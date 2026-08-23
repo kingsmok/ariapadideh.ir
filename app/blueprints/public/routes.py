@@ -249,27 +249,27 @@ def category(slug, page=1):
 @public_bp.route('/product/<slug>')
 def product(slug):
     """Product detail page"""
-    
+
     product_obj = Product.query.filter_by(slug=slug, is_active=True, is_deleted=False).first_or_404()
-    
+
     # Increment views
     product_obj.increment_views()
-    
+
     # Get images
     images = product_obj.images.filter_by(is_deleted=False).order_by(ProductImage.sort_order).all()
-    
+
     # Get specifications
     specifications = product_obj.get_specifications_dict()
-    
+
     # Get related products
     related_products = product_obj.get_related_products(limit=4)
-    
+
     # Get comments
     comments = product_obj.comments.filter_by(
         is_approved=True,
         is_deleted=False
     ).order_by(db.desc('created_at')).limit(10).all()
-    
+
     # Check if in wishlist
     in_wishlist = False
     if current_user.is_authenticated:
@@ -277,17 +277,29 @@ def product(slug):
             user_id=current_user.id,
             product_id=product_obj.id
         ).first() is not None
-    
+
     # Get breadcrumb categories
     breadcrumb_categories = product_obj.categories[0].breadcrumbs if product_obj.categories else []
-    
+
+    # Get related posts (articles mentioning this product's category)
+    related_posts = []
+    if product_obj.categories:
+        cat_ids = [c.id for c in product_obj.categories]
+        related_posts = Post.query.filter(
+            Post.is_active == True,
+            Post.is_deleted == False,
+            Post.status == 'published',
+            Post.category_id.in_(cat_ids) if cat_ids else False,
+        ).order_by(Post.published_at.desc()).limit(3).all()
+
     seo = SEOService.get_product_seo(product_obj)
-    
+
     return render_template('public/product.html',
         product=product_obj,
         images=images,
         specifications=specifications,
         related_products=related_products,
+        related_posts=related_posts,
         comments=comments,
         in_wishlist=in_wishlist,
         breadcrumb_categories=breadcrumb_categories,
@@ -338,39 +350,52 @@ def blog(page=1):
 @cache.cached(timeout=300, query_string=True)
 def post(slug):
     """Blog post detail page"""
-    
+
     post_obj = Post.query.filter_by(slug=slug, status='published', is_active=True, is_deleted=False).first_or_404()
-    
+
     # Increment views
     post_obj.increment_views()
-    
+
     # Get related posts
     related_posts = post_obj.get_related_posts(limit=3)
-    
+
+    # Get related products (articles often mention products in the same category)
+    related_products = []
+    if post_obj.category_id:
+        from app.models import ProductCategory
+        product_ids = [pc.product_id for pc in ProductCategory.query.filter_by(category_id=post_obj.category_id).limit(4).all()]
+        if product_ids:
+            related_products = Product.query.filter(
+                Product.id.in_(product_ids),
+                Product.is_active == True,
+                Product.is_deleted == False,
+            ).limit(4).all()
+
     # Get comments
     comments = post_obj.comments.filter_by(
         is_approved=True,
         is_deleted=False
     ).order_by(db.desc('created_at')).all()
-    
+
     # Previous and next posts
     prev_post = Post.query.filter(
         Post.id < post_obj.id,
         Post.status == 'published',
         Post.is_deleted == False
     ).order_by(Post.id.desc()).first()
-    
+
     next_post = Post.query.filter(
         Post.id > post_obj.id,
         Post.status == 'published',
         Post.is_deleted == False
     ).order_by(Post.id.asc()).first()
-    
+
     seo = SEOService.get_post_seo(post_obj)
-    
+
     return render_template('public/post.html',
         post=post_obj,
         related_posts=related_posts,
+        related_products=related_products,
         comments=comments,
         prev_post=prev_post,
         next_post=next_post,
@@ -863,10 +888,15 @@ def sitemap():
 
 @public_bp.route('/robots.txt')
 def robots():
-    """Robots.txt file"""
-    
+    """Robots.txt file — only block admin/user/api/private pages.
+
+    Note: We do NOT disallow /?* anymore because that would block
+    legitimate paginated/filtered category URLs and waste crawl budget.
+    Pagination uses /page/<n> which is indexable.
+    """
+
     site_url = current_app.config.get('SITE_URL', request.url_root.rstrip('/'))
-    
+
     content = f"""User-agent: *
 Allow: /
 Disallow: /admin/
@@ -874,10 +904,23 @@ Disallow: /user/
 Disallow: /api/
 Disallow: /cart
 Disallow: /checkout
-Disallow: /*?*
+Disallow: /order/
+Disallow: /payment/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /change-password
+
+# AI crawlers — allow for SEO/AEO discoverability
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
 
 Sitemap: {site_url}/sitemap.xml"""
-    
+
     return content, 200, {'Content-Type': 'text/plain'}
 
 

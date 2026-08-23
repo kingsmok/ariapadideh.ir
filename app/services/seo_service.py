@@ -169,12 +169,14 @@ class SEOService:
     
     @staticmethod
     def generate_sitemap() -> str:
-        """Generate XML sitemap"""
+        """Generate XML sitemap with image:image extension."""
         site_url = SEOService.get_site_url()
-        
+
         xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        
+        # Note: image namespace enables Google Image sitemap ingestion
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+        xml += '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+
         # Static pages
         static_pages = [
             {'loc': site_url, 'priority': '1.0', 'changefreq': 'daily'},
@@ -182,49 +184,66 @@ class SEOService:
             {'loc': f'{site_url}/contact', 'priority': '0.8', 'changefreq': 'monthly'},
             {'loc': f'{site_url}/faq', 'priority': '0.7', 'changefreq': 'monthly'},
             {'loc': f'{site_url}/blog', 'priority': '0.9', 'changefreq': 'daily'},
+            {'loc': f'{site_url}/categories', 'priority': '0.7', 'changefreq': 'weekly'},
             {'loc': f'{site_url}/terms', 'priority': '0.5', 'changefreq': 'yearly'},
             {'loc': f'{site_url}/privacy', 'priority': '0.5', 'changefreq': 'yearly'},
         ]
-        
+
         for page in static_pages:
-            xml += f'<url>\n'
+            xml += '<url>\n'
             xml += f'  <loc>{page["loc"]}</loc>\n'
             xml += f'  <changefreq>{page["changefreq"]}</changefreq>\n'
             xml += f'  <priority>{page["priority"]}</priority>\n'
-            xml += f'</url>\n'
-        
-        # Products
+            xml += '</url>\n'
+
+        # Products (with image:image)
         products = Product.query.filter_by(is_active=True, is_deleted=False).limit(1000).all()
         for product in products:
-            xml += f'<url>\n'
+            xml += '<url>\n'
             xml += f'  <loc>{site_url}/product/{product.slug}</loc>\n'
-            xml += f'  <changefreq>weekly</changefreq>\n'
-            xml += f'  <priority>0.8</priority>\n'
-            xml += f'  <lastmod>{product.updated_at.strftime("%Y-%m-%d")}</lastmod>\n'
-            xml += f'</url>\n'
-        
+            xml += '  <changefreq>weekly</changefreq>\n'
+            xml += '  <priority>0.8</priority>\n'
+            if product.updated_at:
+                xml += f'  <lastmod>{product.updated_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            # Image extension — helps Google Image Search index product images
+            if product.main_image_url:
+                xml += '  <image:image>\n'
+                xml += f'    <image:loc>{product.main_image_url}</image:loc>\n'
+                xml += f'    <image:title>{product.title}</image:title>\n'
+                xml += '  </image:image>\n'
+            xml += '</url>\n'
+
         # Categories
         categories = Category.query.filter_by(is_active=True, is_deleted=False).all()
         for category in categories:
-            xml += f'<url>\n'
+            xml += '<url>\n'
             xml += f'  <loc>{site_url}/category/{category.slug}</loc>\n'
-            xml += f'  <changefreq>daily</changefreq>\n'
-            xml += f'  <priority>0.7</priority>\n'
-            xml += f'</url>\n'
-        
+            xml += '  <changefreq>daily</changefreq>\n'
+            xml += '  <priority>0.7</priority>\n'
+            if category.updated_at:
+                xml += f'  <lastmod>{category.updated_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            xml += '</url>\n'
+
         # Posts
         posts = Post.query.filter_by(status='published', is_active=True, is_deleted=False).limit(500).all()
         for post in posts:
-            xml += f'<url>\n'
+            xml += '<url>\n'
             xml += f'  <loc>{site_url}/blog/{post.slug}</loc>\n'
-            xml += f'  <changefreq>weekly</changefreq>\n'
-            xml += f'  <priority>0.6</priority>\n'
-            if post.published_at:
-                xml += f'  <lastmod>{post.published_at.strftime("%Y-%m-%d")}</lastmod>\n'
-            xml += f'</url>\n'
-        
+            xml += '  <changefreq>weekly</changefreq>\n'
+            xml += '  <priority>0.6</priority>\n'
+            lastmod = post.updated_at or post.published_at
+            if lastmod:
+                xml += f'  <lastmod>{lastmod.strftime("%Y-%m-%d")}</lastmod>\n'
+            # Article image
+            if post.featured_image:
+                xml += '  <image:image>\n'
+                xml += f'    <image:loc>{post.featured_image}</image:loc>\n'
+                xml += f'    <image:title>{post.title}</image:title>\n'
+                xml += '  </image:image>\n'
+            xml += '</url>\n'
+
         xml += '</urlset>'
-        
+
         return xml
     
     @staticmethod
