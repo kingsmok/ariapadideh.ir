@@ -751,43 +751,63 @@ def about():
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
+@rate_limit(limit=5, period=3600, key_func=lambda: f'contact:{request.remote_addr}')
 def contact():
     """Contact us page"""
-    
+
     from app.blueprints.public.forms import ContactForm
     from app.services.notification_service import NotificationService
-    
+
     form = ContactForm()
-    
+
     if form.validate_on_submit():
         from app.models import Contact, Address
-        
-        contact_obj = Contact(
-            name=form.name.data,
-            email=form.email.data,
-            phone=form.phone.data,
-            subject=form.subject.data,
-            message=form.message.data,
-            ip_address=request.remote_addr
-        )
-        contact_obj.save()
-        
-        # Notify admins
-        NotificationService.notify_admins(
-            title='پیام جدید تماس با ما',
-            message=f'{form.name.data} - {form.subject.data}',
-            type='message',
-            data={'contact_id': contact_obj.id}
-        )
-        
-        return render_template('public/contact.html', 
-            form=ContactForm(), 
-            success=True)
-    
+        from app.constants import PHONE_PATTERN_IR, PHONE_LANDLINE_IR
+        import re
+
+        # Phone validation (Persian mobile/landline) — only if provided
+        phone = (form.phone.data or '').strip()
+        if phone and not re.match(PHONE_PATTERN_IR, phone) and not re.match(PHONE_LANDLINE_IR, phone):
+            flash('شماره تلفن وارد شده نامعتبر است.', 'error')
+            page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
+            return render_template('public/contact.html', form=form, page=page, success=False)
+
+        try:
+            contact_obj = Contact(
+                name=form.name.data,
+                email=form.email.data,
+                phone=phone or None,
+                subject=form.subject.data,
+                message=form.message.data,
+                ip_address=request.remote_addr,
+            )
+            contact_obj.save()
+
+            # Notify admins
+            NotificationService.notify_admins(
+                title='پیام جدید تماس با ما',
+                message=f'{form.name.data} - {form.subject.data}',
+                type='message',
+                data={'contact_id': contact_obj.id}
+            )
+
+            # Notify via Telegram
+            try:
+                NotificationService.notify_telegram_contact(contact_obj)
+            except Exception as e:
+                current_app.logger.warning(f'Telegram notify failed: {e}')
+
+            return render_template('public/contact.html',
+                form=ContactForm(),
+                success=True)
+        except Exception as e:
+            current_app.logger.error(f'Contact save error: {e}')
+            flash('خطا در ارسال پیام. لطفاً مجدداً تلاش کنید.', 'error')
+
     page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
-    
-    return render_template('public/contact.html', 
-        form=form, 
+
+    return render_template('public/contact.html',
+        form=form,
         page=page,
         success=False)
 
