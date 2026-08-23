@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}پرداخت آزمایشی | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="glass-card" style="padding:2.5rem 2rem; text-align:center;">
+                    <div style="font-size:4rem; line-height:1; margin-bottom:1rem;" aria-hidden="true">🏦</div>
+                    <h1 class="text-white" style="font-size:1.5rem; font-weight:900; margin-bottom:0.5rem;">
+                        درگاه پرداخت آزمایشی
+                    </h1>
+                    <p class="text-muted" style="font-size:0.9rem; margin-bottom:1.5rem;">
+                        این یک درگاه آزمایشی است. در محیط واقعی، به درگاه بانکی منتقل می‌شوید.
+                    </p>
+
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem; text-align:right;">
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                            <span class="text-muted">شماره سفارش:</span>
+                            <strong class="text-white" data-persian-num>{{ order.order_number }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                            <span class="text-muted">مبلغ قابل پرداخت:</span>
+                            <strong class="text-yellow" data-persian-num>{{ format_price(transaction.amount) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:0.9rem;">
+                            <span class="text-muted">شناسه تراکنش:</span>
+                            <strong class="text-white" data-persian-num>{{ transaction.reference_id or '—' }}</strong>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('public.payment_mock', order_number=order.order_number) }}">
+                        <button type="submit" name="action" value="pay" class="btn-rahsa-cta w-100" style="padding:0.85rem; font-size:1rem; margin-bottom:0.75rem;">
+                            <span aria-hidden="true">✓</span>
+                            <span>پرداخت موفق (آزمایشی)</span>
+                        </button>
+                        <button type="submit" name="action" value="cancel" class="btn-rahsa-secondary w-100" style="padding:0.85rem; font-size:1rem; text-decoration:none; background:rgba(239,68,68,0.1); color:var(--accent-danger); border:1px solid rgba(239,68,68,0.3);">
+                            <span aria-hidden="true">✕</span>
+                            <span>انصراف از پرداخت</span>
+                        </button>
+                    </form>
+
+                    <p class="text-muted mt-3" style="font-size:0.75rem;">
+                        <span aria-hidden="true">🔒</span>
+                        اتصال امن · رمزنگاری شده
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
