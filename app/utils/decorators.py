@@ -1,9 +1,52 @@
 """
 Custom Decorators
 """
+import hashlib
+import time
+import threading
+from collections import defaultdict
 from functools import wraps
 from flask import request, jsonify, render_template, current_app, redirect, url_for, flash
 from flask_login import current_user
+
+
+# ==================== In-memory rate limit fallback ====================
+# Used when Redis is not available. Thread-safe.
+class InMemoryRateLimiter:
+    """Simple in-memory rate limiter with thread safety."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        # key -> (count, reset_time)
+        self._buckets: dict = defaultdict(lambda: [0, 0])
+
+    def hit(self, key: str, limit: int, period: int) -> tuple[bool, int]:
+        """
+        Try to register a hit.
+        Returns (allowed, retry_after_seconds).
+        """
+        now = time.time()
+        with self._lock:
+            count, reset = self._buckets[key]
+            if reset <= now:
+                # Reset window
+                self._buckets[key] = [1, now + period]
+                return True, 0
+            if count >= limit:
+                return False, int(reset - now)
+            self._buckets[key] = [count + 1, reset]
+            return True, 0
+
+    def cleanup(self, max_age: int = 3600):
+        """Periodically clean old buckets (call from a background task)."""
+        now = time.time()
+        with self._lock:
+            stale = [k for k, (_, r) in self._buckets.items() if r + max_age < now]
+            for k in stale:
+                del self._buckets[k]
+
+
+_memory_limiter = InMemoryRateLimiter()
 
 
 def active_required(f):
@@ -23,8 +66,11 @@ def active_required(f):
 
 def rate_limit(limit=60, period=60, key_func=None):
     """
-    Rate limiting decorator
-    
+    Rate limiting decorator.
+
+    Uses Redis if available; falls back to in-memory bucket if not.
+    This way the limiter works in development without Redis.
+
     Args:
         limit: Maximum number of requests
         period: Time period in seconds
@@ -34,66 +80,108 @@ def rate_limit(limit=60, period=60, key_func=None):
         @wraps(f)
         def decorated(*args, **kwargs):
             from app.extensions import redis_client
-            from flask import request
-            
-            if redis_client is None:
-                return f(*args, **kwargs)
-            
+
             # Generate key
             if key_func:
-                key = key_func()
+                base_key = key_func()
             else:
                 if current_user.is_authenticated:
-                    key = f'rate_limit:user:{current_user.id}'
+                    base_key = f'rate_limit:user:{current_user.id}'
                 else:
-                    key = f'rate_limit:ip:{request.remote_addr}'
-            
-            key = f'{current_app.config.get("CACHE_KEY_PREFIX", "flask_pro")}:{key}:{request.endpoint}'
-            
-            try:
-                # Get current count
-                current = redis_client.get(key)
-                
-                if current is None:
-                    current = 0
-                else:
-                    current = int(current)
-                
-                if current >= limit:
-                    response = jsonify({
-                        'error': 'Rate limit exceeded',
-                        'retry_after': period
-                    })
-                    response.status_code = 429
-                    response.headers['Retry-After'] = str(period)
-                    return response
-                
-                # Increment counter
-                pipe = redis_client.pipeline()
-                pipe.incr(key)
-                pipe.expire(key, period)
-                pipe.execute()
-                
-            except Exception as e:
-                current_app.logger.error(f'Rate limit error: {e}')
-            
+                    base_key = f'rate_limit:ip:{request.remote_addr}'
+
+            redis_key = f'{current_app.config.get("CACHE_KEY_PREFIX", "flask_pro")}:{base_key}:{request.endpoint}'
+            memory_key = f'mem:{base_key}:{request.endpoint}'
+
+            # Try Redis first
+            if redis_client is not None:
+                try:
+                    current = redis_client.get(redis_key)
+                    current = int(current) if current else 0
+                    if current >= limit:
+                        return _rate_limit_response(period)
+                    pipe = redis_client.pipeline()
+                    pipe.incr(redis_key)
+                    pipe.expire(redis_key, period)
+                    pipe.execute()
+                    return f(*args, **kwargs)
+                except Exception as e:
+                    current_app.logger.warning(f'Rate limit Redis error, falling back to memory: {e}')
+
+            # In-memory fallback
+            allowed, retry_after = _memory_limiter.hit(memory_key, limit, period)
+            if not allowed:
+                return _rate_limit_response(retry_after or period)
             return f(*args, **kwargs)
+
         return decorated
     return decorator
 
 
+def _rate_limit_response(retry_after: int):
+    """Build a 429 response (JSON for API, HTML for web)."""
+    if request.is_json or request.path.startswith('/api/'):
+        response = jsonify({
+            'error': 'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی صبر کنید.',
+            'retry_after': retry_after,
+        })
+        response.status_code = 429
+        response.headers['Retry-After'] = str(retry_after)
+        return response
+    flash('تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.', 'warning')
+    return redirect(request.referrer or url_for('public.home'))
+
+
 def api_required(f):
-    """Decorator to require API key"""
+    """
+    Decorator to require valid API key.
+
+    API key is read from `X-API-Key` header or `api_key` query string.
+    Keys are configured via `VALID_API_KEYS` config (comma-separated string or list).
+    The decorator also enforces an API-wide rate limit to prevent abuse.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
-        api_key = request.headers.get('X-API-Key') or request.args.get('api_key')
-        
+        api_key = (
+            request.headers.get('X-API-Key')
+            or request.headers.get('X-Api-Key')
+            or request.args.get('api_key')
+            or ''
+        ).strip()
+
         if not api_key:
-            return jsonify({'error': 'API key required'}), 401
-        
-        # Validate API key (you can implement your own logic)
-        # For now, we'll skip validation
-        
+            return jsonify({
+                'error': 'API key required',
+                'message': 'کلید API ارسال نشده است.',
+            }), 401
+
+        # Validate against configured keys
+        valid_keys = current_app.config.get('VALID_API_KEYS', [])
+        if isinstance(valid_keys, str):
+            valid_keys = [k.strip() for k in valid_keys.split(',') if k.strip()]
+
+        if not valid_keys:
+            # No keys configured: deny all API access (fail-closed)
+            current_app.logger.warning('API access attempted but no VALID_API_KEYS configured')
+            return jsonify({
+                'error': 'API access disabled',
+                'message': 'دسترسی API در حال حاضر غیرفعال است.',
+            }), 503
+
+        if api_key not in valid_keys:
+            # Constant-time comparison to prevent timing attacks
+            import hmac
+            valid_match = False
+            for stored_key in valid_keys:
+                if hmac.compare_digest(api_key, stored_key):
+                    valid_match = True
+                    break
+            if not valid_match:
+                return jsonify({
+                    'error': 'Invalid API key',
+                    'message': 'کلید API نامعتبر است.',
+                }), 401
+
         return f(*args, **kwargs)
     return decorated
 
