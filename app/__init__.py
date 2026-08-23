@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.config import config
 from app.extensions import (
     db, migrate, login_manager, csrf, cache, compress, 
-    moment, babel, assets, init_redis
+    moment, babel, assets, init_redis, redis_client
 )
 
 
@@ -24,9 +24,24 @@ def create_app(config_name: str = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
-    # Initialize Redis
+    # Initialize Redis (non-fatal: if Redis is unreachable we keep going
+    # with cache/session fallbacks so the dev server can still boot).
     if config_name != 'testing':
         init_redis(app)
+        # If Redis isn't reachable and we were going to use it, fall back
+        # to a local in-memory cache so Flask-Caching and friends don't
+        # blow up the first time they're called.
+        if redis_client is None and app.config.get('CACHE_TYPE', '').lower().endswith('cache') \
+                and 'redis' in app.config.get('CACHE_TYPE', '').lower():
+            app.logger.warning(
+                "CACHE_TYPE=%r requires Redis but Redis is unavailable. "
+                "Falling back to SimpleCache for this process.",
+                app.config.get('CACHE_TYPE'),
+            )
+            app.config['CACHE_TYPE'] = 'SimpleCache'
+        # Also switch rate-limit storage off if it points at Redis.
+        if redis_client is None and app.config.get('RATELIMIT_ENABLED'):
+            app.config['RATELIMIT_ENABLED'] = False
     
     # Proxy fix for reverse proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -124,13 +139,19 @@ def register_error_handlers(app: Flask) -> None:
 
 
 def register_context_processors(app: Flask) -> None:
-    """Register Jinja2 context processors and filters"""
-    
+    """
+    Register Jinja2 context processors and filters
+    """
+
     from app.services.setting_service import SettingService
+    from app.services.seo_schema_service import (
+        get_organization_schema,
+        get_website_schema,
+    )
     from app.utils.helpers import (
         format_price, time_ago, truncate_text, get_cdn_url
     )
-    
+
     # Register Jinja Filters
     app.jinja_env.filters['format_price'] = format_price
     app.jinja_env.filters['toman_format'] = format_price
@@ -141,21 +162,66 @@ def register_context_processors(app: Flask) -> None:
     def inject_globals():
         """Inject global variables into templates"""
         settings = SettingService.get_public_settings()
-        
+
         return {
             'site_settings': settings,
             'current_year': __import__('datetime').datetime.now().year,
+            # Global JSON-LD (Organization + WebSite) — computed once per request
+            'organization_schema': get_organization_schema(),
+            'website_schema': get_website_schema(),
         }
-    
+
     @app.context_processor
     def utility_processor():
         """Add utility functions to templates"""
+        from app.utils.helpers import extract_toc, inject_heading_ids
         return {
             'format_price': format_price,
             'time_ago': time_ago,
             'truncate_text': truncate_text,
             'get_cdn_url': get_cdn_url,
+            'to_persian_digits': lambda s: s,
+            'extract_toc': extract_toc,
+            'inject_heading_ids': inject_heading_ids,
+            # Schema helpers for templates
+            'render_breadcrumb_schema': lambda items: _safe_breadcrumb(items),
+            'render_faq_schema': lambda faqs: _safe_faq(faqs),
+            'render_product_schema': lambda p: _safe_product(p),
+            'render_article_schema': lambda post: _safe_article(post),
+            'render_service_schema': lambda cat: _safe_service(cat),
+            'render_person_schema': lambda name, role='', image='', url='': _safe_person(name, role, image, url),
         }
+
+
+def _safe_breadcrumb(items):
+    """Lazy-loaded breadcrumb schema to avoid hitting DB when not needed."""
+    from app.services.seo_schema_service import get_breadcrumb_schema
+    return get_breadcrumb_schema(items)
+
+
+def _safe_faq(faqs):
+    from app.services.seo_schema_service import get_faq_schema
+    return get_faq_schema(faqs)
+
+
+def _safe_product(p):
+    from app.services.seo_schema_service import get_product_schema
+    return get_product_schema(p)
+
+
+def _safe_article(post):
+    from app.services.seo_schema_service import get_article_schema
+    return get_article_schema(post)
+
+
+def _safe_service(cat):
+    from app.services.seo_schema_service import get_service_schema
+    return get_service_schema(cat)
+
+
+def _safe_person(name, role, image, url):
+    from app.services.seo_schema_service import get_person_schema
+    return get_person_schema(name, role, person_image=image, person_url=url)
 
 
 def register_commands(app: Flask) -> None:

@@ -4,37 +4,37 @@
 
 {% block content %}
 <div class="container my-5">
-    <div style="max-width:480px; margin:0 auto; background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-        <div class="text-center mb-4">
-            <h2 style="font-size:1.5rem; font-weight:800; color:#0f172a;">ایجاد حساب کاربری جدید</h2>
-            <p style="color:#64748b; font-size:0.85rem;">به جامعه مشتریان و توسعه‌دهندگان آریا پدیده بپیوندید</p>
+    <div style="max-width:480px; margin:0 auto; background:var(--bg-navy-card); border-radius:1rem; padding:2rem; border:1px solid var(--glass-border); box-shadow:0 10px 25px rgba(0,0,0,0.05);">
+        <div class=" mb-4">
+            <h2 style="font-size:1.5rem; font-weight:800; color:var(--text-white);">ایجاد حساب کاربری جدید</h2>
+            <p style="color:var(--text-gray-400); font-size:0.85rem;">به جامعه مشتریان و توسعه‌دهندگان آریا پدیده بپیوندید</p>
         </div>
         
         <form action="{{ url_for('user.register') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
             <div class="mb-3">
-                <label class="form-label">پست الکترونیکی (ایمیل) *</label>
-                <input type="email" name="email" class="form-control" required placeholder="user@example.com">
+                <label class="form-label-rahsa">پست الکترونیکی (ایمیل) *</label>
+                <input type="email" name="email" class="form-control-rahsa" required placeholder="user@example.com">
             </div>
             <div class="mb-3">
-                <label class="form-label">شماره همراه *</label>
-                <input type="text" name="phone" class="form-control" required placeholder="09121234567">
+                <label class="form-label-rahsa">شماره همراه *</label>
+                <input type="text" name="phone" class="form-control-rahsa" required placeholder="09121234567">
             </div>
             <div class="mb-3">
-                <label class="form-label">رمز عبور *</label>
-                <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                <label class="form-label-rahsa">رمز عبور *</label>
+                <input type="password" name="password" class="form-control-rahsa" required placeholder="••••••••">
             </div>
             <div class="mb-3">
-                <label class="form-label">تکرار رمز عبور *</label>
-                <input type="password" name="confirm_password" class="form-control" required placeholder="••••••••">
+                <label class="form-label-rahsa">تکرار رمز عبور *</label>
+                <input type="password" name="confirm_password" class="form-control-rahsa" required placeholder="••••••••">
             </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+            <button type="submit" class="btn-rahsa-cta btn-lg w-100 mb-3">
                 ثبت‌نام و عضویت
             </button>
         </form>
         
-        <div class="text-center" style="font-size:0.85rem; color:#64748b;">
-            قبلاً ثبت‌نام کرده‌اید؟ <a href="{{ url_for('user.login') }}" style="color:#2563eb; font-weight:700;">وارد شوید</a>
+        <div class="" style="font-size:0.85rem; color:var(--text-gray-400);">
+            قبلاً ثبت‌نام کرده‌اید؟ <a href="{{ url_for('user.login') }}" style="color:var(--accent-gold); font-weight:700;">وارد شوید</a>
         </div>
     </div>
 </div>

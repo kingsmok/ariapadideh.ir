@@ -12,44 +12,44 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">عنوان خدمت</label>
-                <input type="text" name="title" class="form-control bg-dark text-light" value="{{ service.title if service else '' }}" required>
+                <label class="form-label-rahsa">عنوان خدمت</label>
+                <input type="text" name="title" class="form-control-rahsa bg-dark text-light" value="{{ service.title if service else '' }}" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">نام مستعار (Slug)</label>
-                <input type="text" name="slug" class="form-control bg-dark text-light" value="{{ service.slug if service else '' }}" required>
+                <label class="form-label-rahsa">نام مستعار (Slug)</label>
+                <input type="text" name="slug" class="form-control-rahsa bg-dark text-light" value="{{ service.slug if service else '' }}" required>
             </div>
             <div class="col-md-4">
-                <label class="form-label">دسته‌بندی (کد)</label>
-                <input type="text" name="category_type" class="form-control bg-dark text-light" value="{{ service.category_type if service else 'web' }}" required>
+                <label class="form-label-rahsa">دسته‌بندی (کد)</label>
+                <input type="text" name="category_type" class="form-control-rahsa bg-dark text-light" value="{{ service.category_type if service else 'web' }}" required>
             </div>
             <div class="col-md-4">
-                <label class="form-label">آیکون (ایموجی یا کد SVG)</label>
-                <input type="text" name="icon" class="form-control bg-dark text-light" value="{{ service.icon if service else '⚡' }}">
+                <label class="form-label-rahsa">آیکون (ایموجی یا کد SVG)</label>
+                <input type="text" name="icon" class="form-control-rahsa bg-dark text-light" value="{{ service.icon if service else '⚡' }}">
             </div>
             <div class="col-md-4">
-                <label class="form-label">قیمت پایه (تومان)</label>
-                <input type="number" name="starting_price" class="form-control bg-dark text-light" value="{{ service.starting_price if service else '0' }}">
+                <label class="form-label-rahsa">قیمت پایه (تومان)</label>
+                <input type="number" name="starting_price" class="form-control-rahsa bg-dark text-light" value="{{ service.starting_price if service else '0' }}">
             </div>
             <div class="col-md-6">
-                <label class="form-label">مدت زمان تحویل (روز)</label>
-                <input type="number" name="estimated_days" class="form-control bg-dark text-light" value="{{ service.estimated_days if service else '7' }}">
+                <label class="form-label-rahsa">مدت زمان تحویل (روز)</label>
+                <input type="number" name="estimated_days" class="form-control-rahsa bg-dark text-light" value="{{ service.estimated_days if service else '7' }}">
             </div>
             <div class="col-md-6">
-                <label class="form-label">تکنولوژی‌ها (جداشده با کاما)</label>
-                <input type="text" name="tech_stack" class="form-control bg-dark text-light" value="{{ service.tech_stack if service else 'Python, Flask' }}">
+                <label class="form-label-rahsa">تکنولوژی‌ها (جداشده با کاما)</label>
+                <input type="text" name="tech_stack" class="form-control-rahsa bg-dark text-light" value="{{ service.tech_stack if service else 'Python, Flask' }}">
             </div>
             <div class="col-12">
-                <label class="form-label">خلاصه توضیحات</label>
-                <textarea name="summary" class="form-control bg-dark text-light" rows="2">{{ service.summary if service else '' }}</textarea>
+                <label class="form-label-rahsa">خلاصه توضیحات</label>
+                <textarea name="summary" class="form-control-rahsa bg-dark text-light" rows="2">{{ service.summary if service else '' }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label">توضیحات کامل</label>
-                <textarea name="description" class="form-control bg-dark text-light" rows="4">{{ service.description if service else '' }}</textarea>
+                <label class="form-label-rahsa">توضیحات کامل</label>
+                <textarea name="description" class="form-control-rahsa bg-dark text-light" rows="4">{{ service.description if service else '' }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label">خروجی‌های پروژه (Deliverables JSON یا متنی)</label>
-                <textarea name="deliverables" class="form-control bg-dark text-light" rows="3">{{ service.deliverables if service else '' }}</textarea>
+                <label class="form-label-rahsa">خروجی‌های پروژه (Deliverables JSON یا متنی)</label>
+                <textarea name="deliverables" class="form-control-rahsa bg-dark text-light" rows="3">{{ service.deliverables if service else '' }}</textarea>
             </div>
             <div class="col-md-6">
                 <div class="form-check">

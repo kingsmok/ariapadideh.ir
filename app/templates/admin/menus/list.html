@@ -3,18 +3,18 @@
 {% block page_title %}مدیریت منوها و لینک‌ها{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:1.5rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+<div style="padding:1.5rem;" class="glass-card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h2 style="font-size:1.3rem; font-weight:800; color:#0f172a; margin:0;">منوها و لینک‌های بالایی و پایینی وب‌سایت</h2>
-        <a href="{{ url_for('admin.menu_edit') }}" class="btn btn-primary">➕ ایجاد آیتم منو جدید</a>
+        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">منوها و لینک‌های بالایی و پایینی وب‌سایت</h2>
+        <a href="{{ url_for('admin.menu_edit') }}" class="btn-rahsa-cta">➕ ایجاد آیتم منو جدید</a>
     </div>
 
     {% for pos, items in menus.items() %}
     <div style="margin-bottom:2rem;">
-        <h3 style="font-size:1.1rem; font-weight:700; color:#2563eb; margin-bottom:0.75rem;">موقعیت: {{ pos }}</h3>
+        <h3 style="font-size:1.1rem; font-weight:700; color:var(--accent-gold); margin-bottom:0.75rem;">موقعیت: {{ pos }}</h3>
         <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead>
-                <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:right;">
+                <tr style="background:var(--bg-navy-elevated); border-bottom:2px solid var(--glass-border); text-align:right;">
                     <th style="padding:0.75rem;">عنوان منو</th>
                     <th style="padding:0.75rem;">آدرس (URL)</th>
                     <th style="padding:0.75rem; text-align:center;">عملیات</th>
@@ -23,16 +23,16 @@
             <tbody>
                 {% if items %}
                     {% for m in items %}
-                    <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:0.75rem; font-weight:700; color:#0f172a;">{{ m.title }}</td>
-                        <td style="padding:0.75rem; color:#64748b;">{{ m.url }}</td>
+                    <tr style="border-bottom:1px solid var(--glass-border);">
+                        <td style="padding:0.75rem; font-weight:700; color:var(--text-white);">{{ m.title }}</td>
+                        <td style="padding:0.75rem; color:var(--text-gray-400);">{{ m.url }}</td>
                         <td style="padding:0.75rem; text-align:center;">
-                            <a href="{{ url_for('admin.menu_edit', menu_id=m.id) }}" class="btn btn-outline-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">✏️ ویرایش متن</a>
+                            <a href="{{ url_for('admin.menu_edit', menu_id=m.id) }}" class="btn-rahsa-outline" style="padding:0.2rem 0.5rem; font-size:0.8rem;">✏️ ویرایش متن</a>
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr><td colspan="3" style="text-align:center; padding:1rem; color:#64748b;">آیتمی در این موقعیت قرار ندارد.</td></tr>
+                    <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-gray-400);">آیتمی در این موقعیت قرار ندارد.</td></tr>
                 {% endif %}
             </tbody>
         </table>

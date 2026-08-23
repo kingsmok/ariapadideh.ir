@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>📁 مدیریت نمونه‌کارها و کیس‌استادی‌ها</h2>
-    <a href="{{ url_for('admin.agency_portfolio_edit') }}" class="btn btn-primary">+ افزودن نمونه‌کار جدید</a>
+    <a href="{{ url_for('admin.agency_portfolio_edit') }}" class="btn-rahsa-cta">+ افزودن نمونه‌کار جدید</a>
 </div>
 
 <div class="card bg-navy-card text-light p-3">
@@ -25,13 +25,13 @@
             <tr>
                 <td><strong>{{ item.title }}</strong></td>
                 <td>{{ item.client_name or '-' }}</td>
-                <td><span class="badge bg-info">{{ item.industry or 'عمومی' }}</span></td>
+                <td><span class="badge-rahsa info">{{ item.industry or 'عمومی' }}</span></td>
                 <td>{{ '⭐ بله' if item.is_featured else 'خیر' }}</td>
                 <td>
                     {% if item.is_active %}
-                        <span class="badge bg-success">فعال</span>
+                        <span class="badge-rahsa success">فعال</span>
                     {% else %}
-                        <span class="badge bg-danger">غیرفعال</span>
+                        <span class="badge-rahsa danger">غیرفعال</span>
                     {% endif %}
                 </td>
                 <td>
@@ -44,7 +44,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center text-muted">هیچ نمونه‌کاری ثبت نشده است.</td>
+                <td colspan="6" class=" text-muted">هیچ نمونه‌کاری ثبت نشده است.</td>
             </tr>
             {% endfor %}
         </tbody>

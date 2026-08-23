@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}تأیید سفارش {{ order.order_number }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="glass-card" style="padding:2.5rem 2rem; text-align:center;">
+                    {% if order.payment_status == 'paid' %}
+                    <div style="font-size:5rem; line-height:1; margin-bottom:1rem;" aria-hidden="true">✅</div>
+                    <h1 class="text-white" style="font-size:1.8rem; font-weight:900; margin-bottom:0.75rem;">
+                        پرداخت با موفقیت انجام شد!
+                    </h1>
+                    <p class="text-muted" style="font-size:1rem; margin-bottom:2rem;">
+                        از خرید شما سپاسگزاریم. سفارش شما در حال پردازش است.
+                    </p>
+                    {% else %}
+                    <div style="font-size:5rem; line-height:1; margin-bottom:1rem;" aria-hidden="true">📦</div>
+                    <h1 class="text-white" style="font-size:1.8rem; font-weight:900; margin-bottom:0.75rem;">
+                        سفارش شما با موفقیت ثبت شد!
+                    </h1>
+                    <p class="text-muted" style="font-size:1rem; margin-bottom:2rem;">
+                        شماره سفارش: <strong class="text-yellow" data-persian-num>{{ order.order_number }}</strong>
+                    </p>
+                    {% endif %}
+
+                    <!-- Order details -->
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:1.5rem; margin-bottom:1.5rem; text-align:right;">
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.95rem;">
+                            <span class="text-muted">شماره سفارش:</span>
+                            <strong class="text-white" data-persian-num>{{ order.order_number }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.95rem;">
+                            <span class="text-muted">مبلغ:</span>
+                            <strong class="text-yellow" data-persian-num>{{ format_price(order.total_amount) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.95rem;">
+                            <span class="text-muted">وضعیت پرداخت:</span>
+                            <strong class="{% if order.payment_status == 'paid' %}text-success{% else %}text-warning{% endif %}">
+                                {{ order.payment_status_fa }}
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.95rem;">
+                            <span class="text-muted">وضعیت سفارش:</span>
+                            <strong class="text-white">{{ order.status_fa }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:0.95rem;">
+                            <span class="text-muted">گیرنده:</span>
+                            <strong class="text-white">{{ order.recipient_name }} - {{ order.recipient_phone }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Items list -->
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:1.5rem; margin-bottom:1.5rem; text-align:right;">
+                        <h3 class="text-white" style="font-size:1rem; font-weight:800; margin-bottom:1rem;">محصولات سفارش:</h3>
+                        {% for item in order.items %}
+                        <div class="d-flex justify-content-between" style="padding:0.5rem 0; border-bottom:1px solid var(--glass-border); font-size:0.9rem;">
+                            <span class="text-white">{{ item.title }}</span>
+                            <span class="text-muted" data-persian-num>{{ item.quantity }} × {{ format_price(item.unit_price) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        {% if current_user.is_authenticated and order.user_id == current_user.id %}
+                        <a href="{{ url_for('user.dashboard') }}" class="btn-rahsa-cta" style="padding:0.75rem 1.5rem;">
+                            <span aria-hidden="true">📋</span>
+                            <span>پیگیری سفارش</span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('public.home') }}" class="btn-rahsa-secondary" style="padding:0.75rem 1.5rem; text-decoration:none;">
+                            <span aria-hidden="true">🏠</span>
+                            <span>بازگشت به خانه</span>
+                        </a>
+                    </div>
+
+                    {% if not current_user.is_authenticated %}
+                    <div class="mt-4 pt-3" style="border-top:1px solid var(--glass-border);">
+                        <p class="text-muted" style="font-size:0.85rem; margin:0;">
+                            <span aria-hidden="true">💡</span>
+                            پیشنهاد می‌کنیم برای پیگیری آسان‌تر سفارش، <a href="{{ url_for('user.register') }}" class="text-yellow">ثبت‌نام</a> کنید.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

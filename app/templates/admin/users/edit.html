@@ -3,8 +3,8 @@
 {% block page_title %}{{ 'ویرایش کاربر' if user else 'ایجاد کاربر جدید' }}{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:700px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+<div style="padding:2rem; max-width:700px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
         {{ 'ویرایش کاربر ' ~ user.full_name if user else 'ایجاد کاربر جدید' }}
     </h2>
 
@@ -13,28 +13,28 @@
         
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">نام</label>
-                {{ form.first_name(class="form-control") }}
+                <label class="form-label-rahsa">نام</label>
+                {{ form.first_name(class="form-control-rahsa") }}
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">نام خانوادگی</label>
-                {{ form.last_name(class="form-control") }}
+                <label class="form-label-rahsa">نام خانوادگی</label>
+                {{ form.last_name(class="form-control-rahsa") }}
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">ایمیل</label>
-                {{ form.email(class="form-control") }}
+                <label class="form-label-rahsa">ایمیل</label>
+                {{ form.email(class="form-control-rahsa") }}
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">شماره همراه</label>
-                {{ form.phone(class="form-control") }}
+                <label class="form-label-rahsa">شماره همراه</label>
+                {{ form.phone(class="form-control-rahsa") }}
             </div>
             <div class="col-12 mb-3">
-                <label class="form-label">رمز عبور (جدید)</label>
-                {{ form.password(class="form-control", placeholder="در صورت عدم تغییر خالی بگذارید") }}
+                <label class="form-label-rahsa">رمز عبور (جدید)</label>
+                {{ form.password(class="form-control-rahsa", placeholder="در صورت عدم تغییر خالی بگذارید") }}
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
             💾 ذخیره اطلاعات کاربر
         </button>
     </form>

@@ -3,8 +3,8 @@
 {% block page_title %}{{ 'ویرایش آیتم منو' if menu else 'ایجاد آیتم منو جدید' }}{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:700px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+<div style="padding:2rem; max-width:700px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
         {{ 'ویرایش متن منو ' ~ menu.title if menu else 'ایجاد آیتم منو جدید' }}
     </h2>
 
@@ -12,19 +12,19 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
         
         <div class="mb-3">
-            <label class="form-label">عنوان منو *</label>
-            {{ form.title(class="form-control") }}
+            <label class="form-label-rahsa">عنوان منو *</label>
+            {{ form.title(class="form-control-rahsa") }}
         </div>
         <div class="mb-3">
-            <label class="form-label">آدرس لینک (URL)</label>
-            {{ form.url(class="form-control") }}
+            <label class="form-label-rahsa">آدرس لینک (URL)</label>
+            {{ form.url(class="form-control-rahsa") }}
         </div>
         <div class="mb-3">
-            <label class="form-label">موقعیت منو</label>
-            {{ form.position(class="form-select") }}
+            <label class="form-label-rahsa">موقعیت منو</label>
+            {{ form.position(class="form-select-rahsa") }}
         </div>
         
-        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
             💾 ذخیره تغییرات منو
         </button>
     </form>

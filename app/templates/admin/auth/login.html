@@ -1,30 +1,48 @@
 {% extends 'base.html' %}
 
-{% block title %}ورود به پنل مدیریت | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+{% block title %}ورود به پنل مدیریت | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div style="max-width:420px; margin:0 auto; background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-        <div class="text-center mb-4">
-            <span class="logo-badge mb-2" style="margin:0 auto; width:50px; height:50px; font-size:1.6rem; background:linear-gradient(135deg, #1e293b, #0f172a);">⚙️</span>
-            <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a;">ورود به مدیریت آریا پدیده</h2>
-            <p style="color:#64748b; font-size:0.85rem;">ویژه مدیران و پشتیبانان ارشد سیستم</p>
+<section class="section" style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+    <div class="container">
+        <div class="glass-card" style="max-width:420px; margin:0 auto; padding:2.5rem 2rem;">
+
+            <div class=" mb-4">
+                <div class="brand-badge-rahsa mx-auto" style="width:60px; height:60px; font-size:1.8rem; margin-bottom:1rem;" aria-hidden="true">⚙️</div>
+                <h1 class="text-white" style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem;">
+                    ورود به پنل مدیریت
+                </h1>
+                <p class="text-muted" style="font-size:0.85rem; margin:0;">
+                    ویژه مدیران و پشتیبانان ارشد سیستم
+                </p>
+            </div>
+
+            <form action="{{ url_for('admin.login') }}" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+                <div class="mb-3">
+                    <label for="login_email" class="form-label-rahsa">ایمیل مدیر</label>
+                    <input type="email" id="login_email" name="email" class="form-control-rahsa bidi-plaintext"
+                           value="admin@example.com" required autocomplete="username" autofocus>
+                </div>
+
+                <div class="mb-4">
+                    <label for="login_password" class="form-label-rahsa">رمز عبور</label>
+                    <input type="password" id="login_password" name="password" class="form-control-rahsa bidi-plaintext"
+                           value="admin123" required autocomplete="current-password" minlength="6">
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem; font-size:0.95rem;" aria-label="ورود به مدیریت">
+                    <span>ورود به مدیریت</span>
+                    <span aria-hidden="true">←</span>
+                </button>
+            </form>
+
+            <p class="text-muted  mt-3" style="font-size:0.75rem;">
+                🔒 دسترسی به این بخش فقط برای مدیران مجاز است
+            </p>
+
         </div>
-        
-        <form action="{{ url_for('admin.login') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-            <div class="mb-3">
-                <label class="form-label">ایمیل مدیر</label>
-                <input type="email" name="email" class="form-control" value="admin@example.com" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">رمز عبور</label>
-                <input type="password" name="password" class="form-control" value="admin123" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100">
-                ورود به مدیریت
-            </button>
-        </form>
     </div>
-</div>
+</section>
 {% endblock %}

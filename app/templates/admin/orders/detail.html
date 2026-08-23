@@ -3,16 +3,16 @@
 {% block page_title %}جزئیات سفارش #{{ order.order_number }}{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:800px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
-        <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin:0;">
+<div style="padding:2rem; max-width:800px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
             سفارش شماره #{{ order.order_number }}
         </h2>
-        <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-primary" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
+        <a href="{{ url_for('admin.orders') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
     </div>
 
-    <div style="background:#f8fafc; padding:1.25rem; border-radius:0.75rem; border:1px solid #e2e8f0; margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; font-size:0.95rem;">
-        <div><strong>مبلغ کل:</strong> <span style="color:#2563eb; font-weight:800;">{{ format_price(order.total_amount) }}</span></div>
+    <div style="background:var(--bg-navy-elevated); padding:1.25rem; border-radius:0.75rem; border:1px solid var(--glass-border); margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; font-size:0.95rem;">
+        <div><strong>مبلغ کل:</strong> <span style="color:var(--accent-gold); font-weight:800;">{{ format_price(order.total_amount) }}</span></div>
         <div><strong>وضعیت پرداخت:</strong> {{ order.payment_status }}</div>
         <div><strong>کد پیگیری:</strong> {{ order.tracking_code or '-' }}</div>
         <div><strong>تاریخ ثبت:</strong> {{ order.created_at.strftime('%Y/%m/%d %H:%M') if order.created_at else '' }}</div>

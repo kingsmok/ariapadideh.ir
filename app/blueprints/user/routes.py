@@ -1,19 +1,25 @@
 """
 User Routes - User Panel
 """
+from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import or_, desc
 from werkzeug.datastructures import MultiDict
+import re
 
 from app.blueprints.user import user_bp
 from app.extensions import db
 from app.models import (
     User, Address, Order, OrderItem, CartItem, Wishlist, Comparison,
-    Resume, Contact, Notification, Product
+    Resume, Contact, Notification, Product, Role
 )
 from app.services.cart_service import CartService
-from app.utils.decorators import active_required
+from app.utils.decorators import active_required, rate_limit
+from app.constants import (
+    PHONE_PATTERN_IR, PHONE_LANDLINE_IR, EMAIL_PATTERN,
+    Limits,
+)
 
 
 # ==================== DASHBOARD ====================
@@ -53,78 +59,164 @@ def dashboard():
 # ==================== AUTH ====================
 
 @user_bp.route('/login', methods=['GET', 'POST'])
+@rate_limit(limit=10, period=900, key_func=lambda: f'login:{request.remote_addr}')
 def login():
-    """User login"""
-    
+    """User login with brute force protection."""
+
     if current_user.is_authenticated:
         return redirect(url_for('user.dashboard'))
-    
+
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
-        
-        user = User.query.filter_by(email=email).first()
-        
-        if user and user.check_password(password):
-            if not user.is_active:
-                flash('حساب کاربری شما غیرفعال است.', 'warning')
-                return render_template('user/auth/login.html')
-            
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        remember = bool(request.form.get('remember'))
+
+        # ---- Find user by email OR phone ----
+        user = User.query.filter(
+            (User.email == email) | (User.phone == email)
+        ).first()
+
+        # ---- Brute force: check lockout FIRST (before password verify timing attack) ----
+        if user and user.is_locked():
+            flash('حساب شما به‌دلیل تلاش‌های ناموفق موقتاً قفل شده است. لطفاً بعداً تلاش کنید.', 'error')
+            return render_template('user/auth/login.html')
+
+        # ---- Verify password ----
+        password_valid = user and user.check_password(password)
+
+        if not password_valid:
+            # Increment failed attempts (only if user exists, to avoid enumeration)
+            if user:
+                user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+                if user.failed_login_attempts >= 5:
+                    user.lock_account(minutes=15)
+                    flash('به‌دلیل ۵ تلاش ناموفق، حساب شما به‌مدت ۱۵ دقیقه قفل شد.', 'error')
+                else:
+                    remaining = 5 - user.failed_login_attempts
+                    flash(f'ایمیل یا رمز عبور اشتباه است. {remaining} تلاش دیگر باقی مانده.', 'error')
+                db.session.commit()
+            else:
+                # Generic error to prevent user enumeration
+                flash('ایمیل یا رمز عبور اشتباه است.', 'error')
+
+            return render_template('user/auth/login.html')
+
+        # ---- Check active status ----
+        if not user.is_active:
+            flash('حساب کاربری شما غیرفعال است. با پشتیبانی تماس بگیرید.', 'warning')
+            return render_template('user/auth/login.html')
+
+        # ---- Successful login ----
+        try:
             from flask_login import login_user
             login_user(user, remember=remember)
-            
             user.update_last_login()
-            
-            # Merge guest cart with user cart
-            session_id = CartService.get_session_id()
-            if session_id:
-                CartService.merge_carts(session_id, user.id)
-            
-            next_page = request.args.get('next')
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            db.session.commit()
+
+            # Merge guest cart
+            try:
+                session_id = CartService.get_session_id()
+                if session_id:
+                    CartService.merge_carts(session_id, user.id)
+            except Exception as e:
+                current_app.logger.warning(f'Cart merge failed: {e}')
+
             flash(f'خوش آمدید {user.full_name}!', 'success')
-            return redirect(next_page or url_for('user.dashboard'))
-        
-        flash('ایمیل یا رمز عبور اشتباه است.', 'error')
-    
+
+            # Safe redirect (only relative URLs)
+            next_page = request.args.get('next', '')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('user.dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Login error: {e}')
+            flash('خطا در ورود. لطفاً مجدداً تلاش کنید.', 'error')
+
     return render_template('user/auth/login.html')
 
 
 @user_bp.route('/register', methods=['GET', 'POST'])
+@rate_limit(limit=3, period=3600, key_func=lambda: f'register:{request.remote_addr}')
 def register():
-    """User registration"""
-    
+    """User registration with full validation."""
+
     if current_user.is_authenticated:
         return redirect(url_for('user.dashboard'))
-    
+
     if request.method == 'POST':
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # Validation
+        # ---- Get and clean inputs ----
+        email = (request.form.get('email') or '').strip().lower()
+        phone = (request.form.get('phone') or '').strip()
+        first_name = (request.form.get('first_name') or '').strip()
+        last_name = (request.form.get('last_name') or '').strip()
+        password = request.form.get('password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
+
+        # ---- Validation ----
+        errors = []
+
+        if not email or not re.match(EMAIL_PATTERN, email):
+            errors.append('ایمیل نامعتبر است.')
+
+        if not phone or not re.match(PHONE_PATTERN_IR, phone):
+            errors.append('شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.')
+
+        if len(first_name) < Limits.NAME_MIN or len(first_name) > Limits.NAME_MAX:
+            errors.append(f'نام باید بین {Limits.NAME_MIN} تا {Limits.NAME_MAX} کاراکتر باشد.')
+
+        if last_name and (len(last_name) < Limits.NAME_MIN or len(last_name) > Limits.NAME_MAX):
+            errors.append(f'نام خانوادگی باید بین {Limits.NAME_MIN} تا {Limits.NAME_MAX} کاراکتر باشد.')
+
+        if len(password) < Limits.PASSWORD_MIN:
+            errors.append(f'رمز عبور باید حداقل {Limits.PASSWORD_MIN} کاراکتر باشد.')
+
         if password != confirm_password:
-            flash('رمز عبور و تکرار آن مطابقت ندارد.', 'error')
-            return render_template('user/auth/register.html')
-        
+            errors.append('رمز عبور و تکرار آن مطابقت ندارند.')
+
         if User.query.filter_by(email=email).first():
-            flash('این ایمیل قبلاً ثبت شده است.', 'error')
-            return render_template('user/auth/register.html')
-        
-        # Create user
-        from app.models import Role
-        user = User(
-            email=email,
-            phone=phone,
-            role_id=Role.get_user_role().id
-        )
-        user.set_password(password)
-        user.save()
-        
-        flash('ثبت‌نام با موفقیت انجام شد. لطفاً وارد شوید.', 'success')
-        return redirect(url_for('user.login'))
-    
+            errors.append('این ایمیل قبلاً ثبت شده است.')
+
+        if User.query.filter_by(phone=phone).first():
+            errors.append('این شماره موبایل قبلاً ثبت شده است.')
+
+        if errors:
+            for error in errors:
+                flash(error, 'error')
+            return render_template(
+                'user/auth/register.html',
+                email=email, phone=phone, first_name=first_name, last_name=last_name
+            )
+
+        # ---- Create user ----
+        try:
+            user = User(
+                email=email,
+                phone=phone,
+                first_name=first_name,
+                last_name=last_name,
+                role_id=Role.get_user_role().id,
+                is_active=True,
+            )
+            user.set_password(password)
+            user.save()
+
+            # Send welcome email (non-blocking)
+            try:
+                from app.services.email_service import EmailService
+                EmailService.send_welcome(user)
+            except Exception as e:
+                current_app.logger.warning(f'Welcome email failed: {e}')
+
+            flash('ثبت‌نام با موفقیت انجام شد. لطفاً وارد شوید.', 'success')
+            return redirect(url_for('user.login'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Registration error: {e}')
+            flash('خطا در ثبت‌نام. لطفاً مجدداً تلاش کنید.', 'error')
+
     return render_template('user/auth/register.html')
 
 
@@ -141,21 +233,83 @@ def logout():
 
 
 @user_bp.route('/forgot-password', methods=['GET', 'POST'])
+@rate_limit(limit=3, period=3600, key_func=lambda: f'forgot:{request.remote_addr}')
 def forgot_password():
-    """Forgot password"""
-    
+    """Forgot password — request reset link via email."""
+
+    if current_user.is_authenticated:
+        return redirect(url_for('user.dashboard'))
+
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = (request.form.get('email') or '').strip().lower()
+
+        if not email:
+            flash('ایمیل را وارد کنید.', 'error')
+            return render_template('user/auth/forgot_password.html')
+
         user = User.query.filter_by(email=email).first()
-        
+
+        # Always show success to prevent email enumeration
         if user:
-            token = user.generate_reset_token()
-            # TODO: Send email with reset link
-            flash(f'لینک بازیابی رمز عبور به ایمیل شما ارسال شد.', 'success')
-        else:
-            flash('کاربری با این ایمیل یافت نشد.', 'warning')
-    
+            try:
+                token = user.generate_reset_token()
+                reset_url = url_for('user.reset_password', token=token, _external=True)
+                from app.services.notification_service import NotificationService
+                NotificationService.send_password_reset(user, reset_url)
+            except Exception as e:
+                current_app.logger.error(f'Password reset error: {e}')
+                flash('خطا در ارسال ایمیل. لطفاً بعداً تلاش کنید.', 'error')
+                return render_template('user/auth/forgot_password.html')
+
+        flash(
+            'اگر ایمیل شما در سیستم موجود باشد، لینک بازیابی به آن ارسال خواهد شد.',
+            'success'
+        )
+        return redirect(url_for('user.login'))
+
     return render_template('user/auth/forgot_password.html')
+
+
+@user_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password using token from email."""
+
+    if current_user.is_authenticated:
+        return redirect(url_for('user.dashboard'))
+
+    user = User.query.filter_by(reset_token=token).first()
+
+    if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
+        flash('لینک بازیابی نامعتبر یا منقضی شده است.', 'error')
+        return redirect(url_for('user.forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if not new_password or len(new_password) < 8:
+            flash('رمز عبور باید حداقل ۸ کاراکتر باشد.', 'error')
+            return render_template('user/auth/reset_password.html', token=token, valid=True)
+
+        if new_password != confirm_password:
+            flash('رمز جدید و تکرار آن مطابقت ندارد.', 'error')
+            return render_template('user/auth/reset_password.html', token=token, valid=True)
+
+        try:
+            user.set_password(new_password)
+            user.reset_token = None
+            user.reset_token_expires = None
+            user.unlock_account()  # Also unlock if locked
+            db.session.commit()
+
+            flash('رمز عبور شما با موفقیت تغییر کرد. لطفاً وارد شوید.', 'success')
+            return redirect(url_for('user.login'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Password reset commit error: {e}')
+            flash('خطا در تغییر رمز عبور. لطفاً مجدداً تلاش کنید.', 'error')
+
+    return render_template('user/auth/reset_password.html', token=token, valid=True)
 
 
 # ==================== PROFILE ====================
@@ -179,28 +333,62 @@ def profile():
 
 @user_bp.route('/profile/change-password', methods=['GET', 'POST'])
 @login_required
+@rate_limit(limit=5, period=3600, key_func=lambda: f'change_pw:{current_user.id}')
 def change_password():
-    """Change password"""
-    
+    """Change password (requires current password)."""
+
     if request.method == 'POST':
-        current_password = request.form.get('current_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        # Validate current password
         if not current_user.check_password(current_password):
-            flash('رمز فعلی اشتباه است.', 'error')
-            return redirect(url_for('user.change_password'))
-        
+            # Track failed attempts to prevent brute force
+            current_user.failed_login_attempts = (current_user.failed_login_attempts or 0) + 1
+            if current_user.failed_login_attempts >= 5:
+                current_user.lock_account(minutes=15)
+                flash('به دلیل تلاش‌های ناموفق، حساب شما به‌مدت ۱۵ دقیقه قفل شد.', 'error')
+            else:
+                flash('رمز فعلی اشتباه است.', 'error')
+            db.session.commit()
+            return render_template('user/profile/change_password.html')
+
+        # Validate new password
+        if not new_password or len(new_password) < 8:
+            flash('رمز جدید باید حداقل ۸ کاراکتر باشد.', 'error')
+            return render_template('user/profile/change_password.html')
+
         if new_password != confirm_password:
             flash('رمز جدید و تکرار آن مطابقت ندارد.', 'error')
-            return redirect(url_for('user.change_password'))
-        
-        current_user.set_password(new_password)
-        current_user.save()
-        
-        flash('رمز عبور با موفقیت تغییر کرد.', 'success')
-        return redirect(url_for('user.profile'))
-    
+            return render_template('user/profile/change_password.html')
+
+        # Check that new password is different
+        if current_user.check_password(new_password):
+            flash('رمز جدید نباید با رمز فعلی یکسان باشد.', 'error')
+            return render_template('user/profile/change_password.html')
+
+        try:
+            current_user.set_password(new_password)
+            current_user.failed_login_attempts = 0
+            db.session.commit()
+
+            # Notify via email
+            from app.services.notification_service import NotificationService
+            NotificationService.send_to_user(
+                user_id=current_user.id,
+                title='تغییر رمز عبور',
+                message='رمز عبور شما با موفقیت تغییر کرد. اگر این عمل از طرف شما نبود، با پشتیبانی تماس بگیرید.',
+                type='warning',
+            )
+
+            flash('رمز عبور با موفقیت تغییر کرد.', 'success')
+            return redirect(url_for('user.profile'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Password change error: {e}')
+            flash('خطا در تغییر رمز عبور. لطفاً مجدداً تلاش کنید.', 'error')
+
     return render_template('user/profile/change_password.html')
 
 

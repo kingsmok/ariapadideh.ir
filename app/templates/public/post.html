@@ -1,16 +1,250 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ post.title if post else 'مقاله' }} | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+{% block title %}{{ post.title if post else 'مقاله' }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div style="background:#fff; border-radius:1rem; padding:2.5rem; border:1px solid #e2e8f0; max-width:900px; margin:0 auto;">
-        <h1 style="font-size:2rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem;">
-            {{ post.title if post else 'مقاله' }}
-        </h1>
-        <div style="font-size:1rem; line-height:2; color:#334155;">
-            {{ post.content|safe if post else '' }}
-        </div>
+<section class="section">
+    <div class="container" style="max-width:900px;">
+
+        <article class="glass-card" style="padding:2.5rem;">
+            <!-- Breadcrumb (semantic + JSON-LD) -->
+            {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}, {'name': 'مجله', 'url': url_for('public.blog', _external=True)}] %}
+            {% if post and post.category %}
+            {% set _crumbs = _crumbs + [{'name': post.category.title, 'url': url_for('public.blog_category', slug=post.category.slug, _external=True)}] %}
+            {% endif %}
+            {% if post %}
+            {% set _crumbs = _crumbs + [{'name': post.title, 'url': url_for('public.post', slug=post.slug, _external=True)}] %}
+            {% endif %}
+
+            <nav aria-label="مسیر دسترسی" class="mb-4">
+                <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                    {% for crumb in _crumbs %}
+                    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                        {% if not loop.last %}
+                        <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                            <span itemprop="name">{{ crumb.name }}</span>
+                        </a>
+                        {% else %}
+                        <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                        {% endif %}
+                        <meta itemprop="position" content="{{ loop.index }}">
+                    </li>
+                    {% if not loop.last %}
+                    <li aria-hidden="true" class="text-muted">/</li>
+                    {% endif %}
+                    {% endfor %}
+                </ol>
+            </nav>
+            {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{% if post %}{{ render_article_schema(post)|safe }}{% endif %}{% endblock %}
+
+            {% if post %}
+                <header class="mb-4">
+                    <h1 class="text-white" style="font-size:clamp(1.5rem, 4vw, 2.2rem); font-weight:900; line-height:1.3; margin-bottom:1rem;">
+                        {{ post.title }}
+                    </h1>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted" style="font-size:0.85rem;">
+                        <span class="d-flex align-items-center gap-1">
+                            <span aria-hidden="true">📅</span>
+                            <time datetime="{{ post.published_at.isoformat() if post.published_at else post.created_at.isoformat() }}">
+                                {{ post.published_at|default(post.created_at)|string|truncate(10, true, '') }}
+                            </time>
+                        </span>
+                        {% if post.author %}
+                        <span class="d-flex align-items-center gap-1">
+                            <span aria-hidden="true">✍️</span>
+                            <span>{{ post.author.full_name }}</span>
+                        </span>
+                        {% endif %}
+                        <span class="d-flex align-items-center gap-1">
+                            <span aria-hidden="true">👁️</span>
+                            <span><span data-persian-num>{{ post.views or 0 }}</span> بازدید</span>
+                        </span>
+                        {% if post.updated_at and post.published_at and (post.updated_at - post.published_at).days > 7 %}
+                        <span class="d-flex align-items-center gap-1" style="font-size:0.75rem;" title="آخرین به‌روزرسانی">
+                            <span aria-hidden="true">🔄</span>
+                            <time datetime="{{ post.updated_at.isoformat() }}">
+                                به‌روزرسانی: {{ post.updated_at|string|truncate(10, true, '') }}
+                            </time>
+                        </span>
+                        {% endif %}
+                    </div>
+                </header>
+
+                {% if post.featured_image %}
+                <div class="mb-4" style="border-radius:var(--radius-xl); overflow:hidden;">
+                    <img src="{{ post.featured_image }}"
+                         alt="{{ post.title }}{% if post.excerpt %} - {{ post.excerpt|striptags|truncate(120) }}{% endif %}"
+                         title="{{ post.title }}"
+                         loading="eager"
+                         fetchpriority="high"
+                         decoding="async"
+                         width="1200"
+                         height="675"
+                         style="width:100%; height:auto; display:block;">
+                </div>
+                {% endif %}
+
+                <div class="post-content" style="font-size:1rem; line-height:1.9; color:var(--text-gray-200);">
+                    {% set _toc = extract_toc(post.content) %}
+                    {% if _toc and _toc|length >= 2 %}
+                    <nav class="toc-rahsa" aria-label="فهرست مطالب" style="background:rgba(10,17,40,0.5); border:1px solid var(--glass-border); border-right:3px solid var(--accent-gold); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-bottom:2rem;">
+                        <h2 class="text-white" style="font-size:0.95rem; font-weight:800; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">📑</span>
+                            <span>فهرست مطالب</span>
+                        </h2>
+                        <ol style="list-style:none; padding:0; margin:0; counter-reset:toc;">
+                            {% for item in _toc %}
+                            <li style="counter-increment:toc; padding:0.25rem 0; font-size:0.875rem; {% if item.level == 3 %}padding-right:1.5rem;{% endif %}">
+                                <a href="#{{ item.id }}" style="color:var(--text-gray-200); text-decoration:none; display:flex; align-items:baseline; gap:0.5rem;">
+                                    <span class="text-muted" style="font-size:0.75rem; min-width:1.5rem;" data-persian-num>{{ loop.index }}.</span>
+                                    <span>{{ item.title }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </nav>
+                    {% endif %}
+                    {{ inject_heading_ids(post.content)|safe }}
+                </div>
+
+                <!-- Tags -->
+                {% if post.tags %}
+                <div class="mt-4 pt-4" style="border-top:1px solid var(--glass-border);">
+                    <h3 class="text-muted" style="font-size:0.9rem; font-weight:700; margin-bottom:0.75rem;">برچسب‌ها:</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for tag in post.tags %}
+                        <span class="badge-rahsa info">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Prev/Next -->
+                <nav class="d-flex flex-wrap justify-content-between gap-3 mt-5 pt-4" style="border-top:1px solid var(--glass-border);" aria-label="مقاله قبلی و بعدی">
+                    {% if prev_post %}
+                    <a href="{{ url_for('public.post', slug=prev_post.slug) }}" class="btn-rahsa-outline" style="padding:0.5rem 1rem; font-size:0.85rem;">
+                        <span aria-hidden="true">→</span>
+                        <span>مقاله قبلی</span>
+                    </a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+
+                    {% if next_post %}
+                    <a href="{{ url_for('public.post', slug=next_post.slug) }}" class="btn-rahsa-outline" style="padding:0.5rem 1rem; font-size:0.85rem;">
+                        <span>مقاله بعدی</span>
+                        <span aria-hidden="true">←</span>
+                    </a>
+                    {% endif %}
+                </nav>
+
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon" aria-hidden="true">📄</div>
+                    <h2 class="empty-state-title">مقاله یافت نشد</h2>
+                    <p class="empty-state-message">مقاله مورد نظر شما یافت نشد یا حذف شده است.</p>
+                    <a href="{{ url_for('public.blog') }}" class="btn-rahsa-cta empty-state-action">
+                        <span>بازگشت به مجله</span>
+                    </a>
+                </div>
+            {% endif %}
+        </article>
+
+        <!-- Related Posts -->
+        {% if related_posts %}
+        <section class="mt-5">
+            <h2 class="text-white mb-4" style="font-size:1.25rem; font-weight:800;">مقالات مرتبط</h2>
+            <div class="row g-4">
+                {% for related in related_posts %}
+                <article class="col-12 col-md-6 col-lg-4">
+                    <a href="{{ url_for('public.post', slug=related.slug) }}" class="product-card d-block h-100 text-decoration-none">
+                        <div class="product-card-image">
+                            <img src="{{ related.featured_image or url_for('static', filename='images/no-image.png') }}"
+                                 alt="{{ related.title }}{% if related.excerpt %} - {{ related.excerpt|striptags|truncate(80) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="240">
+                        </div>
+                        <div class="product-card-body">
+                            <h3 class="product-card-title">{{ related.title }}</h3>
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Related Products (cross-link posts → products) -->
+        {% if related_products %}
+        <section class="mt-5 pt-4" style="border-top:1px solid var(--glass-border);">
+            <h2 class="text-white mb-4" style="font-size:1.25rem; font-weight:800;">محصولات مرتبط</h2>
+            <div class="row g-4">
+                {% for p in related_products %}
+                <div class="col-12 col-md-6 col-lg-3">
+                    <article class="product-card h-100">
+                        <a href="{{ url_for('public.product', slug=p.slug) }}" class="product-card-image" aria-label="{{ p.title }}">
+                            <img src="{{ p.featured_image or url_for('static', filename='images/no-image.png') }}"
+                                 alt="{{ p.title }}{% if p.short_description %} - {{ p.short_description|striptags|truncate(70) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="300">
+                        </a>
+                        <div class="product-card-body">
+                            <h3 class="product-card-title">{{ p.title }}</h3>
+                            <div class="product-card-price" data-persian-num>{{ p.current_price|format_price }}</div>
+                        </div>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
     </div>
-</div>
+</section>
+
+<style>
+.post-content h1, .post-content h2, .post-content h3, .post-content h4 {
+    color: var(--text-white);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+.post-content h2 { font-size: 1.5rem; }
+.post-content h3 { font-size: 1.25rem; }
+.post-content p { margin-bottom: 1rem; }
+.post-content a { color: var(--accent-gold); text-decoration: underline; }
+.post-content a:hover { color: var(--accent-gold-hover); }
+.post-content img { border-radius: var(--radius-lg); margin: 1rem 0; }
+.post-content ul, .post-content ol { padding-inline-start: 1.5rem; margin-bottom: 1rem; }
+.post-content li { margin-bottom: 0.5rem; }
+.post-content blockquote {
+    border-inline-start: 4px solid var(--accent-gold);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    background: var(--glass-bg);
+    border-radius: var(--radius-md);
+    color: var(--text-gray-200);
+}
+.post-content pre {
+    background: var(--bg-navy-dark);
+    color: var(--text-gray-100);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    direction: ltr;
+    text-align: left;
+}
+.post-content code {
+    background: var(--glass-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    direction: ltr;
+    display: inline-block;
+}
+</style>
 {% endblock %}

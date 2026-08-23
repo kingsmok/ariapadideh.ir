@@ -1,32 +1,117 @@
 {% extends 'admin/base.html' %}
 
+{% block title %}داشبورد{% endblock %}
 {% block page_title %}داشبورد مدیریت{% endblock %}
 
 {% block admin_content %}
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #2563eb;">
-            <span style="font-size:0.85rem; color:#64748b;">تعداد پکیج‌ها & محصولات</span>
-            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.products_count if stats else 0 }}</h3>
+
+<!-- Welcome Banner -->
+<div class="glass-card mb-4" style="padding:2rem; background:linear-gradient(135deg, rgba(20,33,61,0.9) 0%, rgba(10,17,40,0.9) 100%);">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div aria-hidden="true" style="font-size:2.5rem;">👋</div>
+        <div class="flex-1">
+            <h2 class="text-white" style="font-size:1.4rem; font-weight:800; margin-bottom:0.25rem;">
+                خوش آمدید، {{ current_user.full_name or 'مدیر' }}
+            </h2>
+            <p class="text-muted" style="font-size:0.9rem; margin:0;">
+                خلاصه‌ای از وضعیت امروز سیستم
+            </p>
+        </div>
+        <a href="{{ url_for('public.home') }}" class="btn-rahsa-outline" target="_blank" rel="noopener" style="font-size:0.85rem;">
+            <span>مشاهده سایت</span>
+            <span aria-hidden="true">↗</span>
+        </a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-label">تعداد محصولات</div>
+            <div class="stat-card-value" data-persian-num>{{ stats.products_count if stats else 0 }}</div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #10b981;">
-            <span style="font-size:0.85rem; color:#64748b;">کاربران ثبت‌نام شده</span>
-            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.users_count if stats else 0 }}</h3>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="stat-card-label">کاربران ثبت‌نام شده</div>
+            <div class="stat-card-value" data-persian-num>{{ stats.users_count if stats else 0 }}</div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #f59e0b;">
-            <span style="font-size:0.85rem; color:#64748b;">کل سفارشات</span>
-            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.orders_count if stats else 0 }}</h3>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="stat-card-label">کل سفارشات</div>
+            <div class="stat-card-value" data-persian-num>{{ stats.orders_count if stats else 0 }}</div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #06b6d4;">
-            <span style="font-size:0.85rem; color:#64748b;">درخواست‌های استعلام</span>
-            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.contacts_count if stats else 0 }}</h3>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card info">
+            <div class="stat-card-label">درخواست‌های تماس</div>
+            <div class="stat-card-value" data-persian-num>{{ stats.contacts_count if stats else 0 }}</div>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions -->
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="glass-card" style="padding:1.5rem;">
+            <h2 class="text-white mb-3" style="font-size:1.1rem; font-weight:800;">میان‌برهای سریع</h2>
+            <div class="row g-2">
+                <div class="col-6 col-md-3">
+                    <a href="#" class="d-block glass-card  text-decoration-none" style="padding:1.25rem; transition:var(--transition);">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;" aria-hidden="true">📦</div>
+                        <div class="text-white font-bold" style="font-size:0.85rem;">افزودن محصول</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="#" class="d-block glass-card  text-decoration-none" style="padding:1.25rem; transition:var(--transition);">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;" aria-hidden="true">📰</div>
+                        <div class="text-white font-bold" style="font-size:0.85rem;">نوشتن مقاله</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="#" class="d-block glass-card  text-decoration-none" style="padding:1.25rem; transition:var(--transition);">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;" aria-hidden="true">🛒</div>
+                        <div class="text-white font-bold" style="font-size:0.85rem;">سفارشات جدید</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="#" class="d-block glass-card  text-decoration-none" style="padding:1.25rem; transition:var(--transition);">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;" aria-hidden="true">⚙️</div>
+                        <div class="text-white font-bold" style="font-size:0.85rem;">تنظیمات</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="glass-card" style="padding:1.5rem;">
+            <h2 class="text-white mb-3" style="font-size:1.1rem; font-weight:800;">وضعیت سیستم</h2>
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex align-items-center justify-content-between" style="padding:0.5rem 0;">
+                    <span class="text-muted" style="font-size:0.875rem;">پایگاه داده</span>
+                    <span class="badge-rahsa success" style="font-size:0.7rem;">✓ فعال</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between" style="padding:0.5rem 0;">
+                    <span class="text-muted" style="font-size:0.875rem;">کش</span>
+                    <span class="badge-rahsa success" style="font-size:0.7rem;">✓ فعال</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between" style="padding:0.5rem 0;">
+                    <span class="text-muted" style="font-size:0.875rem;">Redis</span>
+                    <span class="badge-rahsa warning" style="font-size:0.7rem;">⚠ اختیاری</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between" style="padding:0.5rem 0;">
+                    <span class="text-muted" style="font-size:0.875rem;">نسخه Flask</span>
+                    <span class="text-white bidi-plaintext" style="font-size:0.8rem;">3.x</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

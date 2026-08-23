@@ -1,59 +1,100 @@
 {% extends 'admin/base.html' %}
 
+{% block title %}محصولات{% endblock %}
 {% block page_title %}مدیریت محصولات، پکیج‌ها و اسکریپت‌ها{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:1.5rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h2 style="font-size:1.3rem; font-weight:800; color:#0f172a; margin:0;">لیست کلیه پکیج‌ها و نرم‌افزارها</h2>
-        <a href="{{ url_for('admin.product_edit') }}" class="btn btn-primary">
-            ➕ افزودن پکیج / نرم‌افزار جدید
+<div class="glass-card" style="padding:1.5rem;">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="text-white" style="font-size:1.3rem; font-weight:800; margin:0;">لیست کلیه محصولات</h2>
+            <p class="text-muted" style="font-size:0.85rem; margin:0.25rem 0 0 0;">
+                مدیریت پکیج‌ها، سورس‌کدها و نرم‌افزارهای فروشگاه
+            </p>
+        </div>
+        <a href="{{ url_for('admin.product_edit') }}" class="btn-rahsa-cta" style="font-size:0.85rem; padding:0.55rem 1.25rem;" aria-label="افزودن محصول جدید">
+            <span>افزودن محصول جدید</span>
+            <span aria-hidden="true">➕</span>
         </a>
     </div>
 
+    {% if products and products.items %}
     <div style="overflow-x:auto;">
-        <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <table class="table-rahsa">
             <thead>
-                <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:right;">
-                    <th style="padding:0.85rem;">شناسه</th>
-                    <th style="padding:0.85rem;">عنوان پکیج / نرم‌افزار</th>
-                    <th style="padding:0.85rem;">قیمت (تومان)</th>
-                    <th style="padding:0.85rem;">وضعیت</th>
-                    <th style="padding:0.85rem; text-align:center;">عملیات</th>
+                <tr>
+                    <th>شناسه</th>
+                    <th>عنوان</th>
+                    <th>قیمت</th>
+                    <th>وضعیت</th>
+                    <th style="text-align:center;">عملیات</th>
                 </tr>
             </thead>
             <tbody>
-                {% if products and products.items %}
-                    {% for p in products.items %}
-                    <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:0.85rem; color:#64748b;">#{{ p.id }}</td>
-                        <td style="padding:0.85rem; font-weight:700; color:#0f172a;">{{ p.title }}</td>
-                        <td style="padding:0.85rem; color:#2563eb; font-weight:800;">{{ format_price(p.current_price) }}</td>
-                        <td style="padding:0.85rem;">
-                            {% if p.is_active %}
-                                <span style="background:#dcfce7; color:#166534; padding:0.2rem 0.5rem; border-radius:0.25rem; font-size:0.8rem; font-weight:700;">فعال</span>
-                            {% else %}
-                                <span style="background:#fee2e2; color:#991b1b; padding:0.2rem 0.5rem; border-radius:0.25rem; font-size:0.8rem;">غیرفعال</span>
-                            {% endif %}
-                        </td>
-                        <td style="padding:0.85rem; text-align:center;">
-                            <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn btn-outline-primary" style="padding:0.25rem 0.6rem; font-size:0.8rem;">
-                                ✏️ ویرایش
-                            </a>
-                            <form action="{{ url_for('admin.product_delete', product_id=p.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('آیا از حذف این پکیج مطمئن هستید؟');">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-                                <button type="submit" class="btn btn-danger" style="padding:0.25rem 0.6rem; font-size:0.8rem;">🗑️ حذف</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="5" style="text-align:center; padding:2rem; color:#64748b;">هیچ محصولی ثبت نشده است.</td>
-                    </tr>
-                {% endif %}
+                {% for p in products.items %}
+                <tr>
+                    <td class="text-muted bidi-plaintext">#{{ p.id }}</td>
+                    <td class="text-white font-bold">{{ p.title }}</td>
+                    <td class="text-yellow font-black" data-persian-num>{{ format_price(p.current_price) }}</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span class="badge-rahsa success">فعال</span>
+                        {% else %}
+                        <span class="badge-rahsa danger">غیرفعال</span>
+                        {% endif %}
+                        {% if p.is_featured %}<span class="badge-rahsa gold">⭐ ویژه</span>{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn-rahsa-outline" style="padding:0.3rem 0.75rem; font-size:0.8rem;" aria-label="ویرایش {{ p.title }}">
+                            ✏️ ویرایش
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {% if products.pages > 1 %}
+    <nav class="pagination-rahsa mt-4" aria-label="صفحه‌بندی">
+        {% if products.has_prev %}
+        <a href="{{ url_for('admin.products', page=products.prev_num) }}" aria-label="قبلی">→</a>
+        {% else %}
+        <span class="disabled">→</span>
+        {% endif %}
+
+        {% for page_num in products.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if page_num %}
+                {% if page_num == products.page %}
+                <span class="active">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('admin.products', page=page_num) }}">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span>…</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if products.has_next %}
+        <a href="{{ url_for('admin.products', page=products.next_num) }}" aria-label="بعدی">←</a>
+        {% else %}
+        <span class="disabled">←</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon" aria-hidden="true">📦</div>
+        <h2 class="empty-state-title">هنوز محصولی ثبت نشده</h2>
+        <p class="empty-state-message">برای شروع، اولین محصول یا پکیج نرم‌افزاری خود را اضافه کنید.</p>
+        <a href="{{ url_for('admin.product_edit') }}" class="btn-rahsa-cta empty-state-action">
+            <span>افزودن اولین محصول</span>
+            <span aria-hidden="true">➕</span>
+        </a>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

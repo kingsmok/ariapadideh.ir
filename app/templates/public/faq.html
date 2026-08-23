@@ -1,46 +1,79 @@
 {% extends 'base.html' %}
 
-{% block title %}سوالات متداول | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+{% block title %}سوالات متداول | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div style="max-width:850px; margin:0 auto;">
-        <h1 style="font-size:2rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; text-align:center;">
-            سوالات متداول مشتریان
-        </h1>
-        
-        <div class="faq-list">
+<section class="section">
+    <div class="container">
+
+        <!-- Breadcrumb -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}, {'name': 'سوالات متداول', 'url': url_for('public.faq', _external=True)}] %}
+        <nav aria-label="مسیر دسترسی" class="mb-3">
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        {% block structured_data %}
+        {{ render_breadcrumb_schema(_crumbs)|safe }}
+        {% if faqs %}{{ render_faq_schema(faqs)|safe }}{% endif %}
+        {% endblock %}
+
+        <div style="max-width:850px; margin:0 auto;">
+
+            <!-- Page Header -->
+            <div class=" mb-5">
+                <div aria-hidden="true" style="font-size:2.8rem; margin-bottom:0.5rem;">❓</div>
+                <h1 class="text-white" style="font-size:2rem; font-weight:900; margin-bottom:0.75rem;">
+                    سوالات متداول مشتریان
+                </h1>
+                <p class="text-muted" style="font-size:0.95rem; max-width:600px; margin:0 auto;">
+                    پاسخ به پرتکرارترین سوالات شما درباره خدمات، محصولات و نحوه همکاری با رهسا دیو
+                </p>
+            </div>
+
             {% if faqs %}
+            <div class="faq-list">
                 {% for faq in faqs %}
-                <div class="faq-item" style="background:#fff; border-radius:0.75rem; border:1px solid #e2e8f0; margin-bottom:1rem; overflow:hidden;">
-                    <button class="faq-question" style="width:100%; padding:1.25rem; text-align:right; border:none; background:none; font-weight:700; font-size:1.05rem; cursor:pointer; display:flex; justify-content:space-between;">
+                <details class="accordion-item-rahsa">
+                    <summary>
                         <span>{{ faq.question }}</span>
-                        <span>▾</span>
-                    </button>
-                    <div class="faq-answer" style="padding:0 1.25rem 1.25rem; color:#475569; line-height:1.8; display:none;">
+                    </summary>
+                    <div class="accordion-body-rahsa">
                         {{ faq.answer }}
                     </div>
-                </div>
+                </details>
                 {% endfor %}
+            </div>
             {% else %}
-                <p style="text-align:center; color:#64748b;">سوالات متداول در حال بروزرسانی است.</p>
+            <div class="empty-state">
+                <div class="empty-state-icon" aria-hidden="true">💬</div>
+                <h2 class="empty-state-title">سوالات متداول در حال بروزرسانی است</h2>
+                <p class="empty-state-message">
+                    به‌زودی پاسخ پرتکرارترین سوالات شما در این بخش قرار می‌گیرد.
+                    در حال حاضر می‌توانید از طریق صفحه تماس با ما، سوال خود را مستقیماً بپرسید.
+                </p>
+                <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta empty-state-action">
+                    <span>تماس با ما</span>
+                    <span aria-hidden="true">←</span>
+                </a>
+            </div>
             {% endif %}
+
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.querySelectorAll('.faq-question').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const ans = this.nextElementSibling;
-        if (ans) {
-            const isHidden = ans.style.display === 'none' || !ans.style.display;
-            document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
-            if (isHidden) ans.style.display = 'block';
-        }
-    });
-});
-</script>
+</section>
 {% endblock %}

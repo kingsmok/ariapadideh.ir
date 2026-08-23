@@ -2,46 +2,372 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}پنل مدیریت{% endblock %} | {{ site_settings.general_site_name or 'آریا پدیده' }}</title>
-    
-    <!-- Local Stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    
-    {% block extra_css %}{% endblock %}
-</head>
-<body class="bg-light">
-    <!-- Main Header -->
-    <header class="site-header">
-        <div class="container py-2 d-flex justify-content-between align-items-center">
-            <a href="{{ url_for('admin.dashboard') }}" class="logo-brand">
-                <span class="logo-badge">آ</span>
-                <div>
-                    <span class="logo-text">پنل مدیریت {{ site_settings.general_site_name or 'آریا پدیده' }}</span>
-                </div>
-            </a>
-            <div class="d-flex gap-3 align-items-center">
-                <a href="{{ url_for('public.home') }}" class="btn btn-outline-primary" target="_blank">مشاهده وب‌سایت</a>
-                <a href="{{ url_for('admin.logout') }}" class="btn btn-danger">خروج</a>
-            </div>
-        </div>
-    </header>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#0a1128">
+    <title>{% block title %}پنل مدیریت{% endblock %} | {{ site_settings.general_site_name or 'رهسا دیو' }}</title>
 
-    <!-- Main Content -->
-    <main class="container my-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} mb-3">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        {% block admin_content %}{% endblock %}
-    </main>
-    
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-navy-dark);
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: var(--bg-navy-card);
+            border-inline-start: 1px solid var(--glass-border);
+            padding: 1.5rem 0;
+            position: fixed;
+            top: 0;
+            inset-inline-start: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: var(--z-sticky);
+            transition: transform var(--transition);
+        }
+
+        .admin-sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+
+        .admin-sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-gray-300);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
+            border-inline-start: 3px solid transparent;
+        }
+
+        .admin-sidebar-link:hover,
+        .admin-sidebar-link.active {
+            background: var(--glass-bg);
+            color: var(--accent-gold);
+            border-inline-start-color: var(--accent-gold);
+        }
+
+        .admin-sidebar-link .icon {
+            width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .admin-sidebar-section {
+            padding: 0.5rem 1.5rem;
+            color: var(--text-gray-500);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 1rem;
+        }
+
+        .admin-main {
+            flex: 1;
+            margin-inline-start: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            background: rgba(10, 17, 40, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: calc(var(--z-sticky) - 1);
+        }
+
+        .admin-topbar h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-white);
+            margin: 0;
+        }
+
+        .admin-content {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        /* Stat Card */
+        .stat-card {
+            background: var(--bg-navy-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-gold);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            inset-inline-start: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-gold);
+        }
+
+        .stat-card.success::before { background: var(--accent-success); }
+        .stat-card.warning::before { background: var(--accent-warning); }
+        .stat-card.info::before { background: var(--accent-info); }
+        .stat-card.danger::before { background: var(--accent-danger); }
+
+        .stat-card-label {
+            color: var(--text-gray-400);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            color: var(--text-white);
+            font-size: 1.75rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        /* Mobile */
+        .admin-sidebar-toggle {
+            display: none;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-gray-300);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 1.2rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 991px) {
+            .admin-sidebar {
+                transform: translateX(100%); /* RTL: hides to the right */
+            }
+            .admin-sidebar.active {
+                transform: translateX(0);
+            }
+            .admin-main {
+                margin-inline-start: 0;
+            }
+            .admin-sidebar-toggle {
+                display: flex;
+            }
+        }
+
+        /* Overlay for mobile sidebar */
+        .admin-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: calc(var(--z-sticky) - 1);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .admin-sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="admin-sidebar-overlay" id="admin-sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="منوی مدیریت">
+            <div class="admin-sidebar-header">
+                <a href="{{ url_for('admin.dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <div class="brand-badge-rahsa" aria-hidden="true">آ</div>
+                    <div>
+                        <span class="d-block text-white font-bold" style="font-size:1rem;">پنل مدیریت</span>
+                        <span class="d-block text-muted" style="font-size:0.7rem;">{{ site_settings.general_site_name or 'رهسا دیو' }}</span>
+                    </div>
+                </a>
+            </div>
+
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="admin-sidebar-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">
+                <span class="icon" aria-hidden="true">📊</span>
+                <span>داشبورد</span>
+            </a>
+
+            <div class="admin-sidebar-section">فروشگاه</div>
+
+            <a href="{{ url_for('admin.products_list') if url_for('admin.products_list', _external=False) else '#' }}"
+               class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">📦</span>
+                <span>محصولات</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">🗂️</span>
+                <span>دسته‌بندی‌ها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">🏷️</span>
+                <span>برندها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">🛒</span>
+                <span>سفارشات</span>
+            </a>
+
+            <div class="admin-sidebar-section">محتوا</div>
+
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">📄</span>
+                <span>صفحات</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">📰</span>
+                <span>مقالات</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">🎬</span>
+                <span>اسلایدرها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">🖼️</span>
+                <span>بنرها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">❓</span>
+                <span>سوالات متداول</span>
+            </a>
+
+            <div class="admin-sidebar-section">کاربران</div>
+
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">👥</span>
+                <span>کاربران</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">💬</span>
+                <span>پیام‌ها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">📄</span>
+                <span>رزومه‌ها</span>
+            </a>
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">💼</span>
+                <span>آژانس / خدمات</span>
+            </a>
+
+            <div class="admin-sidebar-section">سیستم</div>
+
+            <a href="#" class="admin-sidebar-link">
+                <span class="icon" aria-hidden="true">⚙️</span>
+                <span>تنظیمات</span>
+            </a>
+            <a href="{{ url_for('public.home') }}" class="admin-sidebar-link" target="_blank" rel="noopener">
+                <span class="icon" aria-hidden="true">🌐</span>
+                <span>مشاهده سایت</span>
+            </a>
+            <a href="{{ url_for('admin.logout') if url_for('admin.logout', _external=False) else '#' }}"
+               class="admin-sidebar-link" style="color:var(--accent-danger);">
+                <span class="icon" aria-hidden="true">🚪</span>
+                <span>خروج</span>
+            </a>
+        </aside>
+
+        <!-- Main -->
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="admin-sidebar-toggle" id="admin-sidebar-toggle"
+                            aria-label="باز کردن منوی مدیریت" aria-expanded="false">
+                        ☰
+                    </button>
+                    <h1>{% block page_title %}داشبورد{% endblock %}</h1>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.85rem;">
+                        {{ current_user.full_name if current_user.is_authenticated else 'مدیر' }}
+                    </span>
+                </div>
+            </header>
+
+            <main class="admin-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    <div class="flash-container" style="position:relative; top:0; inset-inline-end:0; max-width:100%; margin-bottom:1.5rem;" role="status" aria-live="polite">
+                        {% for category, message in messages %}
+                        {% set cat = 'danger' if category in ('error', 'danger') else category %}
+                        <div class="flash-message {{ cat }}">
+                            <span class="flash-icon" aria-hidden="true">
+                                {%- if cat == 'success' -%}✓
+                                {%- elif cat == 'danger' -%}✕
+                                {%- elif cat == 'warning' -%}⚠
+                                {%- else -%}ℹ
+                                {%- endif -%}
+                            </span>
+                            <span class="flash-text">{{ message }}</span>
+                            <button type="button" class="flash-close" aria-label="بستن">×</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block admin_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script>
+        // Admin sidebar toggle (mobile)
+        (function() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-sidebar-overlay');
+            const toggleBtn = document.getElementById('admin-sidebar-toggle');
+
+            function openSidebar() {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            }
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+            if (overlay) overlay.addEventListener('click', closeSidebar);
+        })();
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
