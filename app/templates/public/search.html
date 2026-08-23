@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'macros/product_card.html' import product_card with context %}
+
+{% block title %}نتایج جستجو "{{ query }}" | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem;">
+        🔍 نتایج جستجو برای: <span style="color:#2563eb;">"{{ query }}"</span>
+    </h1>
+    
+    <div class="products-grid">
+        {% if products and products.items %}
+            {% for product in products.items %}
+                {{ product_card(product) }}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5" style="background:#fff; border-radius:1rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.04);">
+                <p style="color:#64748b; margin:0; font-size:1rem;">هیچ پکیج یا اسکریپتی با این عبارت یافت نشد.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

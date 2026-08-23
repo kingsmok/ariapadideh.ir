@@ -3,8 +3,8 @@ Product and Category Models
 """
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, Enum, JSON
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, Enum, JSON, and_
+from sqlalchemy.orm import relationship, Mapped, foreign
 import re
 
 from app.extensions import db
@@ -228,7 +228,7 @@ class Product(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrder
     cart_items = relationship('CartItem', back_populates='product', lazy='dynamic')
     wishlisted_by = relationship('Wishlist', back_populates='product', lazy='dynamic')
     compared_by = relationship('Comparison', back_populates='product', lazy='dynamic')
-    comments = relationship('Comment', back_populates='product', lazy='dynamic')
+    comments = relationship('Comment', primaryjoin="and_(Comment.commentable_type=='product', foreign(Comment.commentable_id)==Product.id)", back_populates='product', lazy='dynamic', overlaps="comments")
     meta_rel = relationship('ProductMeta', back_populates='product', lazy='dynamic', cascade='all, delete-orphan')
     
     @property
@@ -293,6 +293,18 @@ class Product(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrder
         """Increment view count"""
         self.view_count += 1
         db.session.commit()
+
+    def get_related_products(self, limit: int = 4) -> List['Product']:
+        """Get related products in the same category"""
+        if not self.categories:
+            return Product.query.filter(Product.id != self.id, Product.is_active == True, Product.is_deleted == False).limit(limit).all()
+        cat_id = self.categories[0].id
+        return Product.query.filter(
+            Product.id != self.id,
+            Product.categories.any(id=cat_id),
+            Product.is_active == True,
+            Product.is_deleted == False
+        ).limit(limit).all()
     
     def get_specifications_dict(self) -> dict:
         """Get specifications as dictionary"""
@@ -379,7 +391,7 @@ class ProductImage(BaseModel, TimestampMixin):
     file_size = db.Column(Integer, nullable=True)  # bytes
     
     # Relationships
-    product = relationship('ProductImage', back_populates='product')
+    product = relationship('Product', back_populates='images')
     
     def __repr__(self):
         return f'<ProductImage {self.id}>'

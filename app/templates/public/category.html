@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'macros/product_card.html' import product_card with context %}
+
+{% block title %}{{ category.title if category else 'دسته‌بندی خدمات' }} | {{ site_settings.agency_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section style="padding-top:3.5rem; padding-bottom:5rem;">
+    <div class="container">
+        
+        <!-- Category Banner Header -->
+        <div class="glass-card p-4 p-md-5 rounded-2xl mb-4" style="background:linear-gradient(135deg, rgba(20,33,61,0.9) 0%, rgba(10,17,40,0.9) 100%); border:1px solid rgba(255,255,255,0.12);">
+            <div class="row align-items-center gy-3">
+                <div class="col-12 col-md-8">
+                    <span style="color:#FBB03B; font-weight:800; font-size:0.8rem; text-transform:uppercase;" class="d-block mb-1">🗂️ دسته‌بندی تخصصی</span>
+                    <h1 style="font-size:2rem; font-weight:900; color:#ffffff; margin-bottom:0.5rem;">
+                        {{ category.title if category else 'خدمات نرم‌افزاری' }}
+                    </h1>
+                    <p style="color:#cbd5e1; font-size:0.925rem; margin:0; line-height:1.7;">
+                        {{ category.description or 'مشاهده لیست پکیج‌های تحویل آنی، سورس‌کدها و سفارش پروژه‌های این حوزه' }}
+                    </p>
+                </div>
+                <div class="col-12 col-md-4 text-md-end">
+                    <a href="/#quote-section" class="btn-rahsa-cta" style="padding:0.6rem 1.25rem; font-size:0.85rem;" aria-label="سفارش سفارشی">
+                        🚀 سفارش پروژه اختصاصی
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products / Services Grid -->
+        <div class="row g-4">
+            {% if products and products.items %}
+                {% for product in products.items %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    {{ product_card(product) }}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <div class="glass-card p-5 rounded-2xl" style="background:rgba(20,33,61,0.5); max-width:500px; margin:0 auto;">
+                        <div style="font-size:3rem; margin-bottom:1rem;">📦</div>
+                        <h3 style="color:#ffffff; font-size:1.2rem; font-weight:800; margin-bottom:0.5rem;">محصولی یافت نشد</h3>
+                        <p style="color:#94a3b8; font-size:0.875rem;">در حال حاضر پکیج جدیدی در این دسته‌بندی تعریف نشده است. جهت سفارش اختصاصی تماس بگیرید.</p>
+                        <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta mt-2" style="padding:0.5rem 1.25rem; font-size:0.825rem;">ارتباط با کارشناسان</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}

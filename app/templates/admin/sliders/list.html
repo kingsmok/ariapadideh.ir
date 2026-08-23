@@ -1,0 +1,37 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}مدیریت اسلایدرها{% endblock %}
+
+{% block admin_content %}
+<div style="background:#fff; border-radius:1rem; padding:1.5rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 style="font-size:1.3rem; font-weight:800; color:#0f172a; margin:0;">اسلایدرهای صفحه اصلی و بنرها</h2>
+        <a href="{{ url_for('admin.slider_edit') }}" class="btn btn-primary">➕ ایجاد اسلایدر جدید</a>
+    </div>
+
+    <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+            <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:right;">
+                <th style="padding:0.85rem;">عنوان اسلایدر</th>
+                <th style="padding:0.85rem;">موقعیت</th>
+                <th style="padding:0.85rem; text-align:center;">مدیریت آیتم‌ها</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if sliders %}
+                {% for s in sliders %}
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:0.85rem; font-weight:700; color:#0f172a;">{{ s.title }}</td>
+                    <td style="padding:0.85rem; color:#64748b;">{{ s.position }}</td>
+                    <td style="padding:0.85rem; text-align:center;">
+                        <a href="{{ url_for('admin.slider_items', slider_id=s.id) }}" class="btn btn-outline-primary" style="padding:0.25rem 0.6rem; font-size:0.8rem;">🖼️ آیتم‌ها</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="3" style="text-align:center; padding:2rem; color:#64748b;">اسلایدری ثبت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

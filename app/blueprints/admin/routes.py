@@ -23,7 +23,8 @@ from app.models import (
     Order, OrderItem, CartItem, Wishlist, Comparison,
     Page, PageComponent, Post, Comment,
     Menu, Slider, SliderItem, Banner, Media, Setting,
-    Contact, FAQ, Resume, Log, Notification
+    Contact, FAQ, Resume, Log, Notification,
+    ServiceCatalog, PortfolioCaseStudies, ConsultationLeads
 )
 from app.services.media_service import MediaService
 from app.services.notification_service import NotificationService
@@ -1319,3 +1320,134 @@ def profile():
         return redirect(url_for('admin.profile'))
     
     return render_template('admin/profile.html')
+
+
+# ==================== AGENCY B2B MANAGEMENT ====================
+
+@admin_bp.route('/agency/services')
+@login_required
+@admin_required
+def agency_services():
+    """Agency services catalog management"""
+    services_list = ServiceCatalog.query.order_by(ServiceCatalog.sort_order).all()
+    return render_template('admin/agency/services.html', services=services_list)
+
+
+@admin_bp.route('/agency/services/create', methods=['GET', 'POST'])
+@admin_bp.route('/agency/services/<int:service_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def agency_service_edit(service_id=None):
+    """Create or edit agency service"""
+    service = ServiceCatalog.query.get_or_404(service_id) if service_id else None
+
+    if request.method == 'POST':
+        service = service or ServiceCatalog()
+        service.title = request.form.get('title')
+        service.slug = request.form.get('slug')
+        service.short_desc = request.form.get('short_desc') or request.form.get('summary', '')
+        service.full_desc = request.form.get('full_desc') or request.form.get('description', '')
+        service.starting_price_toman = request.form.get('starting_price_toman', type=int) or request.form.get('starting_price', type=int)
+        service.icon_svg = request.form.get('icon_svg') or request.form.get('icon', '⚡')
+        service.sort_order = request.form.get('sort_order', 0, type=int)
+        service.is_active = request.form.get('is_active') == '1'
+        
+        service.save()
+        flash('خدمت با موفقیت ذخیره شد.', 'success')
+        return redirect(url_for('admin.agency_services'))
+
+    return render_template('admin/agency/service_edit.html', service=service)
+
+
+@admin_bp.route('/agency/services/<int:service_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def agency_service_delete(service_id):
+    """Delete agency service"""
+    service = ServiceCatalog.query.get_or_404(service_id)
+    db.session.delete(service)
+    db.session.commit()
+    flash('خدمت با موفقیت حذف شد.', 'success')
+    return redirect(url_for('admin.agency_services'))
+
+
+@admin_bp.route('/agency/portfolio')
+@login_required
+@admin_required
+def agency_portfolio():
+    """Agency portfolio case studies management"""
+    portfolio_list = PortfolioCaseStudies.query.order_by(PortfolioCaseStudies.sort_order).all()
+    return render_template('admin/agency/portfolio.html', portfolio=portfolio_list)
+
+
+@admin_bp.route('/agency/portfolio/create', methods=['GET', 'POST'])
+@admin_bp.route('/agency/portfolio/<int:portfolio_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def agency_portfolio_edit(portfolio_id=None):
+    """Create or edit portfolio case study"""
+    item = PortfolioCaseStudies.query.get_or_404(portfolio_id) if portfolio_id else None
+
+    if request.method == 'POST':
+        item = item or PortfolioCaseStudies()
+        item.title = request.form.get('title')
+        item.slug = request.form.get('slug')
+        item.client_name = request.form.get('client_name')
+        item.challenge_desc = request.form.get('challenge_desc') or request.form.get('challenge', '')
+        item.thumbnail_url = request.form.get('thumbnail_url') or request.form.get('featured_image', '/static/images/no-image.png')
+        item.live_url = request.form.get('live_url')
+        item.sort_order = request.form.get('sort_order', 0, type=int)
+        item.is_featured = request.form.get('is_featured') == '1'
+        item.is_active = request.form.get('is_active') == '1'
+
+        item.save()
+        flash('پروژه نمونه‌کار با موفقیت ذخیره شد.', 'success')
+        return redirect(url_for('admin.agency_portfolio'))
+
+    return render_template('admin/agency/portfolio_edit.html', item=item)
+
+
+@admin_bp.route('/agency/portfolio/<int:portfolio_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def agency_portfolio_delete(portfolio_id):
+    """Delete portfolio case study"""
+    item = PortfolioCaseStudies.query.get_or_404(portfolio_id)
+    db.session.delete(item)
+    db.session.commit()
+    flash('نمونه‌کار با موفقیت حذف شد.', 'success')
+    return redirect(url_for('admin.agency_portfolio'))
+
+
+@admin_bp.route('/agency/leads')
+@admin_bp.route('/agency/leads/<int:page>')
+@login_required
+@admin_required
+def agency_leads(page=1):
+    """Consultation leads CRM list"""
+    per_page = 30
+    status_filter = request.args.get('status', '')
+
+    query = ConsultationLeads.query
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+
+    leads_list = query.order_by(ConsultationLeads.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template('admin/agency/leads.html', leads=leads_list)
+
+
+@admin_bp.route('/agency/leads/<int:lead_id>/status', methods=['POST'])
+@login_required
+@admin_required
+def agency_lead_update_status(lead_id):
+    """Update consultation lead status"""
+    lead = ConsultationLeads.query.get_or_404(lead_id)
+    new_status = request.form.get('status')
+    if new_status:
+        lead.status = new_status
+        lead.save()
+        flash('وضعیت لید با موفقیت بروزرسانی شد.', 'success')
+    return redirect(url_for('admin.agency_leads'))
+

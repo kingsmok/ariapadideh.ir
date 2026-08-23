@@ -1,178 +1,146 @@
-<header class="site-header">
-    <!-- Top Bar -->
-    <div class="header-top">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="top-links">
-                    <a href="{{ url_for('public.about') }}">درباره ما</a>
-                    <a href="{{ url_for('public.contact') }}">تماس با ما</a>
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('user.dashboard') }}">پنل کاربری</a>
-                    {% endif %}
-                </div>
-                <div class="top-contact">
-                    <span><i class="fas fa-phone"></i> {{ site_settings.contact_phone or '021-12345678' }}</span>
-                </div>
-            </div>
+<!-- Top Announcement & Hotlines Bar -->
+<div class="top-promo-bar" style="background: linear-gradient(90deg, #070B1A 0%, #14213d 50%, #070B1A 100%); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; padding: 0.45rem 0; color: #9ca3af;">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background:#FBB03B; color:#0A1128; font-weight:800; font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:4px;">تخفیف ویژه</span>
+            <span style="color:#e2e8f0; font-weight:600;">طراحی وب‌سایت، ربات تلگرام و اسکریپت‌های هوشمند با ۱ سال پشتیبانی رایگان</span>
         </div>
-    </div>
-    
-    <!-- Main Header -->
-    <div class="header-main">
-        <div class="container">
-            <div class="row align-items-center">
-                <!-- Logo -->
-                <div class="col-auto">
-                    <a href="{{ url_for('public.home') }}" class="logo">
-                        {% if site_settings.appearance_logo %}
-                            <img src="{{ site_settings.appearance_logo }}" alt="{{ site_settings.general_site_name }}">
-                        {% else %}
-                            <span class="logo-text">{{ site_settings.general_site_name or 'فلاسک پرو' }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-                
-                <!-- Search -->
-                <div class="col flex-grow-1 mx-4">
-                    <form action="{{ url_for('public.search') }}" method="GET" class="search-form">
-                        <div class="input-group">
-                            <input type="text" name="q" class="form-control" 
-                                   placeholder="جستجو در محصولات..." 
-                                   value="{{ request.args.get('q', '') }}"
-                                   autocomplete="off">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                        <div id="search-results" class="search-results-dropdown"></div>
-                    </form>
-                </div>
-                
-                <!-- Actions -->
-                <div class="col-auto">
-                    <div class="header-actions">
-                        <!-- Compare -->
-                        <a href="{{ url_for('public.compare') }}" class="action-btn" title="مقایسه">
-                            <i class="fas fa-balance-scale"></i>
-                        </a>
-                        
-                        <!-- Cart -->
-                        <a href="{{ url_for('public.cart') }}" class="action-btn cart-btn" title="سبد خرید">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="badge" id="cart-count">{{ cart_items_count if cart_items_count else 0 }}</span>
-                        </a>
-                        
-                        <!-- User -->
-                        {% if current_user.is_authenticated %}
-                            <div class="dropdown">
-                                <button class="action-btn" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><span class="dropdown-item-text">{{ current_user.full_name }}</span></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.dashboard') }}">پنل کاربری</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.orders') }}">سفارش‌های من</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.wishlist') }}">علاقه‌مندی‌ها</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.logout') }}">خروج</a></li>
-                                </ul>
-                            </div>
-                        {% else %}
-                            <a href="{{ url_for('user.login') }}" class="action-btn" title="ورود">
-                                <i class="fas fa-user"></i>
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+        <div class="d-none d-md-flex align-items-center gap-3" style="direction:ltr; font-weight:700;">
+            <a href="tel:07137271621" style="color:#FBB03B; text-decoration:none;">☎️ 071-37271621</a>
+            <span style="color:rgba(255,255,255,0.2);">|</span>
+            <a href="tel:02188991234" style="color:#d1d5db; text-decoration:none;">021-88991234</a>
         </div>
-    </div>
-    
-    <!-- Navigation -->
-    <nav class="header-nav">
-        <div class="container">
-            <div class="nav-wrapper">
-                <!-- Categories Button -->
-                <button class="categories-btn" id="categories-toggle">
-                    <i class="fas fa-bars"></i>
-                    <span>دسته‌بندی‌ها</span>
-                </button>
-                
-                <!-- Main Menu -->
-                <ul class="main-menu">
-                    <li><a href="{{ url_for('public.home') }}">صفحه اصلی</a></li>
-                    {% for category in categories[:6] if categories %}
-                        <li class="has-mega-menu">
-                            <a href="{{ url_for('public.category', slug=category.slug) }}">
-                                {{ category.title }}
-                            </a>
-                            {% if category.children.count() > 0 %}
-                                <div class="mega-menu">
-                                    <div class="container">
-                                        <div class="row">
-                                            {% for child in category.children.filter_by(is_active=True).limit(4) %}
-                                                <div class="col-3">
-                                                    <a href="{{ url_for('public.category', slug=child.slug) }}" class="mega-menu-title">
-                                                        {{ child.title }}
-                                                    </a>
-                                                    <ul class="mega-menu-items">
-                                                        {% for subchild in child.children.filter_by(is_active=True).limit(4) %}
-                                                            <li><a href="{{ url_for('public.category', slug=subchild.slug) }}">{{ subchild.title }}</a></li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% if category.image or category.banner %}
-                                            <div class="mega-menu-banner">
-                                                <img src="{{ category.banner or category.image }}" alt="">
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                    <li><a href="{{ url_for('public.blog') }}">وبلاگ</a></li>
-                    <li><a href="{{ url_for('public.faq') }}">سوالات متداول</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
-
-<!-- Categories Sidebar -->
-<div class="categories-sidebar" id="categories-sidebar">
-    <div class="sidebar-header">
-        <h5>دسته‌بندی‌ها</h5>
-        <button class="close-sidebar" id="close-categories">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="sidebar-content">
-        <ul class="categories-list">
-            {% for category in categories if categories %}
-                <li class="has-sub">
-                    <a href="{{ url_for('public.category', slug=category.slug) }}">
-                        {% if category.icon %}
-                            <i class="{{ category.icon }}"></i>
-                        {% endif %}
-                        {{ category.title }}
-                    </a>
-                    {% if category.children.count() > 0 %}
-                        <button class="toggle-sub"><i class="fas fa-chevron-down"></i></button>
-                        <ul class="sub-categories">
-                            {% for child in category.children.filter_by(is_active=True).limit(8) %}
-                                <li>
-                                    <a href="{{ url_for('public.category', slug=child.slug) }}">{{ child.title }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
     </div>
 </div>
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- Main Navigation Bar Component -->
+<header class="site-navbar sticky-top scrolled" id="site-navbar" style="background: rgba(10, 17, 40, 0.92); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between py-2.5 gap-3" style="min-height:70px;">
+            
+            <!-- Right: Hamburger Button (Mobile) + Brand Logo -->
+            <div class="d-flex align-items-center gap-2.5">
+                <button class="mobile-menu-btn d-lg-none" id="open-drawer-btn" aria-label="منوی موبایل" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:#ffffff; width:40px; height:40px; border-radius:0.6rem; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                
+                <a href="{{ url_for('public.home') }}" class="navbar-brand-logo text-decoration-none" aria-label="{{ site_settings.agency_name or 'رهسا دیو' }}">
+                    <div class="brand-badge-rahsa" style="width:42px; height:42px; background:linear-gradient(135deg, #6b21a8 0%, #FBB03B 100%); color:#ffffff; font-weight:900; border-radius:0.75rem; display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 0 15px rgba(251,176,59,0.3);">ر</div>
+                    <div class="d-flex flex-column">
+                        <span style="font-size:1.3rem; font-weight:900; color:#ffffff; line-height:1.2; letter-spacing:-0.5px;">
+                            {{ site_settings.agency_name or 'رهسا دیو' }}
+                        </span>
+                        <span style="font-size:0.7rem; color:#FBB03B; font-weight:700; opacity:0.9;">
+                            Rahsa Software & Tech Agency
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Center: Navigation Links Desktop -->
+            <nav class="d-none d-lg-block">
+                <ul class="nav-links-center" style="display:flex; align-items:center; gap:1.75rem; list-style:none; margin:0; padding:0;">
+                    {% if header_navigation %}
+                        {% for item in header_navigation %}
+                        <li style="position:relative;" class="dropdown-hover-parent py-2">
+                            <a href="{{ item.url }}" class="nav-link-item {{ 'active' if item.url == request.path else '' }}" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none; transition:all 0.2s ease;">
+                                {{ item.label }}
+                                {% if item.children %}<span style="font-size:0.7rem; margin-inline-start:3px;">▼</span>{% endif %}
+                            </a>
+                            {% if item.children %}
+                            <ul class="dropdown-menu-glass shadow-lg" style="position:absolute; top:100%; right:0; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:0.75rem; padding:0.5rem 0; min-width:210px; display:none; list-style:none; z-index:1000; box-shadow:0 15px 35px rgba(0,0,0,0.6);">
+                                {% for child in item.children %}
+                                <li>
+                                    <a href="{{ child.url }}" style="display:block; padding:0.6rem 1.1rem; color:#cbd5e1; font-size:0.85rem; font-weight:600; text-decoration:none; transition:all 0.2s ease;" class="hover:text-[#FBB03B] hover:bg-slate-800">
+                                        {{ child.label }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="py-2"><a href="{{ url_for('public.home') }}" class="nav-link-item {{ 'active' if request.endpoint == 'public.home' else '' }}" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">صفحه اصلی</a></li>
+                        
+                        <li style="position:relative;" class="dropdown-hover-parent py-2">
+                            <a href="{{ url_for('public.categories_list') }}" class="nav-link-item" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">
+                                خدمات و محصولات <span style="font-size:0.7rem; margin-inline-start:3px;">▼</span>
+                            </a>
+                            <ul class="dropdown-menu-glass shadow-lg" style="position:absolute; top:100%; right:0; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:0.75rem; padding:0.5rem 0; min-width:220px; list-style:none; z-index:1000;">
+                                <li><a href="{{ url_for('public.category', slug='web-design') }}" style="display:block; padding:0.6rem 1.1rem; color:#cbd5e1; font-size:0.85rem; font-weight:600; text-decoration:none;">🌐 طراحی وب‌سایت اختصاصی</a></li>
+                                <li><a href="{{ url_for('public.category', slug='bots') }}" style="display:block; padding:0.6rem 1.1rem; color:#cbd5e1; font-size:0.85rem; font-weight:600; text-decoration:none;">🤖 ربات‌های هوشمند (تلگرام/ایتا)</a></li>
+                                <li><a href="{{ url_for('public.category', slug='scripts') }}" style="display:block; padding:0.6rem 1.1rem; color:#cbd5e1; font-size:0.85rem; font-weight:600; text-decoration:none;">📜 اسکریپت پایتون و اتوماسیون</a></li>
+                                <li><a href="{{ url_for('public.category', slug='software') }}" style="display:block; padding:0.6rem 1.1rem; color:#cbd5e1; font-size:0.85rem; font-weight:600; text-decoration:none;">⚙️ نرم‌افزارهای سفارشی و CRM</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="py-2"><a href="/#portfolio-section" class="nav-link-item" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">نمونه‌کارها</a></li>
+                        <li class="py-2"><a href="/#quote-section" class="nav-link-item" style="color:#FBB03B; font-weight:800; font-size:0.9rem; text-decoration:none;">🧮 محاسبه‌گر قیمت</a></li>
+                        <li class="py-2"><a href="{{ url_for('public.about') }}" class="nav-link-item {{ 'active' if request.endpoint == 'public.about' else '' }}" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">درباره ما</a></li>
+                        <li class="py-2"><a href="{{ url_for('public.contact') }}" class="nav-link-item {{ 'active' if request.endpoint == 'public.contact' else '' }}" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">تماس و مشاوره</a></li>
+                        <li class="py-2"><a href="{{ url_for('public.blog') }}" class="nav-link-item {{ 'active' if request.endpoint == 'public.blog' else '' }}" style="color:#e2e8f0; font-weight:700; font-size:0.9rem; text-decoration:none;">مجله تخصصی</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Left: Quick Search, Cart, User & CTA -->
+            <div class="d-flex align-items-center gap-2">
+                
+                <!-- Desktop Search Bar -->
+                <div class="d-none d-xl-block" style="width: 220px; position: relative;">
+                    <form action="{{ url_for('public.search') }}" method="GET">
+                        <input type="text" name="q" class="header-search-input js-quick-search"
+                               placeholder="جستجوی پکیج، اسکریپت..."
+                               value="{{ request.args.get('q', '') }}" autocomplete="off"
+                               aria-label="جستجوی سایت"
+                               style="width:100%; padding:0.45rem 2.2rem 0.45rem 0.8rem; border-radius:9999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#ffffff; font-size:0.8rem; outline:none;">
+                        <button type="submit" style="position:absolute; inset-inline-start:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9ca3af; cursor:pointer;" aria-label="جستجو">🔍</button>
+                    </form>
+                </div>
+
+                <!-- Shopping Cart Icon -->
+                <a href="{{ url_for('public.cart') }}" title="سبد خرید" aria-label="سبد خرید" style="position:relative; width:40px; height:40px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:9999px; display:flex; align-items:center; justify-content:center; color:#ffffff; text-decoration:none; font-size:1.1rem; transition:all 0.2s ease;">
+                    🛒
+                    <span class="badge-count cart-badge-count" style="position:absolute; top:-3px; inset-inline-end:-3px; background:#ef4444; color:#ffffff; font-size:0.65rem; font-weight:800; border-radius:9999px; min-width:18px; height:18px; display:flex; align-items:center; justify-content:center; border:2px solid #0A1128;">
+                        {{ cart_items_count if cart_items_count else 0 }}
+                    </span>
+                </a>
+
+                <!-- User Account / Login Button -->
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('user.dashboard') }}" title="پنل کاربری" style="width:40px; height:40px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:9999px; display:flex; align-items:center; justify-content:center; color:#FBB03B; font-weight:800; text-decoration:none; font-size:1.1rem;">
+                        👤
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('user.login') }}" class="d-none d-sm-inline-flex" style="color:#d1d5db; font-size:0.85rem; font-weight:700; text-decoration:none; padding:0.45rem 0.9rem; border-radius:9999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                        ورود / ثبت‌نام
+                    </a>
+                {% endif %}
+
+                <!-- Primary CTA Button -->
+                <a href="/#quote-section" class="btn-rahsa-cta d-none d-sm-inline-flex" style="background-color:#FBB03B; color:#0A1128 !important; font-weight:900; font-size:0.85rem; padding:0.55rem 1.25rem; border-radius:9999px; text-decoration:none; box-shadow:0 0 15px rgba(251,176,59,0.3); transition:all 0.2s ease;" aria-label="درخواست مشاوره">
+                    🚀 ثبت سفارش پروژه
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- Mobile Search Row -->
+        <div class="pb-2.5 d-lg-none">
+            <form action="{{ url_for('public.search') }}" method="GET">
+                <div style="position:relative;">
+                    <input type="text" name="q" class="header-search-input js-quick-search"
+                           placeholder="جستجوی پکیج طراحی وب، ربات تلگرام، اسکریپت..."
+                           value="{{ request.args.get('q', '') }}" autocomplete="off"
+                           aria-label="جستجوی سایت"
+                           style="width:100%; padding:0.5rem 2.4rem 0.5rem 0.9rem; border-radius:9999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#ffffff; font-size:0.8rem; outline:none;">
+                    <button type="submit" style="position:absolute; inset-inline-start:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9ca3af; font-size:0.9rem;" aria-label="جستجو">🔍</button>
+                    <div class="search-results-dropdown" id="search-results" style="position:absolute; top:100%; right:0; left:0; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:0.75rem; margin-top:4px; z-index:1050; display:none; max-height:300px; overflow-y:auto;"></div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</header>

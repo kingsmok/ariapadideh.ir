@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }} | {{ site_settings.agency_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section style="padding-top:3.5rem; padding-bottom:5rem;">
+    <div class="container">
+        
+        <div class="row gy-4">
+            
+            <!-- Left Side: Product Media & Tech Stack -->
+            <div class="col-12 col-lg-5">
+                <div class="glass-card p-3 rounded-2xl mb-3" style="background:rgba(20,33,61,0.8); border:1px solid rgba(255,255,255,0.12);">
+                    <img src="{{ product.featured_image or url_for('static', filename='images/product_code_architect.png') }}" 
+                         alt="{{ product.title }}" 
+                         title="{{ product.title }}"
+                         style="width:100%; height:auto; border-radius:1rem; aspect-ratio:16/10; object-fit:cover;">
+                </div>
+
+                <!-- Guarantee & SLA Badges -->
+                <div class="glass-card p-3 rounded-xl d-flex flex-column gap-2" style="background:rgba(10,17,40,0.6); font-size:0.85rem; color:#cbd5e1;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="color:#FBB03B;">⚡</span>
+                        <span><strong>تحویل کامل سورس‌کد:</strong> بدون لایسنس یا قفل دامنه</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="color:#FBB03B;">🛡️</span>
+                        <span><strong>پشتیبانی ۱ ساله:</strong> رفع کامل بوگ و به‌روزرسانی رایگان</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="color:#FBB03B;">📖</span>
+                        <span><strong>مستندات کامل:</strong> راهنمای Deployment و راه‌اندازی</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Product Details & Add to Cart -->
+            <div class="col-12 col-lg-7">
+                <div class="glass-card p-4 p-md-5 rounded-2xl" style="background:rgba(20,33,61,0.8); border:1px solid rgba(255,255,255,0.12);">
+                    
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge" style="background:rgba(251,176,59,0.15); color:#FBB03B; font-weight:800; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.775rem;">
+                            پکیج نرم‌افزاری آماده تحویل
+                        </span>
+                        {% if product.sku %}
+                        <span style="color:#64748b; font-size:0.75rem; font-family:monospace;">SKU: {{ product.sku }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h1 style="font-size:2rem; font-weight:900; color:#ffffff; line-height:1.3; margin-bottom:1rem;">
+                        {{ product.title }}
+                    </h1>
+
+                    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.8; margin-bottom:1.5rem;">
+                        {{ product.short_description or product.description or 'این پکیج نرم‌افزاری توسط تیم مهندسی رهسا دیو طراحی شده و بلافاصله پس از ثبت سفارش در دسترس شما قرار می‌گیرد.' }}
+                    </p>
+
+                    <!-- Price Box -->
+                    <div class="glass-card p-3 rounded-xl mb-4 d-flex align-items-center justify-content-between" style="background:rgba(10,17,40,0.8); border:1px solid rgba(251,176,59,0.3);">
+                        <div>
+                            <span style="font-size:0.775rem; color:#94a3b8; display:block;">مبلغ سرمایه‌گذاری:</span>
+                            <strong style="font-size:1.6rem; color:#FBB03B; font-weight:900;">
+                                {{ product.price | format_price if product.price else 'استعلام قیمت' }}
+                            </strong>
+                        </div>
+
+                        <!-- Add to Cart Form -->
+                        <form action="{{ url_for('public.cart') }}" method="POST" class="d-flex gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.4rem; font-size:0.9rem;" aria-label="خرید پکیج">
+                                🛒 خرید و دریافت فوری
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Direct Consultation Button -->
+                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="font-size:0.875rem;">
+                        🧮 درخواست تغییرات یا توسعه سفارشی روی این پکیج
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock %}

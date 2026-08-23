@@ -1,0 +1,36 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش سوال' if faq else 'افزودن سوال جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:700px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+        {{ 'ویرایش سوال و پاسخ' if faq else 'افزودن سوال متداول جدید' }}
+    </h2>
+
+    <form action="{{ url_for('admin.faq_edit', faq_id=faq.id) if faq else url_for('admin.faq_edit') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        <div class="mb-3">
+            <label class="form-label">سوال *</label>
+            <input type="text" name="question" class="form-control" value="{{ faq.question if faq else '' }}" required placeholder="مثال: آیا سورس کد کامل تحویل داده می‌شود؟">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">پاسخ کامل *</label>
+            <textarea name="answer" class="form-control" style="min-height:120px;" required placeholder="پاسخ کامل سوال را بنویسید...">{{ faq.answer if faq else '' }}</textarea>
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-check" style="display:flex; gap:0.5rem; align-items:center;">
+                <input type="checkbox" name="is_featured" value="1" {% if faq and faq.is_featured %}checked{% endif %}>
+                <label style="font-weight:700;">نمایش در صفحه اصلی</label>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+            💾 ذخیره تغییرات سوال
+        </button>
+    </form>
+</div>
+{% endblock %}

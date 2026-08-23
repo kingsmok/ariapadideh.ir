@@ -3,193 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}پنل مدیریت{% endblock %} | {{ site_settings.general_site_name or 'فلاسک پرو' }}</title>
+    <title>{% block title %}پنل مدیریت{% endblock %} | {{ site_settings.general_site_name or 'آریا پدیده' }}</title>
     
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='admin/img/favicon.ico') }}">
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="{{ url_for('admin.dashboard') }}" class="sidebar-logo">
-                <i class="fas fa-cube"></i>
-                <span>{{ site_settings.general_site_name or 'فلاسک پرو' }}</span>
-            </a>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <ul>
-                <li class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                    <a href="{{ url_for('admin.dashboard') }}">
-                        <i class="fas fa-home"></i>
-                        <span>داشبورد</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">محصولات</span>
-                </li>
-                <li class="{% if 'products' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.products') }}">
-                        <i class="fas fa-box"></i>
-                        <span>محصولات</span>
-                    </a>
-                </li>
-                <li class="{% if 'categories' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.categories') }}">
-                        <i class="fas fa-folder"></i>
-                        <span>دسته‌بندی‌ها</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">فروش</span>
-                </li>
-                <li class="{% if 'orders' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.orders') }}">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>سفارشات</span>
-                        <span class="badge bg-danger">3</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">کاربران</span>
-                </li>
-                <li class="{% if 'users' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.users') }}">
-                        <i class="fas fa-users"></i>
-                        <span>کاربران</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">محتوا</span>
-                </li>
-                <li class="{% if 'pages' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.pages') }}">
-                        <i class="fas fa-file"></i>
-                        <span>صفحات</span>
-                    </a>
-                </li>
-                <li class="{% if 'menus' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.menus') }}">
-                        <i class="fas fa-bars"></i>
-                        <span>منوها</span>
-                    </a>
-                </li>
-                <li class="{% if 'sliders' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.sliders') }}">
-                        <i class="fas fa-images"></i>
-                        <span>اسلایدرها</span>
-                    </a>
-                </li>
-                <li class="{% if 'banners' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.banners') }}">
-                        <i class="fas fa-ad"></i>
-                        <span>بنرها</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">ارتباطات</span>
-                </li>
-                <li class="{% if 'contacts' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.contacts') }}">
-                        <i class="fas fa-envelope"></i>
-                        <span>پیام‌ها</span>
-                        <span class="badge bg-danger">{{ stats.unread_contacts if stats else '' }}</span>
-                    </a>
-                </li>
-                <li class="{% if 'resumes' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.resumes') }}">
-                        <i class="fas fa-user-tie"></i>
-                        <span>رزومه‌ها</span>
-                    </a>
-                </li>
-                
-                <li class="nav-group">
-                    <span class="nav-group-title">تنظیمات</span>
-                </li>
-                <li class="{% if 'settings' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.settings') }}">
-                        <i class="fas fa-cog"></i>
-                        <span>تنظیمات</span>
-                    </a>
-                </li>
-                <li class="{% if 'media' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.media') }}">
-                        <i class="fas fa-photo-video"></i>
-                        <span>رسانه‌ها</span>
-                    </a>
-                </li>
-                <li class="{% if 'logs' in request.endpoint %}active{% endif %}">
-                    <a href="{{ url_for('admin.logs') }}">
-                        <i class="fas fa-history"></i>
-                        <span>لاگ‌ها</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <a href="{{ url_for('public.home') }}" target="_blank">
-                <i class="fas fa-external-link-alt"></i>
-                <span>مشاهده سایت</span>
-            </a>
-            <a href="{{ url_for('admin.logout') }}">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>خروج</span>
-            </a>
-        </div>
-    </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Header -->
-        <header class="main-header">
-            <div class="header-right">
-                <button class="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1>{% block page_title %}{% endblock %}</h1>
-            </div>
-            <div class="header-left">
-                <div class="header-user">
-                    <span>{{ current_user.full_name }}</span>
-                    <img src="{{ current_user.avatar or url_for('static', filename='admin/img/avatar.png') }}" alt="">
+<body class="bg-light">
+    <!-- Main Header -->
+    <header class="site-header">
+        <div class="container py-2 d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('admin.dashboard') }}" class="logo-brand">
+                <span class="logo-badge">آ</span>
+                <div>
+                    <span class="logo-text">پنل مدیریت {{ site_settings.general_site_name or 'آریا پدیده' }}</span>
                 </div>
+            </a>
+            <div class="d-flex gap-3 align-items-center">
+                <a href="{{ url_for('public.home') }}" class="btn btn-outline-primary" target="_blank">مشاهده وب‌سایت</a>
+                <a href="{{ url_for('admin.logout') }}" class="btn btn-danger">خروج</a>
             </div>
-        </header>
-        
-        <!-- Content -->
-        <div class="page-content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            {% block admin_content %}{% endblock %}
         </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} mb-3">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block admin_content %}{% endblock %}
     </main>
     
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

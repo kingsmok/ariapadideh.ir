@@ -2,48 +2,34 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
     <!-- SEO Meta Tags -->
-    <title>{% block title %}{{ seo.full_title if seo else site_settings.general_site_name or 'فلاسک پرو' }}{% endblock %}</title>
+    <title>{% block title %}{{ seo.full_title if seo else site_settings.general_site_name or 'رهسا دیو | آکادمی توسعه نرم‌افزار، طراحی وب و ربات‌های هوشمند' }}{% endblock %}</title>
     
     {% if seo %}
         {% if seo.description %}
         <meta name="description" content="{{ seo.description }}">
         {% endif %}
-        
         {% if seo.keywords %}
         <meta name="keywords" content="{{ seo.keywords }}">
         {% endif %}
-        
         {% if seo.robots %}
         <meta name="robots" content="{{ seo.robots }}">
         {% endif %}
-        
         {% if seo.canonical %}
         <link rel="canonical" href="{{ seo.canonical }}">
         {% endif %}
     {% endif %}
     
-    <!-- Open Graph -->
-    {% if seo %}
-        {{ seo.og_tags|safe if seo.og_tags else '' }}
-    {% endif %}
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
     
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Styles -->
+    <!-- Local Main Stylesheet (No External CDNs) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     
     {% block extra_css %}{% endblock %}
@@ -58,19 +44,22 @@
 <body class="{% block body_class %}{% endblock %}">
     
     <!-- Skip to content -->
-    <a href="#main-content" class="skip-to-content">رفتن به محتوای اصلی</a>
+    <a href="#main-content" style="position:absolute; top:-100px; right:0; z-index:9999;">رفتن به محتوای اصلی</a>
     
+    <!-- Site Header -->
     {% block header %}
         {% include 'components/header.html' %}
     {% endblock %}
     
+    <!-- Mobile Navigation Drawer -->
+    {% include 'components/mobile_drawer.html' %}
+    
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="flash-messages">
+        <div class="container mt-3">
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <div style="padding:0.85rem 1.25rem; border-radius:0.75rem; margin-bottom:1rem; font-weight:700; font-size:0.9rem; background:{{ 'rgba(16, 185, 129, 0.2)' if category == 'success' else 'rgba(239, 68, 68, 0.2)' }}; color:{{ '#10b981' if category == 'success' else '#ef4444' }}; border:1px solid {{ 'rgba(16, 185, 129, 0.4)' if category == 'success' else 'rgba(239, 68, 68, 0.4)' }};">
                 {{ message }}
             </div>
             {% endfor %}
@@ -78,35 +67,27 @@
         {% endif %}
     {% endwith %}
     
-    <!-- Main Content -->
-    <main id="main-content" class="main-content">
-        {% block breadcrumb %}
-        <nav aria-label="breadcrumb" class="breadcrumb-nav container">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">صفحه اصلی</a></li>
-                {% block breadcrumb_items %}{% endblock %}
-            </ol>
-        </nav>
-        {% endblock %}
-        
+    <!-- Main Page Content -->
+    <main id="main-content" style="min-height:60vh;">
         {% block content %}{% endblock %}
     </main>
     
+    <!-- Mobile Bottom Quick Navigation Bar -->
+    {% include 'components/mobile_bottom_nav.html' %}
+    
+    <!-- Site Footer -->
     {% block footer %}
         {% include 'components/footer.html' %}
     {% endblock %}
     
-    <!-- Back to Top -->
-    <button id="back-to-top" class="back-to-top" aria-label="بازگشت به بالا">
-        <i class="fas fa-chevron-up"></i>
+    <!-- Floating Back to Top Button -->
+    <button id="back-to-top" class="back-to-top-rahsa" aria-label="بازگشت به بالای صفحه">
+        ▲
     </button>
     
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Local Interactive JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
-    
-    {% block structured_data %}{% endblock %}
 </body>
 </html>

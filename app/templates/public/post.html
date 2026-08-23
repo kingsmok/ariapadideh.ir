@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title if post else 'مقاله' }} | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div style="background:#fff; border-radius:1rem; padding:2.5rem; border:1px solid #e2e8f0; max-width:900px; margin:0 auto;">
+        <h1 style="font-size:2rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem;">
+            {{ post.title if post else 'مقاله' }}
+        </h1>
+        <div style="font-size:1rem; line-height:2; color:#334155;">
+            {{ post.content|safe if post else '' }}
+        </div>
+    </div>
+</div>
+{% endblock %}

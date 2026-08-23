@@ -124,10 +124,19 @@ def register_error_handlers(app: Flask) -> None:
 
 
 def register_context_processors(app: Flask) -> None:
-    """Register Jinja2 context processors"""
+    """Register Jinja2 context processors and filters"""
     
     from app.services.setting_service import SettingService
+    from app.utils.helpers import (
+        format_price, time_ago, truncate_text, get_cdn_url
+    )
     
+    # Register Jinja Filters
+    app.jinja_env.filters['format_price'] = format_price
+    app.jinja_env.filters['toman_format'] = format_price
+    app.jinja_env.filters['time_ago'] = time_ago
+    app.jinja_env.filters['truncate_text'] = truncate_text
+
     @app.context_processor
     def inject_globals():
         """Inject global variables into templates"""
@@ -141,10 +150,6 @@ def register_context_processors(app: Flask) -> None:
     @app.context_processor
     def utility_processor():
         """Add utility functions to templates"""
-        from app.utils.helpers import (
-            format_price, time_ago, truncate_text, get_cdn_url
-        )
-        
         return {
             'format_price': format_price,
             'time_ago': time_ago,
@@ -156,7 +161,8 @@ def register_context_processors(app: Flask) -> None:
 def register_commands(app: Flask) -> None:
     """Register Flask CLI commands"""
     
-    from app.commands import init_db, create_admin, seed_data
+    from app.commands import register_commands as attach_commands
+    attach_commands(app)
 
 
 def setup_logging(app: Flask) -> None:

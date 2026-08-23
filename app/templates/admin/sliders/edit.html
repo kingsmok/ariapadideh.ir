@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش اسلایدر' if slider else 'ایجاد اسلایدر' }}{% endblock %}
+
+{% block admin_content %}
+<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:600px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+        {{ 'ویرایش اسلایدر ' ~ slider.title if slider else 'ایجاد اسلایدر جدید' }}
+    </h2>
+
+    <form action="{{ url_for('admin.slider_edit', slider_id=slider.id) if slider else url_for('admin.slider_edit') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <div class="mb-3">
+            <label class="form-label">عنوان اسلایدر *</label>
+            <input type="text" name="title" class="form-control" value="{{ slider.title if slider else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">موقعیت</label>
+            <input type="text" name="position" class="form-control" value="{{ slider.position if slider else 'home' }}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">💾 ذخیره اسلایدر</button>
+    </form>
+</div>
+{% endblock %}
