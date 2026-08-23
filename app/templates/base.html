@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}{{ seo.full_title if seo else site_settings.general_site_name or 'فلاسک پرو' }}{% endblock %}</title>
+    
+    {% if seo %}
+        {% if seo.description %}
+        <meta name="description" content="{{ seo.description }}">
+        {% endif %}
+        
+        {% if seo.keywords %}
+        <meta name="keywords" content="{{ seo.keywords }}">
+        {% endif %}
+        
+        {% if seo.robots %}
+        <meta name="robots" content="{{ seo.robots }}">
+        {% endif %}
+        
+        {% if seo.canonical %}
+        <link rel="canonical" href="{{ seo.canonical }}">
+        {% endif %}
+    {% endif %}
+    
+    <!-- Open Graph -->
+    {% if seo %}
+        {{ seo.og_tags|safe if seo.og_tags else '' }}
+    {% endif %}
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Schema.org JSON-LD -->
+    {% if seo and seo.schema %}
+    <script type="application/ld+json">
+    {{ seo.schema|tojson }}
+    </script>
+    {% endif %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    
+    <!-- Skip to content -->
+    <a href="#main-content" class="skip-to-content">رفتن به محتوای اصلی</a>
+    
+    {% block header %}
+        {% include 'components/header.html' %}
+    {% endblock %}
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+        {% block breadcrumb %}
+        <nav aria-label="breadcrumb" class="breadcrumb-nav container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">صفحه اصلی</a></li>
+                {% block breadcrumb_items %}{% endblock %}
+            </ol>
+        </nav>
+        {% endblock %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% block footer %}
+        {% include 'components/footer.html' %}
+    {% endblock %}
+    
+    <!-- Back to Top -->
+    <button id="back-to-top" class="back-to-top" aria-label="بازگشت به بالا">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    {% block structured_data %}{% endblock %}
+</body>
+</html>

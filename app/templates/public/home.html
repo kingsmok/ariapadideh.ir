@@ -1,0 +1,592 @@
+{% extends 'base.html' %}
+
+{% block title %}صفحه اصلی | {{ site_settings.general_site_name or 'فلاسک پرو' }}{% endblock %}
+
+{% block content %}
+<!-- Hero Slider -->
+{% if sliders %}
+<section class="hero-slider">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            {% for item in sliders %}
+                <button type="button" data-bs-target="#heroCarousel" 
+                        data-bs-slide-to="{{ loop.index0 }}" 
+                        {% if loop.first %}class="active"{% endif %}></button>
+            {% endfor %}
+        </div>
+        <div class="carousel-inner">
+            {% for item in sliders %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="hero-slide" style="background-image: url('{{ item.image }}');">
+                        <div class="container">
+                            <div class="hero-content">
+                                <h1>{{ item.title }}</h1>
+                                <p>{{ item.subtitle }}</p>
+                                {% if item.url %}
+                                    <a href="{{ item.url }}" class="btn btn-primary btn-lg">
+                                        {{ item.link_text or 'مشاهده بیشتر' }}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features -->
+<section class="features-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-6 col-md-3">
+                <div class="feature-item">
+                    <i class="fas fa-truck"></i>
+                    <span>ارسال سریع</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item">
+                    <i class="fas fa-undo"></i>
+                    <span>ضمانت بازگشت</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>پرداخت امن</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item">
+                    <i class="fas fa-headset"></i>
+                    <span>پشتیبانی ۲۴/۷</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Top Banners -->
+{% if banners_top %}
+<section class="banners-section">
+    <div class="container">
+        <div class="row">
+            {% for banner in banners_top %}
+                <div class="col-md-6">
+                    <a href="{{ banner.url or '#' }}" class="banner-card">
+                        <img src="{{ banner.image }}" alt="{{ banner.title }}">
+                        {% if banner.overlay_title %}
+                            <div class="banner-overlay">
+                                <h4>{{ banner.overlay_title }}</h4>
+                                <p>{{ banner.overlay_subtitle }}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="products-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>محصولات پرفروش</h2>
+            <a href="{{ url_for('public.search', type='products') }}" class="view-all">
+                مشاهده همه
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <div class="products-grid">
+            {% for product in featured_products %}
+                {% include 'macros/product_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories -->
+{% if categories %}
+<section class="categories-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>دسته‌بندی‌ها</h2>
+        </div>
+        <div class="categories-grid">
+            {% for category in categories %}
+                <a href="{{ url_for('public.category', slug=category.slug) }}" class="category-card">
+                    <div class="category-icon">
+                        {% if category.icon %}
+                            <i class="{{ category.icon }}"></i>
+                        {% else %}
+                            <i class="fas fa-folder"></i>
+                        {% endif %}
+                    </div>
+                    <h4>{{ category.title }}</h4>
+                    {% if category.product_count %}
+                        <span>{{ category.product_count }} محصول</span>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- New Products -->
+{% if new_products %}
+<section class="products-section bg-light">
+    <div class="container">
+        <div class="section-header">
+            <h2>محصولات جدید</h2>
+            <a href="{{ url_for('public.search', type='products', sort='newest') }}" class="view-all">
+                مشاهده همه
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <div class="products-grid">
+            {% for product in new_products %}
+                {% include 'macros/product_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Middle Banners -->
+{% if banners_middle %}
+<section class="banners-section">
+    <div class="container">
+        <div class="row">
+            {% for banner in banners_middle %}
+                <div class="col-md-4">
+                    <a href="{{ banner.url or '#' }}" class="banner-card">
+                        <img src="{{ banner.image }}" alt="{{ banner.title }}">
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Posts -->
+{% if latest_posts %}
+<section class="posts-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>آخرین مقالات</h2>
+            <a href="{{ url_for('public.blog') }}" class="view-all">
+                وبلاگ
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <div class="posts-grid">
+            {% for post in latest_posts %}
+                <article class="post-card">
+                    <a href="{{ url_for('public.post', slug=post.slug) }}" class="post-image">
+                        <img src="{{ post.featured_image or url_for('static', filename='images/no-image.png') }}" 
+                             alt="{{ post.title }}">
+                    </a>
+                    <div class="post-content">
+                        <span class="post-date">{{ post.published_at.strftime('%Y/%m/%d') if post.published_at else '' }}</span>
+                        <h3><a href="{{ url_for('public.post', slug=post.slug) }}">{{ post.title }}</a></h3>
+                        <p>{{ post.excerpt or truncate_text(post.content, 100) }}</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- FAQ Section -->
+{% if faqs %}
+<section class="faq-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <h2>سوالات متداول</h2>
+            <p>پاسخ سوالات پر تکرار کاربران</p>
+        </div>
+        <div class="faq-list">
+            {% for faq in faqs %}
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>{{ faq.question }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>{{ faq.answer }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('public.faq') }}" class="btn btn-outline-primary">
+                همه سوالات متداول
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Hero Slider */
+.hero-slider {
+    margin-bottom: 2rem;
+}
+
+.hero-slide {
+    height: 500px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    color: #fff;
+    margin-bottom: 2rem;
+}
+
+/* Features */
+.features-section {
+    padding: 2rem 0;
+    background: var(--gray-100);
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.feature-item i {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.view-all {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* Products Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 991px) {
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 991px) {
+    .categories-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.category-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.category-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.category-card span {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+/* Banners */
+.banners-section {
+    padding: 2rem 0;
+}
+
+.banner-card {
+    display: block;
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.banner-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.banner-card:hover img {
+    transform: scale(1.05);
+}
+
+.banner-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    width: 100%;
+}
+
+.banner-overlay h4 {
+    margin: 0;
+}
+
+/* Posts */
+.posts-section {
+    padding: 3rem 0;
+}
+
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 991px) {
+    .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.post-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.post-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-5px);
+}
+
+.post-image {
+    display: block;
+    height: 200px;
+    overflow: hidden;
+}
+
+.post-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.post-card:hover .post-image img {
+    transform: scale(1.1);
+}
+
+.post-content {
+    padding: 1.5rem;
+}
+
+.post-date {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+.post-content h3 {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.post-content h3 a {
+    color: var(--gray-800);
+}
+
+.post-content h3 a:hover {
+    color: var(--primary);
+}
+
+.post-content p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* FAQ */
+.faq-section {
+    padding: 3rem 0;
+    background: var(--gray-100);
+}
+
+.faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.faq-question {
+    width: 100%;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: right;
+}
+
+.faq-question i {
+    transition: transform 0.3s;
+}
+
+.faq-item.active .faq-question i {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    padding: 0 1.25rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.faq-item.active .faq-answer {
+    padding: 0 1.25rem 1.25rem;
+    max-height: 500px;
+}
+
+.faq-answer p {
+    margin: 0;
+    color: var(--gray-600);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.faq-question').forEach(button => {
+    button.addEventListener('click', () => {
+        const faqItem = button.parentElement;
+        const isActive = faqItem.classList.contains('active');
+        
+        // Close all
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Toggle current
+        if (!isActive) {
+            faqItem.classList.add('active');
+        }
+    });
+});
+</script>
+{% endblock %}
