@@ -1,25 +1,35 @@
-<!-- Mobile Bottom Navigation Bar (Iranian Standard Modern Mobile UX) -->
-<nav class="mobile-bottom-nav">
-    <a href="{{ url_for('public.home') }}" class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.home' else '' }}">
-        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">🏠</span>
-        <span>صفحه اصلی</span>
+<!-- Mobile Bottom Quick Navigation Bar (4 tabs) -->
+<nav class="mobile-bottom-nav" aria-label="ناوبری سریع موبایل">
+    <a href="{{ url_for('public.home') }}"
+       class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.home' else '' }}"
+       aria-label="صفحه اصلی">
+        <span class="nav-icon" aria-hidden="true">🏠</span>
+        <span>اصلی</span>
     </a>
-    
-    <a href="{{ url_for('public.categories_list') }}" class="bottom-nav-tab {{ 'active' if request.endpoint in ['public.categories_list', 'public.category'] else '' }}">
-        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">🗂️</span>
-        <span>خدمات ما</span>
+
+    <a href="{{ url_for('public.categories_list') }}"
+       class="bottom-nav-tab {{ 'active' if request.endpoint in ['public.categories_list', 'public.category'] else '' }}"
+       aria-label="خدمات">
+        <span class="nav-icon" aria-hidden="true">🗂️</span>
+        <span>خدمات</span>
     </a>
-    
-    <a href="{{ url_for('public.cart') }}" class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.cart' else '' }}">
-        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px; position:relative;">
+
+    <a href="{{ url_for('public.cart') }}"
+       class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.cart' else '' }}"
+       aria-label="سبد خرید">
+        <span class="nav-icon" style="position:relative;" aria-hidden="true">
             🛒
-            <span class="badge-count cart-badge-count">{{ cart_items_count if cart_items_count else 0 }}</span>
+            <span class="badge-count" aria-label="{{ cart_items_count if cart_items_count else 0 }} مورد در سبد">
+                {% if cart_items_count %}{{ cart_items_count }}{% endif %}
+            </span>
         </span>
-        <span>سبد خرید</span>
+        <span>سبد</span>
     </a>
-    
-    <a href="{{ url_for('user.dashboard') if current_user.is_authenticated else url_for('user.login') }}" class="bottom-nav-tab {{ 'active' if 'user' in request.endpoint else '' }}">
-        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">👤</span>
-        <span>{{ 'حساب من' if current_user.is_authenticated else 'ورود' }}</span>
+
+    <a href="{{ url_for('user.dashboard') if current_user.is_authenticated else url_for('user.login') }}"
+       class="bottom-nav-tab {{ 'active' if request.endpoint and 'user' in request.endpoint else '' }}"
+       aria-label="{{ 'حساب من' if current_user.is_authenticated else 'ورود' }}">
+        <span class="nav-icon" aria-hidden="true">👤</span>
+        <span>{{ 'حساب' if current_user.is_authenticated else 'ورود' }}</span>
     </a>
 </nav>

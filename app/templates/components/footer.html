@@ -1,55 +1,119 @@
-<!-- Stitch Exact Footer Component -->
-<footer style="background:#0b0f11; border-top:1px solid rgba(255,255,255,0.05); padding-top:3.5rem; padding-bottom:2rem; position:relative;" class="mt-auto">
+<!-- Site Footer — No inline styles, all classes from main.css -->
+<footer class="site-footer mt-auto" style="background:#0b0f11; border-top:1px solid rgba(255,255,255,0.05); padding-top:3.5rem; padding-bottom:2rem;">
     <div class="container">
-        <div class="row g-4 text-right rtl">
-            
+        <div class="row g-4">
+
             <!-- Brand Column -->
             <div class="col-12 col-md-4">
-                <div class="d-flex align-items-center gap-2.5 mb-3">
-                    <div class="brand-badge-rahsa" style="width:38px; height:38px; background:linear-gradient(135deg, #6b21a8 0%, #FBB03B 100%); color:#ffffff; font-weight:900; border-radius:0.6rem; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">ر</div>
-                    <span style="font-weight:800; font-size:1.25rem; color:#FBB03B;">{{ site_settings.agency_name or 'رهسا دیو' }}</span>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="brand-badge-rahsa" aria-hidden="true">ر</div>
+                    <span class="text-gradient-purple-gold" style="font-weight:800; font-size:1.25rem;">
+                        {{ site_settings.general_site_name or 'رهسا دیو' }}
+                    </span>
                 </div>
-                <p style="color:#9ca3af; font-size:0.875rem; line-height:1.8; max-width:320px;">
+                <p class="text-muted" style="font-size:0.875rem; line-height:1.8; max-width:320px;">
                     آتلیه تخصصی مهندسی نرم‌افزار. پیشگام در خلق راهکارهای دیجیتال سازمانی با معماری مدرن.
                 </p>
+
+                <!-- Social Icons -->
+                <div class="d-flex gap-2 mt-3" style="margin-top:1rem;">
+                    {% if site_settings.social_instagram %}
+                    <a href="{{ site_settings.social_instagram }}"
+                       class="social-icon-hover"
+                       aria-label="اینستاگرام"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.social_telegram %}
+                    <a href="{{ site_settings.social_telegram }}"
+                       class="social-icon-hover"
+                       aria-label="تلگرام"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.social_whatsapp %}
+                    <a href="{{ site_settings.social_whatsapp }}"
+                       class="social-icon-hover"
+                       aria-label="واتساپ"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Quick Links -->
             <div class="col-6 col-md-3">
                 <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">دسترسی سریع</h4>
                 <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
-                    <li><a href="{{ url_for('public.categories_list') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">خدمات نرم‌افزاری</a></li>
-                    <li><a href="/#quote-section" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">مشاوره استراتژیک</a></li>
-                    <li><a href="{{ url_for('public.about') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">درباره ما</a></li>
-                    <li><a href="{{ url_for('public.contact') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">تماس با ما</a></li>
+                    <li><a href="{{ url_for('public.categories_list') }}" class="footer-link-hover text-muted">خدمات نرم‌افزاری</a></li>
+                    <li><a href="/#quote-section" class="footer-link-hover text-muted">مشاوره استراتژیک</a></li>
+                    <li><a href="{{ url_for('public.about') }}" class="footer-link-hover text-muted">درباره ما</a></li>
+                    <li><a href="{{ url_for('public.contact') }}" class="footer-link-hover text-muted">تماس با ما</a></li>
+                    <li><a href="{{ url_for('public.faq') }}" class="footer-link-hover text-muted">سوالات متداول</a></li>
+                </ul>
+            </div>
+
+            <!-- Services -->
+            <div class="col-6 col-md-2">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">خدمات</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
+                    <li><a href="/category/web-design" class="footer-link-hover text-muted">طراحی وب</a></li>
+                    <li><a href="/category/smart-bots" class="footer-link-hover text-muted">ربات هوشمند</a></li>
+                    <li><a href="/category/software-automation" class="footer-link-hover text-muted">اتوماسیون</a></li>
+                    <li><a href="/category/programming-scripts" class="footer-link-hover text-muted">اسکریپت</a></li>
                 </ul>
             </div>
 
             <!-- Address & Contact -->
-            <div class="col-12 col-md-5">
+            <div class="col-12 col-md-3">
                 <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">ارتباط با ما</h4>
-                <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.875rem; color:#9ca3af;">
+                <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.875rem;" class="text-muted">
+                    {% if site_settings.contact_address %}
                     <li class="d-flex align-items-start gap-2 mb-2">
-                        <span style="color:#FBB03B;">📍</span>
-                        <span>شیراز، پارک علم و فناوری فارس، ساختمان فناوری اطلاعات، واحد ۱۲</span>
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📍</span>
+                        <span>{{ site_settings.contact_address }}</span>
                     </li>
+                    {% endif %}
+                    {% if site_settings.contact_phone %}
                     <li class="d-flex align-items-center gap-2 mb-2">
-                        <span style="color:#FBB03B;">📞</span>
-                        <span style="direction:ltr; text-align:right;">+98 71 3727 1621 / 021 8899 1234</span>
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📞</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_phone }}</span>
                     </li>
+                    {% endif %}
+                    {% if site_settings.contact_mobile %}
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📱</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_mobile }}</span>
+                    </li>
+                    {% endif %}
+                    {% if site_settings.contact_email %}
                     <li class="d-flex align-items-center gap-2">
-                        <span style="color:#FBB03B;">✉️</span>
-                        <span>info@rahsadev.ir</span>
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">✉️</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_email }}</span>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
 
         </div>
 
         <!-- Copyright -->
-        <div style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2.5rem; padding-top:1.5rem;" class="text-center">
-            <p style="color:#64748b; font-size:0.825rem; margin:0;">
-                © ۲۰۲۶ {{ site_settings.agency_name or 'رهسا دیو' }}. تمام حقوق محفوظ است.
+        <div class="text-center" style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2.5rem; padding-top:1.5rem;">
+            <p class="text-muted" style="font-size:0.825rem; margin:0;">
+                <span data-persian-num>© ۲۰۲۶</span> {{ site_settings.general_site_name or 'رهسا دیو' }}. تمام حقوق محفوظ است.
             </p>
         </div>
     </div>

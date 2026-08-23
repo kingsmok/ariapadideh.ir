@@ -1,34 +1,51 @@
 {% extends 'base.html' %}
 
-{% block title %}ورود به حساب کاربری | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+{% block title %}ورود به حساب کاربری | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div style="max-width:450px; margin:0 auto; background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-        <div class="text-center mb-4">
-            <span class="logo-badge mb-2" style="margin:0 auto; width:50px; height:50px; font-size:1.6rem;">آ</span>
-            <h2 style="font-size:1.5rem; font-weight:800; color:#0f172a;">ورود به حساب کاربری</h2>
-            <p style="color:#64748b; font-size:0.85rem;">برای مشاهده سفارشات و دریافت سورس‌کدها وارد شوید</p>
-        </div>
-        
-        <form action="{{ url_for('user.login') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-            <div class="mb-3">
-                <label class="form-label">ایمیل یا شماره همراه</label>
-                <input type="text" name="email" class="form-control" placeholder="admin@example.com" required>
+<section class="section" style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+    <div class="container">
+        <div class="glass-card" style="max-width:450px; margin:0 auto; padding:2.5rem 2rem;">
+
+            <div class="text-center mb-4">
+                <div class="brand-badge-rahsa mx-auto" style="width:60px; height:60px; font-size:1.8rem; margin-bottom:1rem;" aria-hidden="true">ک</div>
+                <h1 class="text-white" style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem;">
+                    ورود به حساب کاربری
+                </h1>
+                <p class="text-muted" style="font-size:0.85rem; margin:0;">
+                    برای مشاهده سفارشات و دریافت سورس‌کدها وارد شوید
+                </p>
             </div>
-            <div class="mb-3">
-                <label class="form-label">رمز عبور</label>
-                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+
+            <form action="{{ url_for('user.login') }}" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+                <div class="mb-3">
+                    <label for="user_email" class="form-label-rahsa">ایمیل یا شماره همراه</label>
+                    <input type="text" id="user_email" name="email" class="form-control-rahsa"
+                           placeholder="admin@example.com" required autofocus>
+                </div>
+
+                <div class="mb-4">
+                    <label for="user_password" class="form-label-rahsa">رمز عبور</label>
+                    <input type="password" id="user_password" name="password" class="form-control-rahsa"
+                           placeholder="••••••••" required minlength="6" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem; font-size:0.95rem;" aria-label="ورود به حساب">
+                    <span>ورود به حساب</span>
+                    <span aria-hidden="true">←</span>
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p class="text-muted" style="font-size:0.85rem; margin:0;">
+                    حساب کاربری ندارید؟
+                    <a href="{{ url_for('user.register') }}" class="text-yellow font-bold">ثبت‌نام کنید</a>
+                </p>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
-                ورود به حساب
-            </button>
-        </form>
-        
-        <div class="text-center" style="font-size:0.85rem; color:#64748b;">
-            حساب کاربری ندارید؟ <a href="{{ url_for('user.register') }}" style="color:#2563eb; font-weight:700;">ثبت‌نام کنید</a>
+
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

@@ -1,88 +1,176 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ product.title }} | {{ site_settings.agency_name or 'رهسا دیو' }}{% endblock %}
+{% block title %}{{ product.title }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<section style="padding-top:3.5rem; padding-bottom:5rem;">
+<section class="section">
     <div class="container">
-        
+
+        <!-- Breadcrumb -->
+        <nav aria-label="مسیر دسترسی" class="mb-4">
+            <ol style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                <li><a href="{{ url_for('public.home') }}" class="text-muted text-decoration-none">خانه</a></li>
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% if product.categories and product.categories[0] %}
+                <li><a href="{{ url_for('public.category', slug=product.categories[0].slug) }}" class="text-muted text-decoration-none">{{ product.categories[0].title }}</a></li>
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                <li class="text-yellow">{{ product.title }}</li>
+            </ol>
+        </nav>
+
         <div class="row gy-4">
-            
-            <!-- Left Side: Product Media & Tech Stack -->
+
+            <!-- Product Images & Guarantees -->
             <div class="col-12 col-lg-5">
-                <div class="glass-card p-3 rounded-2xl mb-3" style="background:rgba(20,33,61,0.8); border:1px solid rgba(255,255,255,0.12);">
-                    <img src="{{ product.featured_image or url_for('static', filename='images/product_code_architect.png') }}" 
-                         alt="{{ product.title }}" 
+                <div class="glass-card" style="padding:1rem; margin-bottom:1rem;">
+                    <img src="{{ product.featured_image or url_for('static', filename='images/product_code_architect.png') }}"
+                         alt="{{ product.title }}"
                          title="{{ product.title }}"
-                         style="width:100%; height:auto; border-radius:1rem; aspect-ratio:16/10; object-fit:cover;">
+                         loading="eager"
+                         decoding="async"
+                         style="width:100%; height:auto; border-radius:var(--radius-lg); aspect-ratio:16/10; object-fit:cover;"
+                         onerror="this.src='{{ url_for('static', filename='images/no-image.png') }}'">
                 </div>
 
-                <!-- Guarantee & SLA Badges -->
-                <div class="glass-card p-3 rounded-xl d-flex flex-column gap-2" style="background:rgba(10,17,40,0.6); font-size:0.85rem; color:#cbd5e1;">
-                    <div class="d-flex align-items-center gap-2">
-                        <span style="color:#FBB03B;">⚡</span>
-                        <span><strong>تحویل کامل سورس‌کد:</strong> بدون لایسنس یا قفل دامنه</span>
+                {% if product.images %}
+                <div class="row g-2 mb-3">
+                    {% for img in product.images[:4] %}
+                    <div class="col-3">
+                        <a href="{{ img.url }}" target="_blank" rel="noopener" aria-label="تصویر {{ loop.index }}">
+                            <img src="{{ img.thumbnail_url or img.url }}"
+                                 alt="{{ product.title }} - تصویر {{ loop.index }}"
+                                 loading="lazy"
+                                 style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+                        </a>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span style="color:#FBB03B;">🛡️</span>
-                        <span><strong>پشتیبانی ۱ ساله:</strong> رفع کامل بوگ و به‌روزرسانی رایگان</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span style="color:#FBB03B;">📖</span>
-                        <span><strong>مستندات کامل:</strong> راهنمای Deployment و راه‌اندازی</span>
-                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Guarantees -->
+                <div class="glass-card" style="padding:1.25rem; background:rgba(10,17,40,0.6);">
+                    <h3 class="text-white mb-3" style="font-size:0.95rem; font-weight:800;">ضمانت‌های رهسا دیو:</h3>
+                    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">⚡</span>
+                            <span><strong class="text-white">تحویل کامل سورس‌کد</strong> — بدون لایسنس یا قفل دامنه</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">🛡️</span>
+                            <span><strong class="text-white">پشتیبانی ۱ ساله</strong> — رفع کامل باگ و به‌روزرسانی رایگان</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">📖</span>
+                            <span><strong class="text-white">مستندات کامل</strong> — راهنمای Deployment و راه‌اندازی</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <!-- Right Side: Product Details & Add to Cart -->
+            <!-- Product Details & Purchase -->
             <div class="col-12 col-lg-7">
-                <div class="glass-card p-4 p-md-5 rounded-2xl" style="background:rgba(20,33,61,0.8); border:1px solid rgba(255,255,255,0.12);">
-                    
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge" style="background:rgba(251,176,59,0.15); color:#FBB03B; font-weight:800; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.775rem;">
-                            پکیج نرم‌افزاری آماده تحویل
-                        </span>
+                <article class="glass-card" style="padding:2rem;">
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                        <span class="badge-rahsa gold">پکیج نرم‌افزاری آماده تحویل</span>
                         {% if product.sku %}
-                        <span style="color:#64748b; font-size:0.75rem; font-family:monospace;">SKU: {{ product.sku }}</span>
+                        <span class="text-muted bidi-plaintext" style="font-size:0.75rem;">SKU: {{ product.sku }}</span>
                         {% endif %}
                     </div>
 
-                    <h1 style="font-size:2rem; font-weight:900; color:#ffffff; line-height:1.3; margin-bottom:1rem;">
+                    <h1 class="text-white" style="font-size:clamp(1.5rem, 3.5vw, 2rem); font-weight:900; line-height:1.3; margin-bottom:1rem;">
                         {{ product.title }}
                     </h1>
 
-                    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.8; margin-bottom:1.5rem;">
-                        {{ product.short_description or product.description or 'این پکیج نرم‌افزاری توسط تیم مهندسی رهسا دیو طراحی شده و بلافاصله پس از ثبت سفارش در دسترس شما قرار می‌گیرد.' }}
+                    {% if product.short_description %}
+                    <p class="text-muted" style="font-size:0.95rem; line-height:1.8; margin-bottom:1.5rem;">
+                        {{ product.short_description }}
                     </p>
+                    {% endif %}
 
                     <!-- Price Box -->
-                    <div class="glass-card p-3 rounded-xl mb-4 d-flex align-items-center justify-content-between" style="background:rgba(10,17,40,0.8); border:1px solid rgba(251,176,59,0.3);">
-                        <div>
-                            <span style="font-size:0.775rem; color:#94a3b8; display:block;">مبلغ سرمایه‌گذاری:</span>
-                            <strong style="font-size:1.6rem; color:#FBB03B; font-weight:900;">
-                                {{ product.price | format_price if product.price else 'استعلام قیمت' }}
-                            </strong>
-                        </div>
+                    <div class="glass-card" style="padding:1.25rem 1.5rem; margin-bottom:1.25rem; background:rgba(10,17,40,0.8); border-color:rgba(251,176,59,0.3);">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <span class="text-muted d-block" style="font-size:0.775rem;">مبلغ سرمایه‌گذاری:</span>
+                                <div class="d-flex align-items-baseline gap-2">
+                                    {% if product.old_price and product.old_price > product.current_price %}
+                                    <span class="product-card-price-old" data-persian-num>{{ product.old_price|format_price }}</span>
+                                    {% endif %}
+                                    <strong class="text-yellow" style="font-size:1.6rem; font-weight:900;" data-persian-num>
+                                        {{ product.current_price|format_price if product.current_price else 'استعلام قیمت' }}
+                                    </strong>
+                                </div>
+                            </div>
 
-                        <!-- Add to Cart Form -->
-                        <form action="{{ url_for('public.cart') }}" method="POST" class="d-flex gap-2">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-                            <input type="hidden" name="product_id" value="{{ product.id }}">
-                            <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.4rem; font-size:0.9rem;" aria-label="خرید پکیج">
-                                🛒 خرید و دریافت فوری
-                            </button>
-                        </form>
+                            <form action="{{ url_for('public.cart') }}" method="POST" class="d-flex gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.4rem; font-size:0.9rem;" aria-label="خرید و دریافت فوری">
+                                    <span>خرید و دریافت فوری</span>
+                                    <span aria-hidden="true">🛒</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
-                    <!-- Direct Consultation Button -->
-                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="font-size:0.875rem;">
+                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="font-size:0.875rem; display:block; padding:0.7rem;" aria-label="درخواست تغییرات سفارشی">
                         🧮 درخواست تغییرات یا توسعه سفارشی روی این پکیج
                     </a>
 
+                    <!-- Specifications -->
+                    {% if product.specifications %}
+                    <div class="mt-4">
+                        <h2 class="text-white mb-3" style="font-size:1rem; font-weight:800;">ویژگی‌ها و مشخصات:</h2>
+                        <div class="table-rahsa" style="background:rgba(10,17,40,0.5);">
+                            {% for spec in product.specifications %}
+                            <div style="display:flex; padding:0.5rem 0.75rem; border-bottom:1px solid var(--glass-border);">
+                                <span class="text-muted" style="min-width:140px; font-size:0.85rem;">{{ spec.key }}:</span>
+                                <span class="text-white" style="font-size:0.85rem; font-weight:600;">{{ spec.value }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </article>
+
+                <!-- Long Description -->
+                {% if product.description %}
+                <div class="glass-card mt-4" style="padding:2rem;">
+                    <h2 class="text-white mb-3" style="font-size:1.1rem; font-weight:800;">شرح کامل محصول</h2>
+                    <div class="post-content" style="color:var(--text-gray-200); line-height:1.9; font-size:0.95rem;">
+                        {{ product.description|safe }}
+                    </div>
                 </div>
+                {% endif %}
             </div>
 
         </div>
+
+        <!-- Related Products -->
+        {% if related_products %}
+        <section class="mt-5 pt-4" style="border-top:1px solid var(--glass-border);">
+            <h2 class="text-white mb-4" style="font-size:1.25rem; font-weight:800;">محصولات مرتبط</h2>
+            <div class="row g-4">
+                {% for related in related_products %}
+                <div class="col-12 col-md-6 col-lg-3">
+                    <article class="product-card h-100">
+                        <a href="{{ url_for('public.product', slug=related.slug) }}" class="product-card-image" aria-label="{{ related.title }}">
+                            <img src="{{ related.featured_image or url_for('static', filename='images/no-image.png') }}"
+                                 alt="{{ related.title }}" loading="lazy" decoding="async">
+                        </a>
+                        <div class="product-card-body">
+                            <h3 class="product-card-title">{{ related.title }}</h3>
+                            <div class="product-card-price" data-persian-num>{{ related.current_price|format_price }}</div>
+                        </div>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
 
     </div>
 </section>

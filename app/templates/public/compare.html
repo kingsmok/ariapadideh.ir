@@ -1,85 +1,155 @@
 {% extends 'base.html' %}
 
-{% block title %}محاسبه‌گر آنلاین قیمت و پکیج‌ها | رهسا دیو{% endblock %}
+{% block title %}محاسبه‌گر قیمت و پکیج‌ها | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<section style="padding-top:4rem; padding-bottom:5rem;">
+<section class="section">
     <div class="container">
-        
+
+        <!-- Page Header -->
         <div class="text-center mb-5">
-            <span style="color:#FBB03B; font-weight:800; font-size:0.85rem; text-transform:uppercase;" class="d-block mb-2">🧮 شفافیت در قیمت‌گذاری و خدمات</span>
-            <h1 style="font-size:2.4rem; font-weight:900; color:#ffffff; margin-bottom:0.75rem;">
-                سطوح خدمت و <span style="color:#FBB03B;">پکیج‌های نرم‌افزاری</span>
+            <span class="d-block text-yellow font-bold mb-2" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;" aria-hidden="true">
+                🧮 شفافیت در قیمت‌گذاری
+            </span>
+            <h1 class="text-white" style="font-size:clamp(1.75rem, 4vw, 2.4rem); font-weight:900; margin-bottom:0.75rem;">
+                سطوح خدمت و <span class="text-yellow">پکیج‌های نرم‌افزاری</span>
             </h1>
-            <p style="color:#94a3b8; font-size:0.95rem; max-width:640px; margin:0 auto;">
+            <p class="text-muted" style="font-size:0.95rem; max-width:640px; margin:0 auto;">
                 مقایسه دقیق پلن‌های طراحی وب‌سایت، ربات‌های هوشمند و توسعه پلتفرم‌های اختصاصی با ۱ سال پشتیبانی رایگان.
             </p>
         </div>
 
         <!-- Pricing Tiers Grid -->
-        <div class="row g-4 mb-5">
-            
-            <!-- Tier 1: Starter / Scripts -->
+        <div class="row g-4">
+
+            <!-- Tier 1: Starter -->
             <div class="col-12 col-md-4">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex flex-column justify-content-between" style="background:rgba(20,33,61,0.6); border:1px solid rgba(255,255,255,0.1);">
+                <article class="service-card h-100">
                     <div>
-                        <div style="font-size:0.8rem; font-weight:800; color:#94a3b8; text-transform:uppercase;" class="mb-2">پکیج پایه / اسکریپت</div>
-                        <h3 style="font-size:1.4rem; font-weight:900; color:#ffffff; margin-bottom:1rem;">استارتاپی و اقتصادی</h3>
-                        <div style="font-size:1.8rem; font-weight:900; color:#FBB03B; margin-bottom:1.5rem;">
-                            ۵,۰۰۰,۰۰۰ <span style="font-size:0.85rem; color:#94a3b8; font-weight:600;">تومان</span>
+                        <span class="d-block text-muted font-bold mb-2" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+                            پکیج پایه / اسکریپت
+                        </span>
+                        <h3 class="service-title" style="font-size:1.4rem; margin-bottom:0.75rem;">استارتاپی و اقتصادی</h3>
+                        <div class="text-yellow font-black" style="font-size:1.8rem; margin-bottom:1.5rem;" data-persian-num>
+                            ۵,۰۰۰,۰۰۰
+                            <span class="text-muted" style="font-size:0.85rem; font-weight:600;">تومان</span>
                         </div>
-                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem; color:#cbd5e1;">
-                            <li><span style="color:#10b981;">✓</span> اسکریپت پایتون یا ربات تلگرام پایه</li>
-                            <li><span style="color:#10b981;">✓</span> تحویل کاملاً آزاد سورس‌کد</li>
-                            <li><span style="color:#10b981;">✓</span> پشتیبانی فنی ۳ ماهه</li>
-                            <li><span style="color:#ef4444;">✕</span> پنل مدیریتی اختصاصی ERP</li>
+                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem;">
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                اسکریپت پایتون یا ربات تلگرام پایه
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                تحویل کاملاً آزاد سورس‌کد
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                پشتیبانی فنی ۳ ماهه
+                            </li>
+                            <li class="text-muted" style="opacity:0.5;">
+                                <span class="text-danger" aria-hidden="true">✕</span>
+                                پنل مدیریتی اختصاصی ERP
+                            </li>
                         </ul>
                     </div>
-                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="border-radius:9999px;">سفارش پکیج پایه</a>
-                </div>
+                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="display:block; padding:0.7rem;">
+                        سفارش پکیج پایه
+                    </a>
+                </article>
             </div>
 
-            <!-- Tier 2: Business / Web Design (Featured) -->
+            <!-- Tier 2: Business (Featured) -->
             <div class="col-12 col-md-4">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex flex-column justify-content-between position-relative" style="background:rgba(20,33,61,0.9); border:2px solid #FBB03B; box-shadow:0 0 30px rgba(251,176,59,0.2);">
-                    <span style="position:absolute; top:-12px; inset-inline-start:50%; transform:translateX(50%); background:#FBB03B; color:#0A1128; font-weight:900; font-size:0.7rem; padding:0.25rem 0.85rem; border-radius:9999px;">محبوب‌ترین پیشنهاد</span>
+                <article class="service-card h-100 position-relative"
+                         style="background:rgba(20,33,61,0.9); border:2px solid var(--accent-gold); box-shadow:0 0 30px rgba(251,176,59,0.25);">
+                    <span style="position:absolute; top:-12px; inset-inline-start:50%; transform:translateX(50%);
+                                 background:var(--accent-gold); color:var(--bg-navy-dark); font-weight:900; font-size:0.7rem;
+                                 padding:0.3rem 0.85rem; border-radius:9999px; white-space:nowrap;">
+                        ⭐ محبوب‌ترین پیشنهاد
+                    </span>
                     <div>
-                        <div style="font-size:0.8rem; font-weight:800; color:#FBB03B; text-transform:uppercase;" class="mb-2">پکیج سازمانی / وب‌سایت</div>
-                        <h3 style="font-size:1.4rem; font-weight:900; color:#ffffff; margin-bottom:1rem;">کسب‌وکار حرفه‌ای</h3>
-                        <div style="font-size:1.8rem; font-weight:900; color:#FBB03B; margin-bottom:1.5rem;">
-                            ۱۵,۰۰۰,۰۰۰ <span style="font-size:0.85rem; color:#94a3b8; font-weight:600;">تومان</span>
+                        <span class="d-block text-yellow font-bold mb-2" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+                            پکیج سازمانی / وب‌سایت
+                        </span>
+                        <h3 class="service-title" style="font-size:1.4rem; margin-bottom:0.75rem;">کسب‌وکار حرفه‌ای</h3>
+                        <div class="text-yellow font-black" style="font-size:1.8rem; margin-bottom:1.5rem;" data-persian-num>
+                            ۱۵,۰۰۰,۰۰۰
+                            <span class="text-muted" style="font-size:0.85rem; font-weight:600;">تومان</span>
                         </div>
-                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem; color:#cbd5e1;">
-                            <li><span style="color:#10b981;">✓</span> وب‌سایت اختصاصی + ربات هوشمند</li>
-                            <li><span style="color:#10b981;">✓</span> پنل مدیریتی کامل با گزارش‌گیری</li>
-                            <li><span style="color:#10b981;">✓</span> اتصال به درگاه بانکی و پیامک</li>
-                            <li><span style="color:#10b981;">✓</span> ۱ سال پشتیبانی و SLA تضمینی</li>
+                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem;">
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                وب‌سایت اختصاصی + ربات هوشمند
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                پنل مدیریتی کامل با گزارش‌گیری
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                اتصال به درگاه بانکی و پیامک
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                ۱ سال پشتیبانی و SLA تضمینی
+                            </li>
                         </ul>
                     </div>
-                    <a href="/#quote-section" class="btn-rahsa-cta w-100 text-center" style="border-radius:9999px;">🚀 سفارش پکیج حرفه‌ای</a>
-                </div>
+                    <a href="/#quote-section" class="btn-rahsa-cta w-100 text-center" style="display:block; padding:0.7rem;">
+                        🚀 سفارش پکیج حرفه‌ای
+                    </a>
+                </article>
             </div>
 
-            <!-- Tier 3: Enterprise Software -->
+            <!-- Tier 3: Enterprise -->
             <div class="col-12 col-md-4">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex flex-column justify-content-between" style="background:rgba(20,33,61,0.6); border:1px solid rgba(255,255,255,0.1);">
+                <article class="service-card h-100">
                     <div>
-                        <div style="font-size:0.8rem; font-weight:800; color:#94a3b8; text-transform:uppercase;" class="mb-2">پکیج اختصاصی / ERP</div>
-                        <h3 style="font-size:1.4rem; font-weight:900; color:#ffffff; margin-bottom:1rem;">انترپرایز و سازمانی</h3>
-                        <div style="font-size:1.8rem; font-weight:900; color:#FBB03B; margin-bottom:1.5rem;">
-                            استعلامی <span style="font-size:0.85rem; color:#94a3b8; font-weight:600;">(سفارشی)</span>
+                        <span class="d-block text-muted font-bold mb-2" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+                            پکیج اختصاصی / ERP
+                        </span>
+                        <h3 class="service-title" style="font-size:1.4rem; margin-bottom:0.75rem;">انترپرایز و سازمانی</h3>
+                        <div class="text-yellow font-black" style="font-size:1.8rem; margin-bottom:1.5rem;">
+                            استعلامی
+                            <span class="text-muted" style="font-size:0.85rem; font-weight:600;">(سفارشی)</span>
                         </div>
-                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem; color:#cbd5e1;">
-                            <li><span style="color:#10b981;">✓</span> معماری میکروسرویس سفارشی پایتون</li>
-                            <li><span style="color:#10b981;">✓</span> یکپارچه‌سازی با نرم‌افزارهای مالی/انبار</li>
-                            <li><span style="color:#10b981;">✓</span> استقرار در سرور و مانیتورینگ ۲۴/۷</li>
-                            <li><span style="color:#10b981;">✓</span> پشتیبانی VIP و آموزش تیم</li>
+                        <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; line-height:2.1; font-size:0.875rem;">
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                معماری میکروسرویس سفارشی پایتون
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                یکپارچه‌سازی با نرم‌افزارهای مالی/انبار
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                استقرار در سرور و مانیتورینگ ۲۴/۷
+                            </li>
+                            <li class="text-white">
+                                <span class="text-success" aria-hidden="true">✓</span>
+                                پشتیبانی VIP و آموزش تیم
+                            </li>
                         </ul>
                     </div>
-                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="border-radius:9999px;">استعلام قیمت پروژه</a>
-                </div>
+                    <a href="/#quote-section" class="btn-rahsa-outline w-100 text-center" style="display:block; padding:0.7rem;">
+                        استعلام قیمت پروژه
+                    </a>
+                </article>
             </div>
 
+        </div>
+
+        <!-- FAQ / Trust Section -->
+        <div class="mt-5 text-center">
+            <p class="text-muted" style="font-size:0.9rem;">
+                برای دریافت مشاوره رایگان و برآورد دقیق هزینه پروژه خود، با ما تماس بگیرید.
+            </p>
+            <a href="{{ url_for('public.contact') }}" class="btn-rahsa-outline mt-2" style="font-size:0.9rem;">
+                <span>تماس با کارشناسان</span>
+                <span aria-hidden="true">←</span>
+            </a>
         </div>
 
     </div>

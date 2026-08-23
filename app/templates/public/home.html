@@ -1,74 +1,378 @@
 {% extends 'base.html' %}
 {% from 'macros/product_card.html' import product_card with context %}
 
-{% block title %}رهسا دیو - توسعه نرم‌افزار سازمانی و ربات‌های هوشمند{% endblock %}
+{% block title %}رهسا دیو — توسعه نرم‌افزار سازمانی، طراحی وب و ربات‌های هوشمند{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Hero section specific styles */
+.hero-section {
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 4rem 0;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(107, 33, 168, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(251, 176, 59, 0.1) 0%, transparent 50%);
+}
+
+.hero-glow-1 {
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 450px;
+    height: 450px;
+    background: rgba(10, 17, 40, 0.6);
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+}
+
+.hero-glow-2 {
+    position: absolute;
+    bottom: 20%;
+    right: 20%;
+    width: 400px;
+    height: 400px;
+    background: rgba(251, 176, 59, 0.15);
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+}
+
+.hero-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 1.5rem;
+}
+
+.gold-gradient-text {
+    background: linear-gradient(90deg, #FBB03B 0%, #FFDDB4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FBB03B;
+    display: inline-block;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: rgba(20, 33, 61, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    margin-bottom: 1rem;
+}
+
+.hero-badge-text {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+.hero-description {
+    color: #9ca3af;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    max-width: 620px;
+    margin-bottom: 2rem;
+}
+
+.hero-metric {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #FBB03B;
+    line-height: 1;
+}
+
+.hero-metric-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.hero-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Service card */
+.service-card {
+    position: relative;
+    height: 100%;
+    padding: 2rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(20, 33, 61, 0.8) 0%, rgba(20, 33, 61, 0.4) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.service-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(251, 176, 59, 0.3);
+    box-shadow: var(--shadow-lg);
+}
+
+.service-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 0.85rem;
+    background: rgba(10, 17, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #FBB03B;
+}
+
+.service-card.large .service-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+}
+
+.service-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.service-card.large .service-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.service-description {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.service-card.large .service-description {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.service-link {
+    color: #FBB03B;
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    transition: var(--transition-fast);
+}
+
+.service-link:hover {
+    color: #FFDDB4;
+    gap: 0.75rem;
+}
+
+/* Hero visual */
+.hero-visual {
+    position: relative;
+    width: 100%;
+    min-height: 380px;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: var(--bg-navy-card);
+}
+
+.hero-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1.25rem;
+}
+
+.hero-floating-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(20, 33, 61, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hero-floating-badge-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(251, 176, 59, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FBB03B;
+    font-size: 1.2rem;
+}
+
+.hero-floating-badge-title {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.hero-floating-badge-sub {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+/* Section background variants */
+.section-dark {
+    background: #050814;
+    position: relative;
+}
+
+.section-divider {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-divider h2 {
+    font-size: clamp(1.75rem, 4vw, 2.2rem);
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+}
+
+.section-divider p {
+    color: #9ca3af;
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Quote form */
+.quote-section-card {
+    background: linear-gradient(135deg, rgba(20, 33, 61, 0.9) 0%, rgba(10, 17, 40, 0.9) 100%);
+    border: 1px solid rgba(251, 176, 59, 0.25);
+    border-radius: 1.5rem;
+    padding: 3rem 2.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .quote-section-card { padding: 2rem 1.5rem; }
+}
+
+/* Featured products section header */
+.featured-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Stitch Hero Section -->
-<section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden grid-bg px-4 md:px-12 py-12">
-    <!-- Background Ambient Blur Glows -->
-    <div style="position:absolute; top:20%; left:20%; width:450px; height:450px; background:rgba(10,17,40,0.6); border-radius:9999px; filter:blur(100px); pointer-events:none;"></div>
-    <div style="position:absolute; bottom:20%; right:20%; width:400px; height:400px; background:rgba(251,176,59,0.15); border-radius:9999px; filter:blur(100px); pointer-events:none;"></div>
+
+<!-- ==================== HERO SECTION ==================== -->
+<section class="hero-section">
+    <div class="hero-glow-1" aria-hidden="true"></div>
+    <div class="hero-glow-2" aria-hidden="true"></div>
 
     <div class="container" style="position:relative; z-index:10;">
         <div class="row align-items-center gy-5">
-            
+
             <!-- Hero Content -->
             <div class="col-12 col-lg-7">
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill mb-3" style="background:rgba(20, 33, 61, 0.6); border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
-                    <span style="width:8px; height:8px; border-radius:9999px; background:#FBB03B; display:inline-block;" class="animate-pulse"></span>
-                    <span style="font-size:0.825rem; font-weight:700; color:#cbd5e1;">پیشگام در تحول دیجیتال</span>
+                <div class="hero-badge">
+                    <span class="pulse-dot" aria-hidden="true"></span>
+                    <span class="hero-badge-text">پیشگام در تحول دیجیتال</span>
                 </div>
 
-                <h1 style="font-size:2.8rem; font-weight:900; color:#ffffff; line-height:1.25; margin-bottom:1.25rem;">
-                    معماری آینده با <br>
-                    <span class="gold-gradient-text" style="background:linear-gradient(90deg, #FBB03B 0%, #FFDDB4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">نرم‌افزارهای سازمانی</span> هوشمند
+                <h1 class="hero-title">
+                    معماری آینده با
+                    <br>
+                    <span class="gold-gradient-text">نرم‌افزارهای سازمانی</span> هوشمند
                 </h1>
 
-                <p style="color:#9ca3af; font-size:1.05rem; line-height:1.85; max-width:620px; margin-bottom:2rem;">
+                <p class="hero-description">
                     <strong>رهسا دیو</strong>، آتلیه تخصصی توسعه نرم‌افزار در شیراز. ما با بهره‌گیری از جدیدترین تکنولوژی‌ها و اصول مهندسی نرم‌افزار، سیستم‌های یکپارچه (ERP/CRM) و راهکارهای دیجیتال را برای سازمان شما خلق می‌کنیم.
                 </p>
 
                 <div class="d-flex flex-wrap gap-3 mb-4">
-                    <a href="#quote-section" class="btn-primary" style="background-color:#FBB03B; color:#0A1128 !important; font-weight:800; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; transition:all 0.3s ease;">
+                    <a href="#quote-section" class="btn-rahsa-cta" aria-label="شروع پروژه">
                         <span>شروع پروژه</span>
-                        <span style="font-size:1.2rem;">←</span>
+                        <span aria-hidden="true">←</span>
                     </a>
-                    <a href="{{ url_for('public.categories_list') }}" class="glass-panel" style="background:rgba(20, 33, 61, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); color:#ffffff !important; font-weight:700; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem;">
-                        مشاهده نمونه کارها
+                    <a href="{{ url_for('public.categories_list') }}" class="btn-rahsa-outline" aria-label="مشاهده نمونه کارها">
+                        <span>مشاهده نمونه کارها</span>
                     </a>
                 </div>
 
-                <!-- Metrics Counter Bar -->
+                <!-- Metrics Counter -->
                 <div class="d-flex align-items-center gap-4 pt-4 mt-2" style="border-top:1px solid rgba(255,255,255,0.1);">
-                    <div class="d-flex flex-column">
-                        <span style="font-size:1.8rem; font-weight:900; color:#FBB03B; line-height:1;">۵۰+</span>
-                        <span style="font-size:0.75rem; color:#9ca3af; font-weight:600; margin-top:4px;">پروژه موفق</span>
+                    <div>
+                        <div class="hero-metric" data-persian-num>۵۰+</div>
+                        <div class="hero-metric-label">پروژه موفق</div>
                     </div>
-                    <div style="width:1px; height:36px; background:rgba(255,255,255,0.1);"></div>
-                    <div class="d-flex flex-column">
-                        <span style="font-size:1.8rem; font-weight:900; color:#FBB03B; line-height:1;">۹۹٪</span>
-                        <span style="font-size:0.75rem; color:#9ca3af; font-weight:600; margin-top:4px;">رضایت مشتریان</span>
+                    <div class="hero-divider" aria-hidden="true"></div>
+                    <div>
+                        <div class="hero-metric" data-persian-num>۹۹٪</div>
+                        <div class="hero-metric-label">رضایت مشتریان</div>
+                    </div>
+                    <div class="hero-divider" aria-hidden="true"></div>
+                    <div>
+                        <div class="hero-metric" data-persian-num>۱۲+</div>
+                        <div class="hero-metric-label">سال تجربه</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Hero Visual (Exact 3D Glass Asset Overlay) -->
+            <!-- Hero Visual -->
             <div class="col-12 col-lg-5">
-                <div style="position:relative; width:100%; min-height:380px; border-radius:1.25rem; overflow:hidden;" class="glass-card">
-                    <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}" 
-                         alt="A sophisticated abstract 3D visualization of enterprise software architecture" 
-                         title="Rahsa Dev Architecture"
-                         style="width:100%; height:100%; object-fit:cover; border-radius:1.25rem;">
-                    
-                    <!-- Floating Clean Architecture Badge Overlay -->
-                    <div style="position:absolute; top:20px; right:20px; background:rgba(20, 33, 61, 0.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.15); border-radius:0.75rem; padding:0.85rem 1.25rem;" class="d-flex align-items-center gap-3">
-                        <div style="width:38px; height:38px; border-radius:9999px; background:rgba(251,176,59,0.2); display:flex; align-items:center; justify-content:center; color:#FBB03B; font-weight:900; font-size:1.2rem;">
-                            ⚙️
-                        </div>
+                <div class="hero-visual glass-card">
+                    <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}"
+                         alt="تصویر سه‌بعدی معماری نرم‌افزار سازمانی"
+                         title="معماری رهسا دیو"
+                         loading="eager"
+                         decoding="async"
+                         onerror="this.style.display='none'">
+
+                    <div class="hero-floating-badge">
+                        <div class="hero-floating-badge-icon" aria-hidden="true">⚙️</div>
                         <div>
-                            <div style="font-size:0.875rem; font-weight:800; color:#ffffff;">Clean Architecture</div>
-                            <div style="font-size:0.7rem; color:#9ca3af; font-weight:600;">SOLID Principles</div>
+                            <div class="hero-floating-badge-title">Clean Architecture</div>
+                            <div class="hero-floating-badge-sub">SOLID Principles</div>
                         </div>
                     </div>
                 </div>
@@ -78,79 +382,77 @@
     </div>
 </section>
 
-<!-- Stitch Bento Grid Services Catalog Section -->
-<section style="padding-top:4rem; padding-bottom:4rem; background:#050814; position:relative;">
+<!-- ==================== SERVICES BENTO GRID ==================== -->
+<section class="section section-dark">
     <div class="container">
-        
-        <div class="text-center mb-5">
-            <h2 style="font-size:2rem; font-weight:900; color:#ffffff; margin-bottom:0.75rem;">
-                خدمات تخصصی <span class="gold-gradient-text" style="background:linear-gradient(90deg, #FBB03B 0%, #FFDDB4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">رهسا دیو</span>
+
+        <div class="section-divider">
+            <h2>
+                خدمات تخصصی <span class="gold-gradient-text">رهسا دیو</span>
             </h2>
-            <p style="color:#9ca3af; font-size:1rem; max-width:600px; margin:0 auto;">
+            <p>
                 ارائه راهکارهای جامع دیجیتال با تمرکز بر کیفیت، امنیت و مقیاس‌پذیری.
             </p>
         </div>
 
-        <!-- Stitch Grid Layout -->
         <div class="row g-4">
-            
-            <!-- Service 1 (Large Card - Col Span 8) -->
+
+            <!-- Service 1: Large Card -->
             <div class="col-12 col-lg-8">
-                <div class="glass-card p-4 p-md-5 rounded-2xl h-100 d-flex flex-column justify-content-between" style="background:linear-gradient(135deg, rgba(20, 33, 61, 0.8) 0%, rgba(20, 33, 61, 0.4) 100%); border:1px solid rgba(255,255,255,0.12); border-radius:1.25rem;">
-                    <div>
-                        <div style="width:56px; height:56px; border-radius:0.85rem; background:#0A1128; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin-bottom:1.5rem; color:#FBB03B;">
-                            💻
-                        </div>
-                        <h3 style="font-size:1.4rem; font-weight:900; color:#ffffff; margin-bottom:0.75rem;">
-                            توسعه نرم‌افزارهای سفارشی (ERP/CRM)
-                        </h3>
-                        <p style="color:#9ca3af; font-size:0.95rem; line-height:1.8; margin-bottom:1.5rem;">
-                            طراحی و پیاده‌سازی سیستم‌های یکپارچه سازمانی با معماری میکروسرویس و رویکرد داده‌محور برای اتوماسیون فرآیندهای پیچیده کسب‌وکار شما.
-                        </p>
-                    </div>
-                    <a href="{{ url_for('public.category', slug='software') }}" style="color:#FBB03B; font-weight:800; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem;">
-                        اطلاعات بیشتر ←
+                <article class="service-card large">
+                    <div class="service-icon" aria-hidden="true">💻</div>
+                    <h3 class="service-title">توسعه نرم‌افزارهای سفارشی (ERP/CRM)</h3>
+                    <p class="service-description">
+                        طراحی و پیاده‌سازی سیستم‌های یکپارچه سازمانی با معماری میکروسرویس و رویکرد داده‌محور برای اتوماسیون فرآیندهای پیچیده کسب‌وکار شما.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='software-automation') }}" class="service-link" aria-label="اطلاعات بیشتر درباره نرم‌افزار سفارشی">
+                        اطلاعات بیشتر
+                        <span aria-hidden="true">←</span>
                     </a>
-                </div>
+                </article>
             </div>
 
-            <!-- Service 2 (Col Span 4) -->
+            <!-- Service 2: Smart Bots -->
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex flex-column justify-content-between" style="background:linear-gradient(135deg, rgba(20, 33, 61, 0.8) 0%, rgba(20, 33, 61, 0.4) 100%); border:1px solid rgba(255,255,255,0.1); border-radius:1.25rem;">
-                    <div>
-                        <div style="font-size:2rem; margin-bottom:1rem;">🤖</div>
-                        <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">ربات‌های هوشمند (تلگرام / ایتا)</h3>
-                        <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">توسعه ربات‌های دستیار فروش، استعلام صرافی و اتصال هوشمند به بانک.</p>
-                    </div>
-                    <a href="{{ url_for('public.category', slug='bots') }}" style="color:#FBB03B; font-weight:700; font-size:0.85rem; text-decoration:none; margin-top:1rem;">مشاهده جزئیات ←</a>
-                </div>
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🤖</div>
+                    <h3 class="service-title">ربات‌های هوشمند (تلگرام / ایتا)</h3>
+                    <p class="service-description">
+                        توسعه ربات‌های دستیار فروش، استعلام صرافی و اتصال هوشمند به بانک.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='smart-bots') }}" class="service-link" aria-label="جزئیات ربات‌های هوشمند">
+                        مشاهده جزئیات
+                        <span aria-hidden="true">←</span>
+                    </a>
+                </article>
             </div>
 
-            <!-- Service 3 (Col Span 4) -->
+            <!-- Service 3: Web Design -->
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex flex-column justify-content-between" style="background:linear-gradient(135deg, rgba(20, 33, 61, 0.8) 0%, rgba(20, 33, 61, 0.4) 100%); border:1px solid rgba(255,255,255,0.1); border-radius:1.25rem;">
-                    <div>
-                        <div style="font-size:2rem; margin-bottom:1rem;">🌐</div>
-                        <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">طراحی وب‌سایت اختصاصی</h3>
-                        <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">پلتفرم‌های تحت وب واکنش‌گرا، سریع و ایمن با معماری مدرن پایتون.</p>
-                    </div>
-                    <a href="{{ url_for('public.category', slug='web-design') }}" style="color:#FBB03B; font-weight:700; font-size:0.85rem; text-decoration:none; margin-top:1rem;">مشاهده جزئیات ←</a>
-                </div>
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🌐</div>
+                    <h3 class="service-title">طراحی وب‌سایت اختصاصی</h3>
+                    <p class="service-description">
+                        پلتفرم‌های تحت وب واکنش‌گرا، سریع و ایمن با معماری مدرن پایتون.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='web-design') }}" class="service-link" aria-label="جزئیات طراحی وب">
+                        مشاهده جزئیات
+                        <span aria-hidden="true">←</span>
+                    </a>
+                </article>
             </div>
 
-            <!-- Service 4 (Col Span 8) -->
+            <!-- Service 4: Wide Card -->
             <div class="col-12 col-lg-8">
-                <div class="glass-card p-4 rounded-2xl h-100 d-flex align-items-center gap-4" style="background:linear-gradient(135deg, rgba(20, 33, 61, 0.8) 0%, rgba(20, 33, 61, 0.4) 100%); border:1px solid rgba(255,255,255,0.1); border-radius:1.25rem;">
-                    <div style="width:64px; height:64px; border-radius:9999px; background:#14213D; display:flex; align-items:center; justify-content:center; font-size:2rem; flex-shrink:0;">
-                        🎨
-                    </div>
+                <article class="service-card d-flex align-items-center gap-4">
+                    <div class="service-icon flex-shrink-0" style="width:64px; height:64px; border-radius:50%; font-size:2rem;" aria-hidden="true">🎨</div>
                     <div>
-                        <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">طراحی رابط و تجربه کاربری (UI/UX)</h3>
-                        <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7; margin:0;">
+                        <h3 class="service-title">طراحی رابط و تجربه کاربری (UI/UX)</h3>
+                        <p class="service-description">
                             خلق تجربه‌های دیجیتال کاربرمحور بر پایه تحقیقات و تست‌های کاربردپذیری دقیق برای افزایش نرخ تبدیل.
                         </p>
                     </div>
-                </div>
+                </article>
             </div>
 
         </div>
@@ -158,37 +460,41 @@
     </div>
 </section>
 
-<!-- Stitch Consultation Lead Form Section -->
-<section id="quote-section" style="padding-top:4rem; padding-bottom:5rem; position:relative;">
+<!-- ==================== CONSULTATION LEAD FORM ==================== -->
+<section id="quote-section" class="section">
     <div class="container">
-        <div class="glass-card p-4 p-md-5 rounded-3xl" style="background:linear-gradient(135deg, rgba(20, 33, 61, 0.9) 0%, rgba(10, 17, 40, 0.9) 100%); border:1px solid rgba(251,176,59,0.25); border-radius:1.5rem; max-width:960px; margin:0 auto;">
-            
+        <div class="quote-section-card">
+
             <div class="text-center mb-4">
-                <div style="font-size:2.8rem; margin-bottom:0.5rem; color:#FBB03B;">💬</div>
-                <h2 style="font-size:1.8rem; font-weight:900; color:#ffffff; margin-bottom:0.5rem;">
+                <div aria-hidden="true" style="font-size:2.8rem; margin-bottom:0.5rem; color:#FBB03B;">💬</div>
+                <h2 class="text-white" style="font-size:1.8rem; font-weight:900; margin-bottom:0.5rem;">
                     درخواست مشاوره تخصصی
                 </h2>
-                <p style="color:#9ca3af; font-size:0.925rem; margin:0;">
+                <p class="text-muted" style="font-size:0.925rem; margin:0;">
                     برای بررسی معماری نرم‌افزار یا نیازهای سازمانی خود، اطلاعات زیر را تکمیل کنید.
                 </p>
             </div>
 
-            <form action="/api/v1/leads" method="POST">
+            <form action="/api/v1/leads" method="POST" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
                 <div class="row gy-3">
                     <div class="col-12 col-md-6">
-                        <label class="form-label" style="font-size:0.85rem; color:#ffffff; font-weight:700;">نام و نام خانوادگی</label>
-                        <input type="text" name="full_name" class="form-control-rahsa" placeholder="مثال: علی رضایی" required>
+                        <label for="full_name" class="form-label-rahsa">نام و نام خانوادگی</label>
+                        <input type="text" id="full_name" name="full_name" class="form-control-rahsa"
+                               placeholder="مثال: علی رضایی" required minlength="3" maxlength="100">
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label class="form-label" style="font-size:0.85rem; color:#ffffff; font-weight:700;">شماره تماس</label>
-                        <input type="text" name="phone" class="form-control-rahsa" placeholder="09123456789" required style="direction:ltr; text-align:right;">
+                        <label for="phone" class="form-label-rahsa">شماره تماس</label>
+                        <input type="tel" id="phone" name="phone" class="form-control-rahsa bidi-plaintext"
+                               placeholder="09123456789" required pattern="[0-9]{11}">
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" style="font-size:0.85rem; color:#ffffff; font-weight:700;">نوع درخواست (اختیاری)</label>
-                        <select name="requested_service" class="form-select-rahsa" required>
+                        <label for="requested_service" class="form-label-rahsa">نوع درخواست</label>
+                        <select id="requested_service" name="requested_service" class="form-select-rahsa" required>
+                            <option value="">انتخاب کنید...</option>
                             <option value="سیستم‌های سازمانی (ERP)">سیستم‌های سازمانی (ERP)</option>
                             <option value="توسعه پلتفرم وب">توسعه پلتفرم وب</option>
                             <option value="ربات هوشمند (تلگرام/ایتا)">ربات هوشمند (تلگرام/ایتا)</option>
@@ -198,18 +504,19 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" style="font-size:0.85rem; color:#ffffff; font-weight:700;">شرح مختصری از پروژه</label>
-                        <textarea name="notes" class="form-control-rahsa" rows="4" placeholder="نیازها و چالش‌های کسب‌وکار خود را بنویسید..."></textarea>
+                        <label for="notes" class="form-label-rahsa">شرح مختصری از پروژه</label>
+                        <textarea id="notes" name="notes" class="form-control-rahsa" rows="4"
+                                  placeholder="نیازها و چالش‌های کسب‌وکار خود را بنویسید..." maxlength="2000"></textarea>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary w-100 mt-4" style="background-color:#FBB03B; color:#0A1128 !important; font-weight:900; padding:0.85rem; border-radius:0.75rem; border:none; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:0.5rem;" aria-label="ارسال درخواست">
+                <button type="submit" class="btn-rahsa-cta w-100 mt-4" style="padding:0.85rem; font-size:1rem;" aria-label="ارسال درخواست مشاوره">
                     <span>ارسال درخواست</span>
-                    <span style="font-size:1.1rem;">✈️</span>
+                    <span aria-hidden="true">✈️</span>
                 </button>
 
-                <p style="text-center; font-size:0.75rem; color:#64748b; margin-top:1rem; text-align:center;">
-                    اطلاعات شما نزد تیم مهندسی رهسا دیو کاملاً محفوظ است.
+                <p class="text-muted text-center" style="font-size:0.75rem; margin-top:1rem;">
+                    🔒 اطلاعات شما نزد تیم مهندسی رهسا دیو کاملاً محفوظ است.
                 </p>
             </form>
 
@@ -217,26 +524,27 @@
     </div>
 </section>
 
-<!-- Featured Software Packages Grid -->
+<!-- ==================== FEATURED PRODUCTS ==================== -->
 {% if featured_products %}
-<section style="padding-top:2rem; padding-bottom:4rem;">
+<section class="section" style="padding-top:2rem;">
     <div class="container">
-        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+        <div class="featured-header">
             <div>
-                <h2 style="font-size:1.6rem; font-weight:900; color:#ffffff; margin-bottom:0.25rem;">
+                <h2 class="text-white" style="font-size:1.6rem; font-weight:900; margin-bottom:0.25rem;">
                     پکیج‌ها و سورس‌کدهای آماده
                 </h2>
-                <p style="color:#9ca3af; font-size:0.875rem; margin:0;">
+                <p class="text-muted" style="font-size:0.875rem; margin:0;">
                     تحویل آنی با مستندات کامل و گارانتی ۱ ساله
                 </p>
             </div>
-            <a href="{{ url_for('public.search', type='products') }}" style="color:#FBB03B; font-weight:800; text-decoration:none;">
-                مشاهده همه محصولات ←
+            <a href="{{ url_for('public.search', type='products') }}" class="text-yellow font-bold" style="text-decoration:none;">
+                مشاهده همه محصولات
+                <span aria-hidden="true">←</span>
             </a>
         </div>
-        
+
         <div class="row g-4">
-            {% for product in featured_products %}
+            {% for product in featured_products[:6] %}
             <div class="col-12 col-md-6 col-lg-4">
                 {{ product_card(product) }}
             </div>

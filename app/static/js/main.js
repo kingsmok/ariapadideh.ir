@@ -1,197 +1,231 @@
-/* ==========================================================================
-   RAHSA DEV - Interactive Javascript Architecture
-   Smart Glass Scroll Navbar, Off-canvas Mobile Drawer, AJAX Cart, Quick Search
-   ========================================================================== */
+/**
+ * Rahsa Dev — Interactive Behaviors
+ * Mobile drawer, back-to-top, loading states, flash auto-dismiss, etc.
+ * Vanilla JS, no dependencies.
+ */
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ==================== Section A: Navbar Scroll Transition ====================
-    const siteNavbar = document.getElementById('site-navbar');
-    if (siteNavbar) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 50) {
-                siteNavbar.classList.add('scrolled');
-            } else {
-                siteNavbar.classList.remove('scrolled');
-            }
-        });
-    }
+(function () {
+    'use strict';
 
-    // ==================== Off-canvas Mobile Drawer ====================
-    const drawerOverlay = document.getElementById('mobile-drawer-overlay');
-    const mobileDrawer = document.getElementById('mobile-drawer');
-    const openDrawerBtn = document.getElementById('open-drawer-btn');
-    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    // ============================================================
+    // Mobile Drawer
+    // ============================================================
+    const drawer = document.querySelector('.mobile-drawer-container');
+    const overlay = document.querySelector('.mobile-drawer-overlay');
+    const openBtn = document.getElementById('open-drawer-btn');
+    const closeBtn = document.getElementById('close-drawer-btn');
 
     function openDrawer() {
-        if (mobileDrawer && drawerOverlay) {
-            mobileDrawer.classList.add('active');
-            drawerOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
+        if (!drawer || !overlay) return;
+        drawer.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        // Focus the close button for keyboard users
+        if (closeBtn) setTimeout(() => closeBtn.focus(), 100);
     }
 
     function closeDrawer() {
-        if (mobileDrawer && drawerOverlay) {
-            mobileDrawer.classList.remove('active');
-            drawerOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+        if (!drawer || !overlay) return;
+        drawer.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
-    if (openDrawerBtn) openDrawerBtn.addEventListener('click', openDrawer);
-    if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
-    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+    if (openBtn) openBtn.addEventListener('click', openDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (overlay) overlay.addEventListener('click', closeDrawer);
 
-    // ==================== Quick Search API ====================
-    const searchInputs = document.querySelectorAll('.js-quick-search');
-    searchInputs.forEach(input => {
-        let debounceTimer;
-        const resultsContainer = input.parentElement.querySelector('.search-results-dropdown') || 
-                                 document.getElementById('search-results');
-
-        input.addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            const query = this.value.trim();
-
-            if (query.length < 2) {
-                if (resultsContainer) {
-                    resultsContainer.classList.remove('show');
-                    resultsContainer.innerHTML = '';
-                }
-                return;
-            }
-
-            debounceTimer = setTimeout(() => {
-                fetch(`/api/quick-search?q=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!resultsContainer) return;
-                        
-                        if (data.results && data.results.length > 0) {
-                            let html = '<div style="font-size:0.78rem; font-weight:700; color:#9ca3af; padding:0.4rem 0.6rem; border-bottom:1px solid rgba(255,255,255,0.1);">نتایج جستجو:</div>';
-                            data.results.forEach(item => {
-                                html += `
-                                    <a href="${item.url}" style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem; text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff;">
-                                        <div style="font-size:1.2rem;">${item.type === 'product' ? '📦' : '📁'}</div>
-                                        <div style="flex:1;">
-                                            <div style="font-weight:700; font-size:0.875rem;">${item.title}</div>
-                                            <div style="font-size:0.75rem; color:#fca311; font-weight:800;">${item.price ? item.price : ''}</div>
-                                        </div>
-                                    </a>
-                                `;
-                            });
-                            resultsContainer.innerHTML = html;
-                            resultsContainer.classList.add('show');
-                        } else {
-                            resultsContainer.innerHTML = '<div style="padding:0.75rem; text-align:center; color:#9ca3af; font-size:0.85rem;">هیچ دیتایی یافت نشد.</div>';
-                            resultsContainer.classList.add('show');
-                        }
-                    })
-                    .catch(err => console.error('Search API error:', err));
-            }, 250);
-        });
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.header-search-wrap') && !e.target.closest('.search-form')) {
-            document.querySelectorAll('.search-results-dropdown').forEach(el => el.classList.remove('show'));
+    // ESC to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer && drawer.classList.contains('active')) {
+            closeDrawer();
         }
     });
 
-    // ==================== AJAX Add to Cart ====================
-    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const productId = this.getAttribute('data-product-id');
-            if (!productId) return;
-
-            const origText = this.innerHTML;
-            this.innerHTML = '⏳ ثبت...';
-            this.disabled = true;
-
-            fetch('/api/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                },
-                body: JSON.stringify({ product_id: parseInt(productId), quantity: 1 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                this.innerHTML = origText;
-                this.disabled = false;
-                if (data.success) {
-                    showToast('با موفقیت ثبت نام / به سبد اضافه شد! 🛒', 'success');
-                    document.querySelectorAll('.cart-badge-count').forEach(badge => {
-                        badge.textContent = data.cart_count || 0;
-                    });
-                } else {
-                    showToast(data.message || 'خطا در انجام درخواست', 'error');
-                }
-            })
-            .catch(err => {
-                this.innerHTML = origText;
-                this.disabled = false;
-                showToast('خطایی رخ داد.', 'error');
-            });
-        });
-    });
-
-    // ==================== Toast Notifications ====================
-    function showToast(message, type = 'info') {
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            container.style.cssText = 'position:fixed; bottom:80px; inset-inline-end:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:0.5rem;';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            background:#14213d; color:#fff; padding:0.85rem 1.25rem; border-radius:0.75rem; 
-            box-shadow:0 10px 25px rgba(0,0,0,0.5); font-size:0.875rem; border-inline-start:4px solid ${type === 'success' ? '#10b981' : '#ef4444'};
-            animation: fadeIn 0.3s ease;
-        `;
-        toast.textContent = message;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3500);
-    }
-
-    // ==================== Back To Top ====================
-    const backToTopBtn = document.getElementById('back-to-top');
-    if (backToTopBtn) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 300) {
-                backToTopBtn.classList.add('show');
-            } else {
-                backToTopBtn.classList.remove('show');
+    // ============================================================
+    // Back to Top
+    // ============================================================
+    const backToTop = document.getElementById('back-to-top');
+    if (backToTop) {
+        // Throttled scroll listener
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    if (window.scrollY > 400) {
+                        backToTop.classList.add('show');
+                    } else {
+                        backToTop.classList.remove('show');
+                    }
+                    ticking = false;
+                });
+                ticking = true;
             }
-        });
-        backToTopBtn.addEventListener('click', function() {
+        }, { passive: true });
+
+        backToTop.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
-    // ==================== FAQ Accordion ====================
-    document.querySelectorAll('.faq-question-toggle').forEach(button => {
-        button.addEventListener('click', () => {
-            const faqItem = button.parentElement;
-            const answer = faqItem.querySelector('.faq-answer-body');
-            const isVisible = answer.style.display === 'block';
+    // ============================================================
+    // Flash Messages Auto-Dismiss
+    // ============================================================
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach((msg) => {
+        // Auto-dismiss after 5s
+        setTimeout(() => {
+            msg.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            msg.style.opacity = '0';
+            msg.style.transform = 'translateX(-20px)';
+            setTimeout(() => msg.remove(), 400);
+        }, 5000);
 
-            document.querySelectorAll('.faq-answer-body').forEach(ans => ans.style.display = 'none');
-            document.querySelectorAll('.faq-icon-arrow').forEach(arrow => arrow.textContent = '➕');
+        // Manual close button
+        const closeBtn = msg.querySelector('.flash-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                msg.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                msg.style.opacity = '0';
+                msg.style.transform = 'translateX(-20px)';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }
+    });
 
-            if (!isVisible) {
-                answer.style.display = 'block';
-                button.querySelector('.faq-icon-arrow').textContent = '➖';
+    // ============================================================
+    // Loading State on Form Submit
+    // ============================================================
+    document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', (e) => {
+            const submitBtn = form.querySelector('[type="submit"]');
+            // Skip if form has data-no-loading
+            if (form.hasAttribute('data-no-loading')) return;
+            // Skip if button is explicitly marked
+            if (submitBtn && submitBtn.hasAttribute('data-no-loading')) return;
+
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.classList.add('is-loading');
+                submitBtn.disabled = true;
+
+                // Re-enable after 15s as a safety net (in case the server hangs)
+                setTimeout(() => {
+                    submitBtn.classList.remove('is-loading');
+                    submitBtn.disabled = false;
+                }, 15000);
             }
         });
     });
-});
+
+    // ============================================================
+    // Persian Numeral Conversion (display-only, doesn't change DOM value)
+    // ============================================================
+    function toPersianDigits(str) {
+        const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const fa = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        let result = String(str);
+        for (let i = 0; i < 10; i++) {
+            result = result.replace(new RegExp(en[i], 'g'), fa[i]);
+        }
+        return result;
+    }
+
+    // Apply to all elements with [data-persian-num] attribute
+    document.querySelectorAll('[data-persian-num]').forEach((el) => {
+        // For text nodes only (don't change input values)
+        if (el.children.length === 0) {
+            el.textContent = toPersianDigits(el.textContent);
+        }
+    });
+
+    // ============================================================
+    // Auto-dismiss alerts after action (e.g., added to cart)
+    // ============================================================
+    const cartCountBadge = document.querySelector('.bottom-nav-tab .badge-count');
+    if (cartCountBadge) {
+        // Pulse animation when count changes
+        const observer = new MutationObserver(() => {
+            cartCountBadge.style.animation = 'none';
+            setTimeout(() => {
+                cartCountBadge.style.animation = 'pulse 0.4s ease';
+            }, 10);
+        });
+        observer.observe(cartCountBadge, { childList: true, characterData: true, subtree: true });
+    }
+
+    // ============================================================
+    // Smooth anchor scroll for in-page links
+    // ============================================================
+    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href === '#' || href.length < 2) return;
+            const target = document.querySelector(href);
+            if (target) {
+                e.preventDefault();
+                const offset = 80; // header height
+                const top = target.getBoundingClientRect().top + window.scrollY - offset;
+                window.scrollTo({ top, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // ============================================================
+    // Image Lazy Loading Fallback (for older browsers)
+    // ============================================================
+    if ('loading' in HTMLImageElement.prototype) {
+        // Native lazy loading is supported — no-op
+    } else {
+        // Fallback: IntersectionObserver
+        const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                        }
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+            lazyImages.forEach((img) => imageObserver.observe(img));
+        } else {
+            // Last resort: load all
+            lazyImages.forEach((img) => {
+                if (img.dataset.src) img.src = img.dataset.src;
+            });
+        }
+    }
+
+    // ============================================================
+    // Add pulse animation (used by cart badge)
+    // ============================================================
+    if (!document.getElementById('pulse-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'pulse-keyframes';
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.4); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // ============================================================
+    // Active link highlighting in mobile bottom nav
+    // ============================================================
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.bottom-nav-tab').forEach((tab) => {
+        const href = tab.getAttribute('href');
+        if (href && href !== '/' && currentPath.startsWith(href)) {
+            tab.classList.add('active');
+        } else if (href === '/' && currentPath === '/') {
+            tab.classList.add('active');
+        }
+    });
+
+})();

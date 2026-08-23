@@ -1,68 +1,173 @@
 {% extends 'base.html' %}
 
-{% block title %}رهسا دیو - درباره ما و تیم مهندسی{% endblock %}
+{% block title %}درباره ما و تیم مهندسی | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<main class="py-12 px-4 md:px-12 max-w-[1280px] mx-auto w-full flex flex-col gap-16">
-    
-    <!-- Hero Section: The Narrative -->
-    <section class="flex flex-col md:flex-row items-center gap-12">
-        <div class="flex-1 flex flex-col gap-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-container border border-white/5 w-fit" style="background:rgba(20, 33, 61, 0.6); border:1px solid rgba(255,255,255,0.1);">
-                <span style="color:#FBB03B; font-size:1.1rem;">⚙️</span>
-                <span class="font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase" style="font-size:0.8rem; color:#9ca3af; font-weight:700;">Digital Craftsmanship</span>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section">
+    <div class="hero-glow-1" aria-hidden="true"></div>
+    <div class="hero-glow-2" aria-hidden="true"></div>
+
+    <div class="container" style="position:relative; z-index:10;">
+        <div class="row align-items-center gy-5">
+
+            <div class="col-12 col-lg-7">
+                <div class="hero-badge">
+                    <span aria-hidden="true" style="color:#FBB03B; font-size:1.1rem;">⚙️</span>
+                    <span class="hero-badge-text">Digital Craftsmanship</span>
+                </div>
+
+                <h1 class="hero-title">
+                    معماری <span class="gold-gradient-text">نرم‌افزار</span> در قلب شیراز
+                </h1>
+
+                <p class="hero-description">
+                    <strong>رهسا دیو</strong> تنها یک شرکت توسعه نرم‌افزار نیست؛ ما یک آتلیه معماری دیجیتال هستیم.
+                    با تکیه بر اصول مستحکم مهندسی و زیبایی‌شناسی مدرن، راهکارهای سازمانی را خلق می‌کنیم که
+                    نه تنها کارآمد، بلکه الهام‌بخش هستند. اعتماد و تخصص، دو ستون اصلی بنای ما در هر پروژه است.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <a href="/#quote-section" class="btn-rahsa-cta" aria-label="شروع پروژه">
+                        <span>شروع پروژه</span>
+                        <span aria-hidden="true">←</span>
+                    </a>
+                    <a href="#values-section" class="btn-rahsa-outline" aria-label="مشاهده ارزش‌های ما">
+                        <span>ارزش‌های ما</span>
+                    </a>
+                </div>
             </div>
-            
-            <h1 style="font-size:2.8rem; font-weight:900; color:#ffffff; line-height:1.25;">
-                معماری <span class="gold-gradient-text" style="background:linear-gradient(90deg, #FBB03B 0%, #FFDDB4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">نرم‌افزار</span> در قلب شیراز
-            </h1>
 
-            <p style="color:#cbd5e1; font-size:1.05rem; line-height:1.85; max-width:640px;">
-                <strong>رهسا دیو</strong> تنها یک شرکت توسعه نرم‌افزار نیست؛ ما یک آتلیه معماری دیجیتال هستیم. با تکیه بر اصول مستحکم مهندسی و زیبایی‌شناسی مدرن، راهکارهای سازمانی را خلق می‌کنیم که نه تنها کارآمد، بلکه الهام‌بخش هستند. اعتماد و تخصص، دو ستون اصلی بنای ما در هر پروژه است.
-            </p>
-
-            <div class="d-flex flex-wrap gap-3 mt-2">
-                <a href="/#quote-section" class="btn-primary" style="background-color:#FBB03B; color:#0A1128 !important; font-weight:800; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none;">
-                    شروع پروژه
-                </a>
-                <a href="#team-section" class="glass-card" style="background:rgba(20, 33, 61, 0.7); border:1px solid rgba(255,255,255,0.1); color:#ffffff !important; font-weight:700; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none;">
-                    آشنایی با تیم
-                </a>
+            <div class="col-12 col-lg-5">
+                <div class="hero-visual glass-card">
+                    <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}"
+                         alt="معماری رهسا دیو"
+                         title="Rahsa Architecture"
+                         loading="lazy"
+                         decoding="async"
+                         onerror="this.style.display='none'">
+                </div>
             </div>
-        </div>
 
-        <div class="flex-1 w-full relative min-h-[380px] rounded-2xl overflow-hidden glass-card">
-            <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}" alt="Rahsa Architecture" style="width:100%; height:100%; object-fit:cover; border-radius:1rem;">
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Core Values Bento Grid -->
-    <section class="flex flex-col gap-8 mt-12">
-        <div class="text-center mb-4">
-            <h2 style="font-size:2rem; font-weight:900; color:#ffffff; margin-bottom:0.5rem;">ارزش‌های بنیادین ما</h2>
-            <p style="color:#9ca3af; font-size:0.95rem;">اصولی که هر خط کد ما را هدایت می‌کنند.</p>
+<!-- ==================== CORE VALUES ==================== -->
+<section id="values-section" class="section section-dark">
+    <div class="container">
+
+        <div class="section-divider">
+            <h2>ارزش‌های بنیادین ما</h2>
+            <p>اصولی که هر خط کد ما را هدایت می‌کنند.</p>
         </div>
 
         <div class="row g-4">
-            <!-- Value 1 -->
             <div class="col-12 col-md-4">
-                <div class="glass-card p-4 rounded-2xl h-100" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
-                    <div style="font-size:2rem; margin-bottom:1rem; color:#FBB03B;">🛡️</div>
-                    <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">اعتماد و امنیت</h3>
-                    <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">در سطح سازمانی، امنیت یک ویژگی نیست، بلکه پیش‌نیاز است. معماری ما بر پایه مستحکم‌ترین پروتکل‌ها بنا شده است.</p>
-                </div>
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🛡️</div>
+                    <h3 class="service-title">اعتماد و امنیت</h3>
+                    <p class="service-description">
+                        در سطح سازمانی، امنیت یک ویژگی نیست، بلکه پیش‌نیاز است.
+                        معماری ما بر پایه مستحکم‌ترین پروتکل‌ها بنا شده است.
+                    </p>
+                </article>
             </div>
 
-            <!-- Value 2 -->
-            <div class="col-12 col-md-8">
-                <div class="glass-card p-4 rounded-2xl h-100" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
-                    <div style="font-size:2rem; margin-bottom:1rem; color:#FBB03B;">💎</div>
-                    <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">صناعت دیجیتال (Digital Craftsmanship)</h3>
-                    <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">ما به نرم‌افزار به چشم یک اثر هنری مهندسی شده نگاه می‌کنیم. کدهای تمیز (Clean Code)، ساختارهای ماژولار و رابط کاربری شیشه‌ای ما، همگی نشان از تعهد ما به کیفیت بی‌نقص است.</p>
-                </div>
+            <div class="col-12 col-md-4">
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">💎</div>
+                    <h3 class="service-title">صناعت دیجیتال</h3>
+                    <p class="service-description">
+                        ما به نرم‌افزار به چشم یک اثر هنری مهندسی‌شده نگاه می‌کنیم.
+                        کدهای تمیز و ساختارهای ماژولار، نشان از تعهد ما به کیفیت بی‌نقص است.
+                    </p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🚀</div>
+                    <h3 class="service-title">نوآوری مستمر</h3>
+                    <p class="service-description">
+                        همواره در حال یادگیری و به‌کارگیری آخرین تکنولوژی‌های روز دنیا
+                        برای ارائه راهکارهای پیشرو و آینده‌نگر هستیم.
+                    </p>
+                </article>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-</main>
+<!-- ==================== TEAM ==================== -->
+<section id="team-section" class="section">
+    <div class="container">
+        <div class="section-divider">
+            <h2>تیم ما</h2>
+            <p>مهندسانی که رؤیای شما را به کد تبدیل می‌کنند.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="service-card text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3" aria-hidden="true" style="width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-gold) 100%); font-size:2.5rem; color:#fff;">
+                        👨‍💻
+                    </div>
+                    <h3 class="service-title">علی خادمی</h3>
+                    <p class="text-yellow" style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem;">بنیان‌گذار و سرپرست فنی</p>
+                    <p class="service-description">
+                        بیش از ۱۲ سال تجربه در توسعه نرم‌افزارهای سازمانی و معماری سیستم‌های مقیاس‌پذیر.
+                    </p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="service-card text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3" aria-hidden="true" style="width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-gold) 100%); font-size:2.5rem; color:#fff;">
+                        👩‍💻
+                    </div>
+                    <h3 class="service-title">مریم احمدی</h3>
+                    <p class="text-yellow" style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem;">مدیر محصول</p>
+                    <p class="service-description">
+                        متخصص طراحی تجربه کاربری و مدیریت محصول. عاشق خلق رابط‌های کاربری زیبا و کاربردی.
+                    </p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="service-card text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3" aria-hidden="true" style="width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-gold) 100%); font-size:2.5rem; color:#fff;">
+                        🧑‍💻
+                    </div>
+                    <h3 class="service-title">حسین رضایی</h3>
+                    <p class="text-yellow" style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem;">مهندس ارشد DevOps</p>
+                    <p class="service-description">
+                        متخصص زیرساخت و استقرار. اطمینان از عملکرد بی‌نقص سیستم‌ها در مقیاس سازمانی.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== CTA ==================== -->
+<section class="section">
+    <div class="container">
+        <div class="glass-card" style="padding:3rem 2rem; text-align:center; max-width:800px; margin:0 auto; background:linear-gradient(135deg, rgba(251,176,59,0.08) 0%, rgba(107,33,168,0.08) 100%); border-color:rgba(251,176,59,0.3);">
+            <div aria-hidden="true" style="font-size:3rem; margin-bottom:1rem;">🤝</div>
+            <h2 class="text-white" style="font-size:1.5rem; font-weight:900; margin-bottom:0.75rem;">
+                آماده همکاری با شما هستیم
+            </h2>
+            <p class="text-muted" style="font-size:0.95rem; max-width:500px; margin:0 auto 1.5rem;">
+                ایده‌های خود را با ما در میان بگذارید. تیم ما آماده تبدیل رؤیای شما به واقعیت است.
+            </p>
+            <a href="/#quote-section" class="btn-rahsa-cta" aria-label="تماس با ما">
+                <span>تماس با ما</span>
+                <span aria-hidden="true">←</span>
+            </a>
+        </div>
+    </div>
+</section>
+
 {% endblock %}

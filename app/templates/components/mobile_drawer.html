@@ -1,72 +1,144 @@
-<!-- Mobile Navigation Off-canvas Drawer Component -->
+<!-- Mobile Navigation Off-canvas Drawer -->
 <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
 
-<div class="mobile-drawer-container" id="mobile-drawer" style="background:#090e24; border-inline-start:1px solid rgba(255,255,255,0.12);">
-    
+<aside class="mobile-drawer-container"
+       id="mobile-drawer"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="drawer-title"
+       aria-hidden="true">
+
     <!-- Drawer Header -->
-    <div style="background:#050814; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1);">
-        <div class="d-flex align-items-center gap-2.5">
-            <div class="brand-badge-rahsa" style="width:38px; height:38px; font-size:1.2rem; background:linear-gradient(135deg, #6b21a8 0%, #FBB03B 100%); color:#ffffff; font-weight:900; border-radius:0.6rem; display:flex; align-items:center; justify-content:center;">ر</div>
+    <div class="mobile-drawer-header">
+        <div class="d-flex align-items-center gap-2">
+            <div class="brand-badge-rahsa" aria-hidden="true">ر</div>
             <div>
-                <span style="font-weight:900; font-size:1.15rem; color:#ffffff; display:block; line-height:1.2;">{{ site_settings.agency_name or 'رهسا دیو' }}</span>
-                <span style="font-size:0.7rem; color:#FBB03B; font-weight:700;">منوی دسترسی سریع</span>
+                <span id="drawer-title" class="d-block font-black text-white" style="font-size:1.15rem; line-height:1.2;">
+                    {{ site_settings.general_site_name or 'رهسا دیو' }}
+                </span>
+                <span class="text-yellow" style="font-size:0.7rem; font-weight:700;">منوی دسترسی سریع</span>
             </div>
         </div>
-        <button class="mobile-drawer-close" id="close-drawer-btn" aria-label="بستن منو" style="background:rgba(255,255,255,0.08); border:none; color:#ffffff; width:34px; height:34px; border-radius:9999px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✖</button>
+        <button type="button"
+                class="mobile-drawer-close"
+                id="close-drawer-btn"
+                aria-label="بستن منو">
+            ✕
+        </button>
     </div>
 
     <!-- Drawer Body -->
-    <div class="mobile-drawer-body" style="padding:1.25rem; flex:1; overflow-y:auto;">
-        
+    <div class="mobile-drawer-body">
+
         <!-- User Authentication Card -->
-        <div style="background:rgba(255,255,255,0.04); border-radius:0.85rem; padding:1rem; border:1px solid rgba(255,255,255,0.08); margin-bottom:1.5rem;">
+        <div class="glass-card p-3 mb-4" style="border-radius:0.85rem;">
             {% if current_user.is_authenticated %}
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <span style="font-size:1.3rem;">👤</span>
+                    <span aria-hidden="true" style="font-size:1.3rem;">👤</span>
                     <div>
-                        <div style="font-weight:800; font-size:0.95rem; color:#ffffff;">{{ current_user.full_name }}</div>
-                        <div style="font-size:0.775rem; color:#9ca3af;">{{ current_user.email or current_user.phone }}</div>
+                        <div class="font-bold text-white" style="font-size:0.95rem;">{{ current_user.full_name }}</div>
+                        <div class="text-muted" style="font-size:0.775rem;">{{ current_user.email or current_user.phone }}</div>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-2">
-                    <a href="{{ url_for('user.dashboard') }}" class="btn-rahsa-cta" style="padding:0.4rem 0.85rem; font-size:0.8rem; flex:1; text-align:center; border-radius:9999px; text-decoration:none; background:#FBB03B; color:#0A1128 !important; font-weight:800;" aria-label="پنل کاربری">📌 پنل کاربری</a>
-                    <a href="{{ url_for('user.logout') }}" class="btn-rahsa-outline" style="padding:0.4rem 0.85rem; font-size:0.8rem; color:#ef4444 !important; border-color:rgba(239,68,68,0.4); text-decoration:none; border-radius:9999px;" aria-label="خروج">خروج</a>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('user.dashboard') }}" class="btn-rahsa-cta flex-1" style="padding:0.5rem 0.85rem; font-size:0.8rem; text-align:center;" aria-label="پنل کاربری">
+                        📌 پنل کاربری
+                    </a>
+                    <a href="{{ url_for('user.logout') }}" class="btn-rahsa-outline" style="padding:0.5rem 0.85rem; font-size:0.8rem; color:#ef4444 !important; border-color:rgba(239,68,68,0.4);" aria-label="خروج">
+                        خروج
+                    </a>
                 </div>
             {% else %}
-                <div style="font-weight:700; font-size:0.875rem; color:#e2e8f0; margin-bottom:0.6rem;">خوش آمدید به پلتفرم رهسا دیو</div>
-                <a href="{{ url_for('user.login') }}" class="btn-rahsa-cta w-100" style="padding:0.55rem; font-size:0.85rem; text-align:center; border-radius:9999px; text-decoration:none; background:#FBB03B; color:#0A1128 !important; font-weight:900; display:block;" aria-label="ورود به حساب">👤 ورود / ثبت‌نام</a>
+                <div class="text-white font-bold mb-2" style="font-size:0.875rem;">خوش آمدید به پلتفرم رهسا دیو</div>
+                <a href="{{ url_for('user.login') }}" class="btn-rahsa-cta w-100" style="padding:0.6rem; font-size:0.85rem; text-align:center; display:block;" aria-label="ورود به حساب">
+                    👤 ورود / ثبت‌نام
+                </a>
             {% endif %}
         </div>
 
-        <!-- Categorized Nav Links -->
-        <div style="margin-bottom:1.5rem;">
-            <div style="font-size:0.75rem; font-weight:800; color:#FBB03B; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">خدمات و محصولات اصلی</div>
-            <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:0.9rem;">
-                <li><a href="{{ url_for('public.home') }}" style="color:#e2e8f0; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;" class="hover:bg-slate-800">💻 صفحه اصلی</a></li>
-                <li><a href="{{ url_for('public.category', slug='web-design') }}" style="color:#e2e8f0; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;">🌐 طراحی وب‌سایت اختصاصی</a></li>
-                <li><a href="{{ url_for('public.category', slug='bots') }}" style="color:#e2e8f0; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;">🤖 ساخت ربات تلگرام و ایتا</a></li>
-                <li><a href="{{ url_for('public.category', slug='scripts') }}" style="color:#e2e8f0; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;">📜 اسکریپت پایتون و اتوماسیون</a></li>
-                <li><a href="{{ url_for('public.category', slug='software') }}" style="color:#e2e8f0; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;">⚙️ توسعه نرم‌افزار سفارشی</a></li>
-                <li><a href="/#quote-section" style="color:#FBB03B; font-weight:800; text-decoration:none; display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:0.5rem;">🧮 محاسبه‌گر قیمت پروژه</a></li>
-            </ul>
+        <!-- Main Services -->
+        <div class="mb-4">
+            <h3 class="text-yellow" style="font-size:0.75rem; font-weight:800; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                خدمات و محصولات اصلی
+            </h3>
+            <nav aria-label="دسته‌بندی خدمات">
+                <ul style="list-style:none; padding:0; margin:0;">
+                    <li>
+                        <a href="{{ url_for('public.home') }}"
+                           class="mobile-drawer-link {{ 'active' if request.endpoint == 'public.home' else '' }}">
+                            <span aria-hidden="true">💻</span> صفحه اصلی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='web-design') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">🌐</span> طراحی وب‌سایت اختصاصی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='smart-bots') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">🤖</span> ساخت ربات تلگرام و ایتا
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='programming-scripts') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">📜</span> اسکریپت پایتون و اتوماسیون
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='software-automation') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">⚙️</span> توسعه نرم‌افزار سفارشی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/#quote-section" class="mobile-drawer-link" style="color:var(--accent-gold); font-weight:800;">
+                            <span aria-hidden="true">🧮</span> محاسبه‌گر قیمت پروژه
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
-        <div style="margin-bottom:1.5rem;">
-            <div style="font-size:0.75rem; font-weight:800; color:#FBB03B; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">اطلاعات و پشتیبانی</div>
-            <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:0.9rem;">
-                <li><a href="{{ url_for('public.about') }}" style="color:#cbd5e1; text-decoration:none; display:block; padding:0.35rem 0.5rem;">🏢 درباره شرکت رهسا دیو</a></li>
-                <li><a href="{{ url_for('public.contact') }}" style="color:#cbd5e1; text-decoration:none; display:block; padding:0.35rem 0.5rem;">📞 تماس و مشاوره رایگان</a></li>
-                <li><a href="{{ url_for('public.faq') }}" style="color:#cbd5e1; text-decoration:none; display:block; padding:0.35rem 0.5rem;">❓ سوالات متداول</a></li>
-                <li><a href="{{ url_for('public.blog') }}" style="color:#cbd5e1; text-decoration:none; display:block; padding:0.35rem 0.5rem;">📰 مجله تخصصی نرم‌افزار</a></li>
-            </ul>
+        <!-- Information & Support -->
+        <div class="mb-4">
+            <h3 class="text-yellow" style="font-size:0.75rem; font-weight:800; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                اطلاعات و پشتیبانی
+            </h3>
+            <nav aria-label="اطلاعات و پشتیبانی">
+                <ul style="list-style:none; padding:0; margin:0;">
+                    <li>
+                        <a href="{{ url_for('public.about') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">🏢</span> درباره شرکت رهسا دیو
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.contact') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">📞</span> تماس و مشاوره رایگان
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.faq') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">❓</span> سوالات متداول
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.blog') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">📰</span> مجله تخصصی نرم‌افزار
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
         <!-- Contact Hotline Box -->
-        <div style="background:rgba(251,176,59,0.08); border:1px solid rgba(251,176,59,0.25); padding:1rem; border-radius:0.85rem;">
-            <div style="font-size:0.8rem; color:#FBB03B; font-weight:800; margin-bottom:0.25rem;">📞 مشاوره تلفنی مستقیم:</div>
-            <div style="font-size:1.1rem; font-weight:900; color:#ffffff; direction:ltr; text-align:right;">071-37271621</div>
-            <div style="font-size:1.1rem; font-weight:900; color:#ffffff; direction:ltr; text-align:right;">021-88991234</div>
+        <div class="glass-card p-3" style="background:rgba(251,176,59,0.08); border-color:rgba(251,176,59,0.25);">
+            <div class="text-yellow font-bold mb-1" style="font-size:0.8rem;">📞 مشاوره تلفنی مستقیم:</div>
+            <div class="bidi-plaintext font-black text-white" style="font-size:1.1rem;">071-37271621</div>
+            <div class="bidi-plaintext font-black text-white" style="font-size:1.1rem;">021-88991234</div>
         </div>
 
     </div>
-</div>
+</aside>

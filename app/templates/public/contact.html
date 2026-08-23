@@ -1,111 +1,136 @@
 {% extends 'base.html' %}
 
-{% block title %}تماس با ما و استعلام قیمت | رهسا دیو{% endblock %}
+{% block title %}تماس با ما و استعلام قیمت | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
-<section style="padding-top:4rem; padding-bottom:5rem;">
+<section class="section">
     <div class="container">
-        
+
+        <!-- Page Header -->
         <div class="text-center mb-5">
-            <span style="color:#FBB03B; font-weight:800; font-size:0.85rem; text-transform:uppercase;" class="d-block mb-2">📞 پل‌های ارتباطی و پشتیبانی</span>
-            <h1 style="font-size:2.4rem; font-weight:900; color:#ffffff; margin-bottom:0.75rem;">
-                ارتباط با تیم مهندسی <span style="color:#FBB03B;">رهسا دیو</span>
+            <span class="d-block text-yellow font-bold mb-2" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;" aria-hidden="true">
+                📞 پل‌های ارتباطی و پشتیبانی
+            </span>
+            <h1 class="text-white" style="font-size:clamp(1.75rem, 4vw, 2.4rem); font-weight:900; margin-bottom:0.75rem;">
+                ارتباط با تیم مهندسی <span class="text-yellow">رهسا دیو</span>
             </h1>
-            <p style="color:#94a3b8; font-size:0.95rem; max-width:600px; margin:0 auto;">
+            <p class="text-muted" style="font-size:0.95rem; max-width:600px; margin:0 auto;">
                 جهت دریافت مشاوره اختصاصی، استعلام هزینه و زمان پروژه یا پیگیری سفارشات با ما در تماس باشید.
             </p>
         </div>
 
         {% if success %}
-        <div class="alert alert-success glass-card text-center p-4 rounded-xl mb-4" style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; font-weight:800;">
-            ✅ پیام شما با موفقیت ثبت شد! کارشناسان رهسا دیو در اسرع وقت با شما تماس خواهند گرفت.
+        <div class="flash-message success" role="alert" style="max-width:600px; margin:0 auto 2rem;">
+            <span class="flash-icon" aria-hidden="true">✓</span>
+            <span class="flash-text">پیام شما با موفقیت ثبت شد! کارشناسان رهسا دیو در اسرع وقت با شما تماس خواهند گرفت.</span>
         </div>
         {% endif %}
 
         <div class="row g-4">
-            
+
             <!-- Contact Info Cards -->
             <div class="col-12 col-lg-5">
                 <div class="d-flex flex-column gap-3">
-                    
-                    <div class="glass-card p-4 rounded-xl" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
+
+                    <!-- Phone -->
+                    <article class="glass-card" style="padding:1.5rem;">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <div style="font-size:1.6rem; color:#FBB03B;">☎️</div>
+                            <div aria-hidden="true" style="font-size:1.6rem; color:var(--accent-gold);">☎️</div>
                             <div>
-                                <h3 style="font-size:1.05rem; font-weight:800; color:#ffffff; margin:0;">خطوط ویژه تلفنی</h3>
-                                <span style="font-size:0.775rem; color:#94a3b8;">پاسخگویی ۹ صبح الی ۱۸ عصر</span>
+                                <h3 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">خطوط ویژه تلفنی</h3>
+                                <span class="text-muted" style="font-size:0.775rem;">پاسخگویی ۹ صبح الی ۱۸ عصر</span>
                             </div>
                         </div>
-                        <div style="font-size:1.25rem; font-weight:900; color:#FBB03B; direction:ltr; text-align:right;" class="pt-2">
+                        <div class="bidi-plaintext text-yellow font-black" style="font-size:1.15rem; padding-top:0.5rem;">
                             071-37271621 / 021-88991234
                         </div>
-                    </div>
+                    </article>
 
-                    <div class="glass-card p-4 rounded-xl" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
+                    <!-- Email -->
+                    <article class="glass-card" style="padding:1.5rem;">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <div style="font-size:1.6rem; color:#FBB03B;">✉️</div>
+                            <div aria-hidden="true" style="font-size:1.6rem; color:var(--accent-gold);">✉️</div>
                             <div>
-                                <h3 style="font-size:1.05rem; font-weight:800; color:#ffffff; margin:0;">ایمیل رسمی شرکت</h3>
-                                <span style="font-size:0.775rem; color:#94a3b8;">ارسال پروپوزال و مکاتبات</span>
+                                <h3 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">ایمیل رسمی شرکت</h3>
+                                <span class="text-muted" style="font-size:0.775rem;">ارسال پروپوزال و مکاتبات</span>
                             </div>
                         </div>
-                        <div style="font-size:1.05rem; font-weight:800; color:#ffffff;" class="pt-2">
+                        <div class="bidi-plaintext text-white font-bold" style="font-size:1rem; padding-top:0.5rem;">
                             info@rahsadev.ir
                         </div>
-                    </div>
+                    </article>
 
-                    <div class="glass-card p-4 rounded-xl" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
+                    <!-- Address -->
+                    <article class="glass-card" style="padding:1.5rem;">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <div style="font-size:1.6rem; color:#FBB03B;">📍</div>
+                            <div aria-hidden="true" style="font-size:1.6rem; color:var(--accent-gold);">📍</div>
                             <div>
-                                <h3 style="font-size:1.05rem; font-weight:800; color:#ffffff; margin:0;">دفاتر مرکزی</h3>
-                                <span style="font-size:0.775rem; color:#94a3b8;">مراجعه حضوری با هماهنگی قبلی</span>
+                                <h3 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">دفاتر مرکزی</h3>
+                                <span class="text-muted" style="font-size:0.775rem;">مراجعه حضوری با هماهنگی قبلی</span>
                             </div>
                         </div>
-                        <div style="font-size:0.875rem; color:#cbd5e1; line-height:1.7;" class="pt-2">
-                            <strong>دفتر شیراز:</strong> بلوار دلاوران / پارک علم و فناوری<br>
-                            <strong>دفتر تهران:</strong> ناحیه نوآوری شریف / خیابان حبیب‌اللهی
+                        <div class="text-white" style="font-size:0.875rem; line-height:1.7; padding-top:0.5rem;">
+                            <strong class="text-yellow">دفتر شیراز:</strong> بلوار دلاوران / پارک علم و فناوری<br>
+                            <strong class="text-yellow">دفتر تهران:</strong> ناحیه نوآوری شریف / خیابان حبیب‌اللهی
                         </div>
-                    </div>
+                    </article>
 
                 </div>
             </div>
 
             <!-- Contact Form -->
             <div class="col-12 col-lg-7">
-                <div class="glass-card p-4 p-md-5 rounded-2xl" style="background:rgba(20,33,61,0.8); border:1px solid rgba(255,255,255,0.12);">
-                    <h2 style="font-size:1.4rem; font-weight:800; color:#ffffff; margin-bottom:1.5rem;">
-                        💡 ارسال پیام مستقیم به کارشناسان
+                <div class="glass-card" style="padding:2rem;">
+                    <h2 class="text-white" style="font-size:1.4rem; font-weight:800; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span aria-hidden="true">💡</span>
+                        <span>ارسال پیام مستقیم به کارشناسان</span>
                     </h2>
 
-                    <form method="POST">
+                    <form method="POST" novalidate>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
                         <div class="row gy-3">
                             <div class="col-12 col-sm-6">
-                                <label class="form-label" style="font-size:0.85rem; color:#e2e8f0; font-weight:700;">نام و نام خانوادگی *</label>
-                                <input type="text" name="name" class="form-control-rahsa" placeholder="مثال: علی رضایی" required>
+                                <label for="contact_name" class="form-label-rahsa">نام و نام خانوادگی *</label>
+                                <input type="text" id="contact_name" name="name" class="form-control-rahsa"
+                                       placeholder="مثال: علی رضایی" required minlength="3" maxlength="100">
                             </div>
+
                             <div class="col-12 col-sm-6">
-                                <label class="form-label" style="font-size:0.85rem; color:#e2e8f0; font-weight:700;">شماره همراه *</label>
-                                <input type="text" name="phone" class="form-control-rahsa" placeholder="09121234567" required>
+                                <label for="contact_phone" class="form-label-rahsa">شماره همراه *</label>
+                                <input type="tel" id="contact_phone" name="phone" class="form-control-rahsa bidi-plaintext"
+                                       placeholder="09121234567" required pattern="[0-9]{11}">
                             </div>
+
                             <div class="col-12 col-sm-6">
-                                <label class="form-label" style="font-size:0.85rem; color:#e2e8f0; font-weight:700;">ایمیل (اختیاری)</label>
-                                <input type="email" name="email" class="form-control-rahsa" placeholder="name@example.com">
+                                <label for="contact_email" class="form-label-rahsa">ایمیل (اختیاری)</label>
+                                <input type="email" id="contact_email" name="email" class="form-control-rahsa bidi-plaintext"
+                                       placeholder="name@example.com">
                             </div>
+
                             <div class="col-12 col-sm-6">
-                                <label class="form-label" style="font-size:0.85rem; color:#e2e8f0; font-weight:700;">موضوع استعلام *</label>
-                                <input type="text" name="subject" class="form-control-rahsa" placeholder="طراحی وب‌سایت / ربات تلگرام / ..." required>
+                                <label for="contact_subject" class="form-label-rahsa">موضوع استعلام *</label>
+                                <input type="text" id="contact_subject" name="subject" class="form-control-rahsa"
+                                       placeholder="طراحی وب‌سایت / ربات تلگرام / ..." required maxlength="150">
                             </div>
+
                             <div class="col-12">
-                                <label class="form-label" style="font-size:0.85rem; color:#e2e8f0; font-weight:700;">متن پیام *</label>
-                                <textarea name="message" class="form-control-rahsa" style="min-height:110px;" placeholder="نیازمندی‌ها و جزئیات پیام خود را شرح دهید..." required></textarea>
+                                <label for="contact_message" class="form-label-rahsa">متن پیام *</label>
+                                <textarea id="contact_message" name="message" class="form-control-rahsa"
+                                          style="min-height:110px;"
+                                          placeholder="نیازمندی‌ها و جزئیات پیام خود را شرح دهید..."
+                                          required minlength="10" maxlength="2000"></textarea>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-rahsa-cta w-100 mt-4" style="padding:0.75rem; font-size:0.9rem;">
-                            🚀 ارسال پیام و دریافت مشاوره
+                        <button type="submit" class="btn-rahsa-cta w-100 mt-4" style="padding:0.85rem; font-size:0.95rem;" aria-label="ارسال پیام و دریافت مشاوره">
+                            <span>ارسال پیام و دریافت مشاوره</span>
+                            <span aria-hidden="true">🚀</span>
                         </button>
+
+                        <p class="text-muted text-center" style="font-size:0.75rem; margin-top:1rem;">
+                            🔒 اطلاعات شما نزد ما کاملاً محفوظ است.
+                        </p>
                     </form>
                 </div>
             </div>
