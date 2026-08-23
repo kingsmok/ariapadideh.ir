@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.config import config
 from app.extensions import (
     db, migrate, login_manager, csrf, cache, compress, 
-    moment, babel, assets, init_redis
+    moment, babel, assets, init_redis, redis_client
 )
 
 
@@ -24,9 +24,24 @@ def create_app(config_name: str = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
-    # Initialize Redis
+    # Initialize Redis (non-fatal: if Redis is unreachable we keep going
+    # with cache/session fallbacks so the dev server can still boot).
     if config_name != 'testing':
         init_redis(app)
+        # If Redis isn't reachable and we were going to use it, fall back
+        # to a local in-memory cache so Flask-Caching and friends don't
+        # blow up the first time they're called.
+        if redis_client is None and app.config.get('CACHE_TYPE', '').lower().endswith('cache') \
+                and 'redis' in app.config.get('CACHE_TYPE', '').lower():
+            app.logger.warning(
+                "CACHE_TYPE=%r requires Redis but Redis is unavailable. "
+                "Falling back to SimpleCache for this process.",
+                app.config.get('CACHE_TYPE'),
+            )
+            app.config['CACHE_TYPE'] = 'SimpleCache'
+        # Also switch rate-limit storage off if it points at Redis.
+        if redis_client is None and app.config.get('RATELIMIT_ENABLED'):
+            app.config['RATELIMIT_ENABLED'] = False
     
     # Proxy fix for reverse proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
