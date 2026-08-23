@@ -3,26 +3,26 @@
 {% block page_title %}{{ 'ویرایش اسلاید' if item else 'افزودن اسلاید جدید' }}{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:700px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+<div style="padding:2rem; max-width:700px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
         {{ 'ویرایش اسلاید ' ~ item.title if item else 'افزودن اسلاید جدید' }}
     </h2>
 
     <form action="{{ url_for('admin.slider_item_edit', slider_id=slider.id, item_id=item.id) if item else url_for('admin.slider_item_edit', slider_id=slider.id) }}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
         <div class="mb-3">
-            <label class="form-label">عنوان اصلی *</label>
-            <input type="text" name="title" class="form-control" value="{{ item.title if item else '' }}" required placeholder="عنوان بزرگ هدر">
+            <label class="form-label-rahsa">عنوان اصلی *</label>
+            <input type="text" name="title" class="form-control-rahsa" value="{{ item.title if item else '' }}" required placeholder="عنوان بزرگ هدر">
         </div>
         <div class="mb-3">
-            <label class="form-label">توضیح زیرعنوان</label>
-            <input type="text" name="subtitle" class="form-control" value="{{ item.subtitle if item else '' }}" placeholder="توضیح کوتاه تحت عنوان">
+            <label class="form-label-rahsa">توضیح زیرعنوان</label>
+            <input type="text" name="subtitle" class="form-control-rahsa" value="{{ item.subtitle if item else '' }}" placeholder="توضیح کوتاه تحت عنوان">
         </div>
         <div class="mb-3">
-            <label class="form-label">لینک کلید</label>
-            <input type="text" name="url" class="form-control" value="{{ item.url if item else '' }}" placeholder="/contact">
+            <label class="form-label-rahsa">لینک کلید</label>
+            <input type="text" name="url" class="form-control-rahsa" value="{{ item.url if item else '' }}" placeholder="/contact">
         </div>
-        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">💾 ذخیره تغییرات اسلاید</button>
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">💾 ذخیره تغییرات اسلاید</button>
     </form>
 </div>
 {% endblock %}

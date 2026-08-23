@@ -3,12 +3,12 @@
 {% block page_title %}{{ 'ویرایش متن صفحه' if page else 'ایجاد صفحه جدید' }}{% endblock %}
 
 {% block admin_content %}
-<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:900px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
-        <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin:0;">
+<div style="padding:2rem; max-width:900px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
             {{ 'ویرایش متون صفحه ' ~ page.title if page else 'ایجاد صفحه جدید' }}
         </h2>
-        <a href="{{ url_for('admin.pages') }}" class="btn btn-outline-primary" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست صفحات</a>
+        <a href="{{ url_for('admin.pages') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست صفحات</a>
     </div>
 
     <form action="{{ url_for('admin.page_edit', page_id=page.id) if page else url_for('admin.page_edit') }}" method="POST">
@@ -16,23 +16,23 @@
         
         <div class="row">
             <div class="col-md-8 mb-3">
-                <label class="form-label">عنوان صفحه *</label>
-                {{ form.title(class="form-control", placeholder="مثال: درباره آریا پدیده") }}
+                <label class="form-label-rahsa">عنوان صفحه *</label>
+                {{ form.title(class="form-control-rahsa", placeholder="مثال: درباره آریا پدیده") }}
             </div>
             
             <div class="col-md-4 mb-3">
-                <label class="form-label">نامک (Slug)</label>
-                {{ form.slug(class="form-control", placeholder="about") }}
+                <label class="form-label-rahsa">نامک (Slug)</label>
+                {{ form.slug(class="form-control-rahsa", placeholder="about") }}
             </div>
             
             <div class="col-12 mb-3">
-                <label class="form-label">محتوای کامل و متن صفحه (پشتیبانی از کد HTML / متن)</label>
-                {{ form.content(class="form-control", style="min-height:220px;") }}
+                <label class="form-label-rahsa">محتوای کامل و متن صفحه (پشتیبانی از کد HTML / متن)</label>
+                {{ form.content(class="form-control-rahsa", style="min-height:220px;") }}
             </div>
             
             <div class="col-md-6 mb-3">
-                <label class="form-label">نوع صفحه</label>
-                {{ form.page_type(class="form-select") }}
+                <label class="form-label-rahsa">نوع صفحه</label>
+                {{ form.page_type(class="form-select-rahsa") }}
             </div>
             
             <div class="col-md-6 mb-3">
@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
             💾 ذخیره تغییرات متن صفحه
         </button>
     </form>

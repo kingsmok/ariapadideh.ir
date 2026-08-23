@@ -25,24 +25,24 @@
             <tr>
                 <td><strong>{{ lead.full_name }}</strong></td>
                 <td><a href="tel:{{ lead.phone }}" class="text-warning" style="direction:ltr; display:inline-block;">{{ lead.phone }}</a></td>
-                <td><span class="badge bg-primary">{{ lead.requested_service }}</span></td>
+                <td><span class="badge-rahsa primary">{{ lead.requested_service }}</span></td>
                 <td>{{ lead.budget_range | format_price if lead.budget_range else 'مشخص نشده' }}</td>
                 <td>{{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else '-' }}</td>
                 <td>
                     {% if lead.status == 'new' %}
                         <span class="badge bg-warning text-dark">جدید</span>
                     {% elif lead.status == 'contacted' %}
-                        <span class="badge bg-info">تماس گرفته شده</span>
+                        <span class="badge-rahsa info">تماس گرفته شده</span>
                     {% elif lead.status == 'closed' %}
-                        <span class="badge bg-success">بسته شده / موفق</span>
+                        <span class="badge-rahsa success">بسته شده / موفق</span>
                     {% else %}
-                        <span class="badge bg-secondary">{{ lead.status }}</span>
+                        <span class="badge-rahsa secondary">{{ lead.status }}</span>
                     {% endif %}
                 </td>
                 <td>
                     <form action="{{ url_for('admin.agency_lead_update_status', lead_id=lead.id) }}" method="POST" class="d-flex gap-1">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <select name="status" class="form-select form-select-sm bg-dark text-light">
+                        <select name="status" class="form-select-rahsa form-select-sm bg-dark text-light">
                             <option value="new" {{ 'selected' if lead.status == 'new' else '' }}>جدید</option>
                             <option value="contacted" {{ 'selected' if lead.status == 'contacted' else '' }}>تماس گرفته شده</option>
                             <option value="proposal_sent" {{ 'selected' if lead.status == 'proposal_sent' else '' }}>ارسال پروپوزال</option>
@@ -54,7 +54,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="7" class="text-center text-muted">هیچ لید مشاوره‌ای یافت نشد.</td>
+                <td colspan="7" class=" text-muted">هیچ لید مشاوره‌ای یافت نشد.</td>
             </tr>
             {% endfor %}
         </tbody>

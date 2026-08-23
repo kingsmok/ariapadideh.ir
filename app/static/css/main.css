@@ -1406,6 +1406,52 @@ textarea.form-control-rahsa::placeholder {
     border-bottom-color: var(--accent-gold);
 }
 
+/* ==================== Stat Cards (Admin Dashboard) ==================== */
+.stat-card {
+    background: var(--bg-navy-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-gold);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent-gold);
+}
+
+.stat-card.success::before { background: var(--accent-success); }
+.stat-card.warning::before { background: var(--accent-warning); }
+.stat-card.info::before { background: var(--accent-info); }
+.stat-card.danger::before { background: var(--accent-danger); }
+
+.stat-card-label {
+    color: var(--text-gray-400);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-value {
+    color: var(--text-white);
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
 /* ==================== Modals ==================== */
 .modal-overlay {
     position: fixed;

@@ -12,40 +12,40 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">عنوان پروژه</label>
-                <input type="text" name="title" class="form-control bg-dark text-light" value="{{ item.title if item else '' }}" required>
+                <label class="form-label-rahsa">عنوان پروژه</label>
+                <input type="text" name="title" class="form-control-rahsa bg-dark text-light" value="{{ item.title if item else '' }}" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">نام مستعار (Slug)</label>
-                <input type="text" name="slug" class="form-control bg-dark text-light" value="{{ item.slug if item else '' }}" required>
+                <label class="form-label-rahsa">نام مستعار (Slug)</label>
+                <input type="text" name="slug" class="form-control-rahsa bg-dark text-light" value="{{ item.slug if item else '' }}" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">نام کارفرما / برند</label>
-                <input type="text" name="client_name" class="form-control bg-dark text-light" value="{{ item.client_name if item else '' }}">
+                <label class="form-label-rahsa">نام کارفرما / برند</label>
+                <input type="text" name="client_name" class="form-control-rahsa bg-dark text-light" value="{{ item.client_name if item else '' }}">
             </div>
             <div class="col-md-6">
-                <label class="form-label">صنعت / حوزه کاری</label>
-                <input type="text" name="industry" class="form-control bg-dark text-light" value="{{ item.industry if item else '' }}">
+                <label class="form-label-rahsa">صنعت / حوزه کاری</label>
+                <input type="text" name="industry" class="form-control-rahsa bg-dark text-light" value="{{ item.industry if item else '' }}">
             </div>
             <div class="col-md-6">
-                <label class="form-label">تصویر اصلی (URL)</label>
-                <input type="text" name="featured_image" class="form-control bg-dark text-light" value="{{ item.featured_image if item else '' }}">
+                <label class="form-label-rahsa">تصویر اصلی (URL)</label>
+                <input type="text" name="featured_image" class="form-control-rahsa bg-dark text-light" value="{{ item.featured_image if item else '' }}">
             </div>
             <div class="col-md-6">
-                <label class="form-label">لینک مستقیم پروژه (Live URL)</label>
-                <input type="text" name="live_url" class="form-control bg-dark text-light" value="{{ item.live_url if item else '' }}">
+                <label class="form-label-rahsa">لینک مستقیم پروژه (Live URL)</label>
+                <input type="text" name="live_url" class="form-control-rahsa bg-dark text-light" value="{{ item.live_url if item else '' }}">
             </div>
             <div class="col-12">
-                <label class="form-label">چالش کارفرما</label>
-                <textarea name="challenge" class="form-control bg-dark text-light" rows="3">{{ item.challenge if item else '' }}</textarea>
+                <label class="form-label-rahsa">چالش کارفرما</label>
+                <textarea name="challenge" class="form-control-rahsa bg-dark text-light" rows="3">{{ item.challenge if item else '' }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label">راهکار رهسا دیو</label>
-                <textarea name="solution" class="form-control bg-dark text-light" rows="3">{{ item.solution if item else '' }}</textarea>
+                <label class="form-label-rahsa">راهکار رهسا دیو</label>
+                <textarea name="solution" class="form-control-rahsa bg-dark text-light" rows="3">{{ item.solution if item else '' }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label">نتایج شاخص (ROI / کارهای انجام شده)</label>
-                <textarea name="results_summary" class="form-control bg-dark text-light" rows="3">{{ item.results_summary if item else '' }}</textarea>
+                <label class="form-label-rahsa">نتایج شاخص (ROI / کارهای انجام شده)</label>
+                <textarea name="results_summary" class="form-control-rahsa bg-dark text-light" rows="3">{{ item.results_summary if item else '' }}</textarea>
             </div>
             <div class="col-md-6">
                 <div class="form-check">

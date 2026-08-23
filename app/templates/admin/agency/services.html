@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>⚡ کاتالوگ خدمات نرم‌افزاری</h2>
-    <a href="{{ url_for('admin.agency_service_edit') }}" class="btn btn-primary">+ افزودن خدمت جدید</a>
+    <a href="{{ url_for('admin.agency_service_edit') }}" class="btn-rahsa-cta">+ افزودن خدمت جدید</a>
 </div>
 
 <div class="card bg-navy-card text-light p-3">
@@ -24,14 +24,14 @@
             {% for s in services %}
             <tr>
                 <td><strong>{{ s.icon }} {{ s.title }}</strong></td>
-                <td><span class="badge bg-secondary">{{ s.category_type }}</span></td>
+                <td><span class="badge-rahsa secondary">{{ s.category_type }}</span></td>
                 <td>{{ s.starting_price | format_price }}</td>
                 <td>{{ s.estimated_days }} روز</td>
                 <td>
                     {% if s.is_active %}
-                        <span class="badge bg-success">فعال</span>
+                        <span class="badge-rahsa success">فعال</span>
                     {% else %}
-                        <span class="badge bg-danger">غیرفعال</span>
+                        <span class="badge-rahsa danger">غیرفعال</span>
                     {% endif %}
                 </td>
                 <td>
@@ -44,7 +44,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center text-muted">هیچ خدمتی ثبت نشده است.</td>
+                <td colspan="6" class=" text-muted">هیچ خدمتی ثبت نشده است.</td>
             </tr>
             {% endfor %}
         </tbody>
