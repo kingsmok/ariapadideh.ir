@@ -1,10 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}وبلاگ و مجله تخصصی | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+{% block title %}{% if category %}{{ category.title }}{% else %}وبلاگ و مجله تخصصی{% endif %} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
 <section class="section">
     <div class="container">
+
+        <!-- Breadcrumb (semantic + JSON-LD) -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}, {'name': 'مجله', 'url': url_for('public.blog', _external=True)}] %}
+        {% if category %}
+        {% set _crumbs = _crumbs + [{'name': category.title, 'url': url_for('public.blog_category', slug=category.slug, _external=True)}] %}
+        {% endif %}
+        <nav aria-label="مسیر دسترسی" class="mb-3">
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{% endblock %}
 
         <!-- Page Header -->
         <div class="mb-5">

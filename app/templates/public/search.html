@@ -1,11 +1,34 @@
 {% extends 'base.html' %}
 {% from 'macros/product_card.html' import product_card with context %}
 
-{% block title %}نتایج جستجو «{{ query }}» | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+{% block title %}{% if query %}نتایج جستجو «{{ query }}»{% else %}جستجو{% endif %} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
 <section class="section">
     <div class="container">
+
+        <!-- Breadcrumb -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}, {'name': 'جستجو', 'url': url_for('public.search', _external=True)}] %}
+        <nav aria-label="مسیر دسترسی" class="mb-3">
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{% endblock %}
 
         <!-- Page Header -->
         <div class="mb-5">

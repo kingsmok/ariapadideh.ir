@@ -57,6 +57,14 @@
     {{ seo.schema|tojson }}
     </script>
     {% endif %}
+
+    <!-- Global Schema.org: Organization + LocalBusiness (E-E-A-T) -->
+    {{ organization_schema|safe }}
+
+    <!-- Global Schema.org: WebSite + SearchAction (Sitelinks Searchbox) -->
+    {{ website_schema|safe }}
+
+    {% block structured_data %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
 

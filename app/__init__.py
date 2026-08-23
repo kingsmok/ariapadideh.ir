@@ -139,13 +139,19 @@ def register_error_handlers(app: Flask) -> None:
 
 
 def register_context_processors(app: Flask) -> None:
-    """Register Jinja2 context processors and filters"""
-    
+    """
+    Register Jinja2 context processors and filters
+    """
+
     from app.services.setting_service import SettingService
+    from app.services.seo_schema_service import (
+        get_organization_schema,
+        get_website_schema,
+    )
     from app.utils.helpers import (
         format_price, time_ago, truncate_text, get_cdn_url
     )
-    
+
     # Register Jinja Filters
     app.jinja_env.filters['format_price'] = format_price
     app.jinja_env.filters['toman_format'] = format_price
@@ -156,12 +162,15 @@ def register_context_processors(app: Flask) -> None:
     def inject_globals():
         """Inject global variables into templates"""
         settings = SettingService.get_public_settings()
-        
+
         return {
             'site_settings': settings,
             'current_year': __import__('datetime').datetime.now().year,
+            # Global JSON-LD (Organization + WebSite) — computed once per request
+            'organization_schema': get_organization_schema(),
+            'website_schema': get_website_schema(),
         }
-    
+
     @app.context_processor
     def utility_processor():
         """Add utility functions to templates"""
@@ -170,7 +179,45 @@ def register_context_processors(app: Flask) -> None:
             'time_ago': time_ago,
             'truncate_text': truncate_text,
             'get_cdn_url': get_cdn_url,
+            # Schema helpers for templates
+            'render_breadcrumb_schema': lambda items: _safe_breadcrumb(items),
+            'render_faq_schema': lambda faqs: _safe_faq(faqs),
+            'render_product_schema': lambda p: _safe_product(p),
+            'render_article_schema': lambda post: _safe_article(post),
+            'render_service_schema': lambda cat: _safe_service(cat),
+            'render_person_schema': lambda name, role='', image='', url='': _safe_person(name, role, image, url),
         }
+
+
+def _safe_breadcrumb(items):
+    """Lazy-loaded breadcrumb schema to avoid hitting DB when not needed."""
+    from app.services.seo_schema_service import get_breadcrumb_schema
+    return get_breadcrumb_schema(items)
+
+
+def _safe_faq(faqs):
+    from app.services.seo_schema_service import get_faq_schema
+    return get_faq_schema(faqs)
+
+
+def _safe_product(p):
+    from app.services.seo_schema_service import get_product_schema
+    return get_product_schema(p)
+
+
+def _safe_article(post):
+    from app.services.seo_schema_service import get_article_schema
+    return get_article_schema(post)
+
+
+def _safe_service(cat):
+    from app.services.seo_schema_service import get_service_schema
+    return get_service_schema(cat)
+
+
+def _safe_person(name, role, image, url):
+    from app.services.seo_schema_service import get_person_schema
+    return get_person_schema(name, role, person_image=image, person_url=url)
 
 
 def register_commands(app: Flask) -> None:

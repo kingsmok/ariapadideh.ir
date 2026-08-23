@@ -6,18 +6,38 @@
 <section class="section">
     <div class="container">
 
-        <!-- Breadcrumb -->
+        <!-- Breadcrumb (semantic + JSON-LD) -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}] %}
+        {% if product.categories and product.categories[0] %}
+            {% set _cat = product.categories[0] %}
+            {% if _cat.parent %}
+            {% set _crumbs = _crumbs + [{'name': _cat.parent.title, 'url': url_for('public.category', slug=_cat.parent.slug, _external=True)}, {'name': _cat.title, 'url': url_for('public.category', slug=_cat.slug, _external=True)}] %}
+            {% else %}
+            {% set _crumbs = _crumbs + [{'name': _cat.title, 'url': url_for('public.category', slug=_cat.slug, _external=True)}] %}
+            {% endif %}
+        {% endif %}
+        {% set _crumbs = _crumbs + [{'name': product.title, 'url': url_for('public.product', slug=product.slug, _external=True)}] %}
+
         <nav aria-label="مسیر دسترسی" class="mb-4">
-            <ol style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
-                <li><a href="{{ url_for('public.home') }}" class="text-muted text-decoration-none">خانه</a></li>
-                <li aria-hidden="true" class="text-muted">/</li>
-                {% if product.categories and product.categories[0] %}
-                <li><a href="{{ url_for('public.category', slug=product.categories[0].slug) }}" class="text-muted text-decoration-none">{{ product.categories[0].title }}</a></li>
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
                 <li aria-hidden="true" class="text-muted">/</li>
                 {% endif %}
-                <li class="text-yellow">{{ product.title }}</li>
+                {% endfor %}
             </ol>
         </nav>
+        {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{{ render_product_schema(product)|safe }}{% endblock %}
 
         <div class="row gy-4">
 

@@ -7,18 +7,35 @@
     <div class="container" style="max-width:900px;">
 
         <article class="glass-card" style="padding:2.5rem;">
-            <!-- Breadcrumb -->
+            <!-- Breadcrumb (semantic + JSON-LD) -->
+            {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}, {'name': 'مجله', 'url': url_for('public.blog', _external=True)}] %}
+            {% if post and post.category %}
+            {% set _crumbs = _crumbs + [{'name': post.category.title, 'url': url_for('public.blog_category', slug=post.category.slug, _external=True)}] %}
+            {% endif %}
+            {% if post %}
+            {% set _crumbs = _crumbs + [{'name': post.title, 'url': url_for('public.post', slug=post.slug, _external=True)}] %}
+            {% endif %}
+
             <nav aria-label="مسیر دسترسی" class="mb-4">
-                <ol style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
-                    <li><a href="{{ url_for('public.home') }}" class="text-muted text-decoration-none">خانه</a></li>
+                <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                    {% for crumb in _crumbs %}
+                    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                        {% if not loop.last %}
+                        <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                            <span itemprop="name">{{ crumb.name }}</span>
+                        </a>
+                        {% else %}
+                        <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                        {% endif %}
+                        <meta itemprop="position" content="{{ loop.index }}">
+                    </li>
+                    {% if not loop.last %}
                     <li aria-hidden="true" class="text-muted">/</li>
-                    <li><a href="{{ url_for('public.blog') }}" class="text-muted text-decoration-none">مجله</a></li>
-                    {% if post and post.category %}
-                    <li aria-hidden="true" class="text-muted">/</li>
-                    <li><a href="{{ url_for('public.blog_category', slug=post.category.slug) }}" class="text-muted text-decoration-none">{{ post.category.title }}</a></li>
                     {% endif %}
+                    {% endfor %}
                 </ol>
             </nav>
+            {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{% if post %}{{ render_article_schema(post)|safe }}{% endif %}{% endblock %}
 
             {% if post %}
                 <header class="mb-4">
