@@ -141,15 +141,29 @@ class SEOService:
     
     @staticmethod
     def get_seo_data(page_type: str) -> Dict[str, Any]:
-        """Get SEO data by page type"""
+        """Get SEO data by page type with keyword-rich defaults."""
         if page_type == 'home':
+            title = Setting.get_value('seo', 'home_title',
+                f'رهسا دیو — توسعه نرم‌افزار سازمانی، طراحی وب و ربات‌های هوشمند')
+            description = Setting.get_value('seo', 'home_description',
+                'رهسا دیو، آتلیه تخصصی توسعه نرم‌افزار سازمانی (ERP/CRM)، طراحی وب‌سایت اختصاصی '
+                'و ربات‌های هوشمند در شیراز. بیش از ۱۲ سال تجربه، ۵۰+ پروژه موفق، '
+                '۹۹٪ رضایت مشتریان. تحویل فوری سورس‌کد، پشتیبانی یک‌ساله و مستندات کامل.')
+            keywords = Setting.get_value('seo', 'home_keywords',
+                'توسعه نرم‌افزار، طراحی وب، ربات هوشمند، ERP، CRM، شیراز، رهسا دیو، '
+                'طراحی سایت، نرم‌افزار سازمانی، ربات تلگرام، برنامه‌نویسی')
+            og_image = Setting.get_value('seo', 'home_og_image', '')
             return {
-                'title': Setting.get_value('seo', 'home_title', SEOService.get_site_name()),
-                'description': Setting.get_value('seo', 'home_description', ''),
-                'full_title': Setting.get_value('seo', 'home_title', SEOService.get_site_name()),
-                'og_type': 'website'
+                'title': title,
+                'description': description,
+                'keywords': keywords,
+                'og_image': og_image,
+                'canonical': SEOService.get_site_url(),
+                'full_title': title,
+                'og_type': 'website',
+                'og_url': SEOService.get_site_url(),
             }
-        
+
         return SEOService.get_default_seo()
     
     @staticmethod

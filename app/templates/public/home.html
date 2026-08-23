@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% from 'macros/product_card.html' import product_card with context %}
 
-{% block title %}رهسا دیو — توسعه نرم‌افزار سازمانی، طراحی وب و ربات‌های هوشمند{% endblock %}
+{% block title %}{% if seo and seo.title %}{{ seo.title }}{% else %}رهسا دیو — توسعه نرم‌افزار سازمانی، طراحی وب و ربات‌های هوشمند{% endif %}{% endblock %}
+
+{% block twitter_title %}{% if seo and seo.title %}{{ seo.title }}{% else %}{{ self.title() }}{% endif %}{% endblock %}
 
 {% block extra_css %}
 <style>
