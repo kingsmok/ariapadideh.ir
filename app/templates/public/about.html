@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}رهسا دیو - درباره ما و تیم مهندسی{% endblock %}
+
+{% block content %}
+<main class="py-12 px-4 md:px-12 max-w-[1280px] mx-auto w-full flex flex-col gap-16">
+    
+    <!-- Hero Section: The Narrative -->
+    <section class="flex flex-col md:flex-row items-center gap-12">
+        <div class="flex-1 flex flex-col gap-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-container border border-white/5 w-fit" style="background:rgba(20, 33, 61, 0.6); border:1px solid rgba(255,255,255,0.1);">
+                <span style="color:#FBB03B; font-size:1.1rem;">⚙️</span>
+                <span class="font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase" style="font-size:0.8rem; color:#9ca3af; font-weight:700;">Digital Craftsmanship</span>
+            </div>
+            
+            <h1 style="font-size:2.8rem; font-weight:900; color:#ffffff; line-height:1.25;">
+                معماری <span class="gold-gradient-text" style="background:linear-gradient(90deg, #FBB03B 0%, #FFDDB4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">نرم‌افزار</span> در قلب شیراز
+            </h1>
+
+            <p style="color:#cbd5e1; font-size:1.05rem; line-height:1.85; max-width:640px;">
+                <strong>رهسا دیو</strong> تنها یک شرکت توسعه نرم‌افزار نیست؛ ما یک آتلیه معماری دیجیتال هستیم. با تکیه بر اصول مستحکم مهندسی و زیبایی‌شناسی مدرن، راهکارهای سازمانی را خلق می‌کنیم که نه تنها کارآمد، بلکه الهام‌بخش هستند. اعتماد و تخصص، دو ستون اصلی بنای ما در هر پروژه است.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3 mt-2">
+                <a href="/#quote-section" class="btn-primary" style="background-color:#FBB03B; color:#0A1128 !important; font-weight:800; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none;">
+                    شروع پروژه
+                </a>
+                <a href="#team-section" class="glass-card" style="background:rgba(20, 33, 61, 0.7); border:1px solid rgba(255,255,255,0.1); color:#ffffff !important; font-weight:700; padding:0.8rem 2rem; border-radius:0.75rem; text-decoration:none;">
+                    آشنایی با تیم
+                </a>
+            </div>
+        </div>
+
+        <div class="flex-1 w-full relative min-h-[380px] rounded-2xl overflow-hidden glass-card">
+            <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}" alt="Rahsa Architecture" style="width:100%; height:100%; object-fit:cover; border-radius:1rem;">
+        </div>
+    </section>
+
+    <!-- Core Values Bento Grid -->
+    <section class="flex flex-col gap-8 mt-12">
+        <div class="text-center mb-4">
+            <h2 style="font-size:2rem; font-weight:900; color:#ffffff; margin-bottom:0.5rem;">ارزش‌های بنیادین ما</h2>
+            <p style="color:#9ca3af; font-size:0.95rem;">اصولی که هر خط کد ما را هدایت می‌کنند.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Value 1 -->
+            <div class="col-12 col-md-4">
+                <div class="glass-card p-4 rounded-2xl h-100" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:2rem; margin-bottom:1rem; color:#FBB03B;">🛡️</div>
+                    <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">اعتماد و امنیت</h3>
+                    <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">در سطح سازمانی، امنیت یک ویژگی نیست، بلکه پیش‌نیاز است. معماری ما بر پایه مستحکم‌ترین پروتکل‌ها بنا شده است.</p>
+                </div>
+            </div>
+
+            <!-- Value 2 -->
+            <div class="col-12 col-md-8">
+                <div class="glass-card p-4 rounded-2xl h-100" style="background:rgba(20,33,61,0.7); border:1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:2rem; margin-bottom:1rem; color:#FBB03B;">💎</div>
+                    <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin-bottom:0.5rem;">صناعت دیجیتال (Digital Craftsmanship)</h3>
+                    <p style="color:#9ca3af; font-size:0.875rem; line-height:1.7;">ما به نرم‌افزار به چشم یک اثر هنری مهندسی شده نگاه می‌کنیم. کدهای تمیز (Clean Code)، ساختارهای ماژولار و رابط کاربری شیشه‌ای ما، همگی نشان از تعهد ما به کیفیت بی‌نقص است.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+{% endblock %}

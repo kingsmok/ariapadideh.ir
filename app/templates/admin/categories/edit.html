@@ -1,0 +1,32 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش دسته‌بندی' if category else 'ایجاد دسته‌بندی جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:700px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+        {{ 'ویرایش دسته‌بندی ' ~ category.title if category else 'ایجاد دسته‌بندی جدید' }}
+    </h2>
+
+    <form action="{{ url_for('admin.category_edit', category_id=category.id) if category else url_for('admin.category_edit') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        <div class="mb-3">
+            <label class="form-label">عنوان دسته‌بندی *</label>
+            {{ form.title(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">نامک (Slug)</label>
+            {{ form.slug(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">توضیحات</label>
+            {{ form.description(class="form-control", style="min-height:90px;") }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+            💾 ذخیره تغییرات دسته‌بندی
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from flask import current_app
 import json
 
+from app.extensions import db
 from app.models import Setting
 
 
@@ -99,43 +100,43 @@ class SettingService:
         
         # General settings
         default_general = {
-            'site_name': ('فلاسک پرو', 'string', True, 'نام سایت', 'نام سایت شما'),
-            'site_url': ('https://example.com', 'string', True, 'آدرس سایت', 'آدرس اصلی سایت'),
-            'tagline': ('بهترین فروشگاه آنلاین', 'string', True, 'تگ‌لاین', 'جمله کوتاه تبلیغاتی'),
-            'copyright': ('تمامی حقوق محفوظ است', 'string', True, 'کپی‌رایت', ''),
+            'site_name': ('رهسا دیو', 'string', True, 'نام سایت', 'نام شرکت'),
+            'site_url': ('https://rahsadev.ir', 'string', True, 'آدرس سایت', 'آدرس رسمی'),
+            'tagline': ('راهکارهای جامع توسعه نرم‌افزار، طراحی وب‌سایت و ربات‌های هوشمند', 'string', True, 'تگ‌لاین', 'شعار شرکت'),
+            'copyright': ('تمامی حقوق محفوظ و متعلق به رهسا دیو می‌باشد.', 'string', True, 'کپی‌رایت', ''),
         }
         
         # Contact settings
         default_contact = {
-            'email': ('info@example.com', 'string', True, 'ایمیل تماس', ''),
-            'phone': ('021-12345678', 'string', True, 'تلفن', ''),
-            'mobile': ('0912-1234567', 'string', True, 'موبایل', ''),
-            'address': ('تهران، خیابان ولیعصر', 'text', True, 'آدرس', ''),
-            'working_hours': ('شنبه تا پنجشنبه: ۹ صبح تا ۶ عصر', 'string', True, 'ساعات کاری', ''),
+            'email': ('info@rahsadev.ir', 'string', True, 'ایمیل تماس', ''),
+            'phone': ('071-37271621', 'string', True, 'تلفن', ''),
+            'mobile': ('021-88991234', 'string', True, 'موبایل', ''),
+            'address': ('شیراز، بلوار دلاوران / تهران، ناحیه نوآوری شریف', 'text', True, 'آدرس', ''),
+            'working_hours': ('شنبه تا پنجشنبه: ۹ صبح تا ۱۸ عصر', 'string', True, 'ساعات کاری', ''),
         }
         
         # Social settings
         default_social = {
-            'instagram': ('https://instagram.com/', 'string', True, 'اینستاگرام', ''),
-            'telegram': ('https://t.me/', 'string', True, 'تلگرام', ''),
-            'whatsapp': ('', 'string', True, 'واتساپ', ''),
+            'instagram': ('https://instagram.com/rahsadev', 'string', True, 'اینستاگرام', ''),
+            'telegram': ('https://t.me/rahsadev', 'string', True, 'تلگرام', ''),
+            'whatsapp': ('https://wa.me/989121234567', 'string', True, 'واتساپ', ''),
             'twitter': ('', 'string', True, 'توییتر', ''),
             'facebook': ('', 'string', True, 'فیسبوک', ''),
-            'linkedin': ('', 'string', True, 'لینکدین', ''),
+            'linkedin': ('https://linkedin.com/company/rahsadev', 'string', True, 'لینکدین', ''),
         }
         
         # SEO settings
         default_seo = {
-            'default_title': ('فلاسک پرو', 'string', True, 'عنوان پیش‌فرض', ''),
-            'default_description': ('فروشگاه آنلاین فلاسک پرو', 'text', True, 'توضیحات پیش‌فرض', ''),
-            'default_keywords': ('فروشگاه, آنلاین, خرید', 'string', True, 'کلمات کلیدی پیش‌فرض', ''),
+            'default_title': ('رهسا دیو | طراحی وب‌سایت، نرم‌افزار و ربات هوشمند', 'string', True, 'عنوان پیش‌فرض', ''),
+            'default_description': ('مرکز تخصصی طراحی وب‌سایت‌های فروشگاهی و شرکتی، برنامه نویسی پایتون، اتوماسیون اداری و ربات تلگرام/ایتا', 'text', True, 'توضیحات پیش‌فرض', ''),
+            'default_keywords': ('طراحی وب‌سایت, برنامه‌نویسی, ربات تلگرام, ربات ایتا, نرم‌افزار حسابداری, اسکریپت فروشگاهی', 'string', True, 'کلمات کلیدی پیش‌فرض', ''),
             'og_image': ('', 'string', True, 'تصویر پیش‌فرض OG', ''),
         }
         
         # Appearance settings
         default_appearance = {
-            'primary_color': ('#007bff', 'color', True, 'رنگ اصلی', ''),
-            'secondary_color': ('#6c757d', 'color', True, 'رنگ ثانویه', ''),
+            'primary_color': ('#2563eb', 'color', True, 'رنگ اصلی', ''),
+            'secondary_color': ('#1e293b', 'color', True, 'رنگ ثانویه', ''),
             'logo': ('', 'string', True, 'لوگو', ''),
             'favicon': ('', 'string', True, 'فاویکون', ''),
             'dark_mode': ('false', 'boolean', True, 'حالت تاریک', ''),
@@ -151,8 +152,8 @@ class SettingService:
         
         for group, settings in all_defaults.items():
             for key, (value, stype, is_public, label, desc) in settings.items():
-                existing = Setting.query.filter_by(group=group, key=key).first()
-                if not existing:
+                setting = Setting.query.filter_by(group=group, key=key).first()
+                if not setting:
                     setting = Setting(
                         group=group,
                         key=key,
@@ -163,6 +164,9 @@ class SettingService:
                         description=desc
                     )
                     db.session.add(setting)
+                else:
+                    setting.value = value
+                    setting.is_public = is_public
         
         db.session.commit()
     

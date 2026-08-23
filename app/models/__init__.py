@@ -10,6 +10,7 @@ from app.models.menu import (
     Menu, Slider, SliderItem, Banner, Media, Setting, 
     Notification, Resume, Contact, FAQ, Log
 )
+from app.models.agency import ServiceCatalog, PortfolioCaseStudies, ConsultationLeads
 
 __all__ = [
     'BaseModel', 'TimestampMixin', 'SoftDeleteMixin', 'ActiveMixin', 'SortOrderMixin', 'MetaMixin',
@@ -18,5 +19,6 @@ __all__ = [
     'Order', 'OrderItem', 'CartItem', 'Wishlist', 'Comparison', 'PaymentTransaction',
     'Page', 'PageComponent', 'Post', 'Comment', 'PostTag',
     'Menu', 'Slider', 'SliderItem', 'Banner', 'Media', 'Setting',
-    'Notification', 'Resume', 'Contact', 'FAQ', 'Log'
+    'Notification', 'Resume', 'Contact', 'FAQ', 'Log',
+    'ServiceCatalog', 'PortfolioCaseStudies', 'ConsultationLeads'
 ]

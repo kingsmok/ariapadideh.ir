@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}وبلاگ و اخبار فناوری | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 style="font-size:1.8rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-right:4px solid #2563eb; padding-right:0.75rem;">
+        آخرین اخبار، آموزش‌ها و مقالات فناوری
+    </h1>
+    
+    <div class="posts-grid">
+        {% if posts and posts.items %}
+            {% for post in posts.items %}
+            <article class="post-card">
+                <a href="{{ url_for('public.post', slug=post.slug) }}" class="post-image">
+                    <img src="{{ post.featured_image or url_for('static', filename='images/no-image.png') }}" alt="{{ post.title }}">
+                </a>
+                <div class="post-content">
+                    <h3><a href="{{ url_for('public.post', slug=post.slug) }}">{{ post.title }}</a></h3>
+                    <p>{{ post.excerpt or truncate_text(post.content, 120) }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5" style="background:#fff; border-radius:1rem; border:1px solid #e2e8f0;">
+                <p style="color:#64748b; margin:0;">هنوز مقاله‌ای منتشر نشده است.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

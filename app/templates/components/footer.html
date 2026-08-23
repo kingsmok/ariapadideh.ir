@@ -1,142 +1,56 @@
-<footer class="site-footer">
-    <!-- Newsletter -->
-    <div class="footer-newsletter">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h5><i class="fas fa-envelope"></i> خبرنامه</h5>
-                    <p>برای اطلاع از جدیدترین محصولات و تخفیف‌ها، ایمیل خود را وارد کنید</p>
+<!-- Stitch Exact Footer Component -->
+<footer style="background:#0b0f11; border-top:1px solid rgba(255,255,255,0.05); padding-top:3.5rem; padding-bottom:2rem; position:relative;" class="mt-auto">
+    <div class="container">
+        <div class="row g-4 text-right rtl">
+            
+            <!-- Brand Column -->
+            <div class="col-12 col-md-4">
+                <div class="d-flex align-items-center gap-2.5 mb-3">
+                    <div class="brand-badge-rahsa" style="width:38px; height:38px; background:linear-gradient(135deg, #6b21a8 0%, #FBB03B 100%); color:#ffffff; font-weight:900; border-radius:0.6rem; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">ر</div>
+                    <span style="font-weight:800; font-size:1.25rem; color:#FBB03B;">{{ site_settings.agency_name or 'رهسا دیو' }}</span>
                 </div>
-                <div class="col-md-6">
-                    <form action="#" method="POST" class="newsletter-form">
-                        <div class="input-group">
-                            <input type="email" name="email" class="form-control" 
-                                   placeholder="ایمیل شما..." required>
-                            <button type="submit" class="btn btn-primary">
-                                عضویت
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <p style="color:#9ca3af; font-size:0.875rem; line-height:1.8; max-width:320px;">
+                    آتلیه تخصصی مهندسی نرم‌افزار. پیشگام در خلق راهکارهای دیجیتال سازمانی با معماری مدرن.
+                </p>
             </div>
+
+            <!-- Quick Links -->
+            <div class="col-6 col-md-3">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">دسترسی سریع</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
+                    <li><a href="{{ url_for('public.categories_list') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">خدمات نرم‌افزاری</a></li>
+                    <li><a href="/#quote-section" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">مشاوره استراتژیک</a></li>
+                    <li><a href="{{ url_for('public.about') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">درباره ما</a></li>
+                    <li><a href="{{ url_for('public.contact') }}" style="color:#9ca3af; text-decoration:none;" class="hover:text-[#FBB03B]">تماس با ما</a></li>
+                </ul>
+            </div>
+
+            <!-- Address & Contact -->
+            <div class="col-12 col-md-5">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">ارتباط با ما</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.875rem; color:#9ca3af;">
+                    <li class="d-flex align-items-start gap-2 mb-2">
+                        <span style="color:#FBB03B;">📍</span>
+                        <span>شیراز، پارک علم و فناوری فارس، ساختمان فناوری اطلاعات، واحد ۱۲</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <span style="color:#FBB03B;">📞</span>
+                        <span style="direction:ltr; text-align:right;">+98 71 3727 1621 / 021 8899 1234</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <span style="color:#FBB03B;">✉️</span>
+                        <span>info@rahsadev.ir</span>
+                    </li>
+                </ul>
+            </div>
+
         </div>
-    </div>
-    
-    <!-- Footer Main -->
-    <div class="footer-main">
-        <div class="container">
-            <div class="row">
-                <!-- About -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="footer-about">
-                        <h5>{{ site_settings.general_site_name or 'فلاسک پرو' }}</h5>
-                        <p>{{ site_settings.general_tagline or 'بهترین تجربه خرید آنلاین' }}</p>
-                        <div class="footer-contact">
-                            {% if site_settings.contact_address %}
-                                <p><i class="fas fa-map-marker-alt"></i> {{ site_settings.contact_address }}</p>
-                            {% endif %}
-                            {% if site_settings.contact_phone %}
-                                <p><i class="fas fa-phone"></i> {{ site_settings.contact_phone }}</p>
-                            {% endif %}
-                            {% if site_settings.contact_email %}
-                                <p><i class="fas fa-envelope"></i> {{ site_settings.contact_email }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Links -->
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-links">
-                        <h5>دسترسی سریع</h5>
-                        <ul>
-                            <li><a href="{{ url_for('public.home') }}">صفحه اصلی</a></li>
-                            <li><a href="{{ url_for('public.about') }}">درباره ما</a></li>
-                            <li><a href="{{ url_for('public.contact') }}">تماس با ما</a></li>
-                            <li><a href="{{ url_for('public.blog') }}">وبلاگ</a></li>
-                            <li><a href="{{ url_for('public.faq') }}">سوالات متداول</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Services -->
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-links">
-                        <h5>خدمات</h5>
-                        <ul>
-                            <li><a href="{{ url_for('public.terms') }}">قوانین و مقررات</a></li>
-                            <li><a href="{{ url_for('public.privacy') }}">حریم خصوصی</a></li>
-                            <li><a href="#">ارسال و تحویل</a></li>
-                            <li><a href="#">گارانتی و بازگشت</a></li>
-                            <li><a href="#">روش‌های پرداخت</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Social -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="footer-social">
-                        <h5>ما را دنبال کنید</h5>
-                        <div class="social-links">
-                            {% if site_settings.social_instagram %}
-                                <a href="{{ site_settings.social_instagram }}" target="_blank" aria-label="اینستاگرام">
-                                    <i class="fab fa-instagram"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_telegram %}
-                                <a href="{{ site_settings.social_telegram }}" target="_blank" aria-label="تلگرام">
-                                    <i class="fab fa-telegram"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_whatsapp %}
-                                <a href="{{ site_settings.social_whatsapp }}" target="_blank" aria-label="واتساپ">
-                                    <i class="fab fa-whatsapp"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_twitter %}
-                                <a href="{{ site_settings.social_twitter }}" target="_blank" aria-label="توییتر">
-                                    <i class="fab fa-twitter"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_facebook %}
-                                <a href="{{ site_settings.social_facebook }}" target="_blank" aria-label="فیسبوک">
-                                    <i class="fab fa-facebook"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_linkedin %}
-                                <a href="{{ site_settings.social_linkedin }}" target="_blank" aria-label="لینکدین">
-                                    <i class="fab fa-linkedin"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Trust Badges -->
-                        <div class="trust-badges mt-4">
-                            <img src="{{ url_for('static', filename='images/enamad.png') }}" alt="نماد اعتماد">
-                            <img src="{{ url_for('static', filename='images/samandehi.png') }}" alt="ساماندهی">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="copyright">
-                        © {{ current_year }} {{ site_settings.general_site_name or 'فلاسک پرو' }}. 
-                        {{ site_settings.general_copyright or 'تمامی حقوق محفوظ است.' }}
-                    </p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="payment-methods">
-                        <img src="{{ url_for('static', filename='images/payment.png') }}" alt="روش‌های پرداخت">
-                    </div>
-                </div>
-            </div>
+
+        <!-- Copyright -->
+        <div style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2.5rem; padding-top:1.5rem;" class="text-center">
+            <p style="color:#64748b; font-size:0.825rem; margin:0;">
+                © ۲۰۲۶ {{ site_settings.agency_name or 'رهسا دیو' }}. تمام حقوق محفوظ است.
+            </p>
         </div>
     </div>
 </footer>

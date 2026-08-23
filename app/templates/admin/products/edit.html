@@ -1,0 +1,68 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش پکیج' if product else 'افزودن پکیج / نرم‌افزار جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; max-width:900px; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin:0;">
+            {{ 'ویرایش اطلاعات پکیج' if product else 'تعریف پکیج / اسکریپت جدید' }}
+        </h2>
+        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-primary" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
+    </div>
+
+    <form action="{{ url_for('admin.product_edit', product_id=product.id) if product else url_for('admin.product_edit') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label">عنوان پکیج / نرم‌افزار *</label>
+                {{ form.title(class="form-control", placeholder="مثال: پکیج جامع طراحی سایت فروشگاهی") }}
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <label class="form-label">نامک (Slug)</label>
+                {{ form.slug(class="form-control", placeholder="flask-pro-ecommerce") }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">قیمت اصلی (تومان) *</label>
+                {{ form.price(class="form-control", placeholder="15800000") }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">قیمت قبل از تخفیف (تومان)</label>
+                {{ form.old_price(class="form-control", placeholder="18500000") }}
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label">توضیح کوتاه</label>
+                {{ form.short_description(class="form-control", style="min-height:70px;") }}
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label">توضیحات کامل و ویژگی‌های فنی</label>
+                {{ form.description(class="form-control", style="min-height:140px;") }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="form-check" style="display:flex; gap:0.5rem; align-items:center; margin-top:1rem;">
+                    {{ form.is_active() }}
+                    <label style="font-weight:700;">پکیج فعال و آماده خرید باشد</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="form-check" style="display:flex; gap:0.5rem; align-items:center; margin-top:1rem;">
+                    {{ form.is_featured() }}
+                    <label style="font-weight:700;">نمایش به عنوان پکیج ویژه در صفحه اصلی</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+            💾 ذخیره تغییرات و بروزرسانی
+        </button>
+    </form>
+</div>
+{% endblock %}

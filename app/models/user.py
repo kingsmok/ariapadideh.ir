@@ -130,10 +130,10 @@ class User(BaseModel, TimestampMixin, SoftDeleteMixin, UserMixin):
     cart_items = relationship('CartItem', back_populates='user', lazy='dynamic')
     wishlists = relationship('Wishlist', back_populates='user', lazy='dynamic')
     comparisons = relationship('Comparison', back_populates='user', lazy='dynamic')
-    resumes = relationship('Resume', back_populates='user', lazy='dynamic')
-    contacts = relationship('Contact', back_populates='user', lazy='dynamic')
+    resumes = relationship('Resume', foreign_keys='Resume.user_id', back_populates='user', lazy='dynamic')
+    contacts = relationship('Contact', foreign_keys='Contact.user_id', back_populates='user', lazy='dynamic')
     notifications = relationship('Notification', back_populates='user', lazy='dynamic')
-    comments = relationship('Comment', back_populates='user', lazy='dynamic')
+    comments = relationship('Comment', foreign_keys='Comment.user_id', back_populates='user', lazy='dynamic')
     meta = relationship('UserMeta', back_populates='user', lazy='dynamic', cascade='all, delete-orphan')
     
     @property

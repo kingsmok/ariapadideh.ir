@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title if page else 'اطلاعات' }} | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div style="background:#fff; border-radius:1rem; padding:2.5rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+        <h1 style="font-size:2rem; font-weight:800; color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #2563eb; padding-bottom:0.75rem;">
+            {{ page.title if page else 'صفحه' }}
+        </h1>
+        <div style="font-size:1rem; line-height:1.9; color:#334155;">
+            {% if page and page.content %}
+                {{ page.content|safe }}
+            {% else %}
+                <p>محتوای این صفحه به زودی بروزرسانی خواهد شد.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

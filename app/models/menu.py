@@ -504,7 +504,7 @@ class Resume(BaseModel, TimestampMixin, SoftDeleteMixin):
     ip_address = db.Column(String(45), nullable=True)
     
     # Relationships
-    user = relationship('User', back_populates='resumes')
+    user = relationship('User', foreign_keys=[user_id], back_populates='resumes')
     
     def update_status(self, status: str, reviewed_by: int = None, notes: str = None) -> None:
         """Update resume status"""

@@ -77,8 +77,9 @@ def login():
             user.update_last_login()
             
             # Merge guest cart with user cart
-            if request.sid:
-                CartService.merge_carts(request.sid, user.id)
+            session_id = CartService.get_session_id()
+            if session_id:
+                CartService.merge_carts(session_id, user.id)
             
             next_page = request.args.get('next')
             flash(f'خوش آمدید {user.full_name}!', 'success')
@@ -520,7 +521,7 @@ def api_cart_add():
         cart_count = CartService.get_user_cart_count(current_user.id)
     else:
         success = CartService.add_to_session_cart(product_id, quantity)
-        cart_count = CartService.get_session_cart_count(request.sid)
+        cart_count = CartService.get_session_cart_count(CartService.get_session_id())
     
     return jsonify({
         'success': success,

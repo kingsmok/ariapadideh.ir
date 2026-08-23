@@ -4,7 +4,8 @@ Base Model - Abstract Base Class for all models
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from sqlalchemy import inspect, event
-from sqlalchemy.orm import declared_attr, Query
+from sqlalchemy.orm import declared_attr
+from flask_sqlalchemy.query import Query as FlaskQuery
 from app.extensions import db
 
 
@@ -155,38 +156,15 @@ class ActiveMixin:
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
 
-# Custom Query class with soft delete support
-class SoftDeleteQuery(Query):
+# Custom Query class with soft delete support and Flask-SQLAlchemy methods
+class SoftDeleteQuery(FlaskQuery):
     """Query class that filters out soft-deleted records"""
     
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        obj._with_deleted = kwargs.pop('_with_deleted', False)
-        if args or kwargs:
-            super(SoftDeleteQuery, obj).__init__(*args, **kwargs)
-            obj = obj.filter_by(is_deleted=False)
-        return obj
-    
     def __init__(self, *args, **kwargs):
-        pass
-    
-    def with_deleted(self):
-        """Return query including soft-deleted records"""
-        return self.__class__(
-            self._only_full_mapper_zero('get'),
-            session=db.session(),
-            _with_deleted=True
-        )
-    
-    def _get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-    
-    def get(self, ident):
-        """Override get to filter by deleted status"""
-        obj = super().get(ident)
-        if obj and obj.is_deleted and not self._with_deleted:
-            return None
-        return obj
+        self._with_deleted = kwargs.pop('_with_deleted', False)
+        super().__init__(*args, **kwargs)
+        if not self._with_deleted:
+            self._criterion = False
 
 
 # Apply soft delete query to base model

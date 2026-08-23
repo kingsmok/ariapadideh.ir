@@ -3,8 +3,8 @@ Content Management Models (Pages, Posts, Comments)
 """
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum, JSON
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum, JSON, and_
+from sqlalchemy.orm import relationship, Mapped, foreign
 
 from app.extensions import db
 from app.models.base import BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMixin, MetaMixin
@@ -160,7 +160,7 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     # Relationships
     author = relationship('User', foreign_keys=[author_id])
     category = relationship('Category', foreign_keys=[category_id])
-    comments = relationship('Comment', back_populates='post', lazy='dynamic', cascade='all, delete-orphan')
+    comments = relationship('Comment', primaryjoin="and_(Comment.commentable_type=='post', foreign(Comment.commentable_id)==Post.id)", back_populates='post', lazy='dynamic', cascade='all, delete-orphan', overlaps="comments")
     
     def publish(self) -> None:
         """Publish the post"""
@@ -263,8 +263,8 @@ class Comment(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin):
     user = relationship('User', foreign_keys=[user_id], back_populates='comments')
     parent = relationship('Comment', remote_side='Comment.id', back_populates='replies')
     replies = relationship('Comment', back_populates='parent', lazy='dynamic')
-    product = relationship('Product', back_populates='comments')
-    post = relationship('Post', back_populates='comments')
+    product = relationship('Product', primaryjoin="and_(Comment.commentable_type=='product', foreign(Comment.commentable_id)==Product.id)", back_populates='comments', overlaps="comments,post")
+    post = relationship('Post', primaryjoin="and_(Comment.commentable_type=='post', foreign(Comment.commentable_id)==Post.id)", back_populates='comments', overlaps="comments,product")
     
     @property
     def display_name(self) -> str:

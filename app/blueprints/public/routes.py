@@ -22,6 +22,7 @@ from app.utils.decorators import rate_limit
 @cache.cached(timeout=300, query_string=True)
 def home():
     """Home page with dynamic components"""
+    from app.models.agency import ServiceCatalog, PortfolioCaseStudies
     
     # Get home page data
     home_page = Page.query.filter_by(page_type='home', is_active=True, is_deleted=False).first()
@@ -36,6 +37,15 @@ def home():
             is_deleted=False
         ).order_by(SliderItem.sort_order).all()
     
+    # Get B2B Services and Portfolio
+    active_services = ServiceCatalog.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(ServiceCatalog.sort_order).all()
+    
+    featured_portfolio = PortfolioCaseStudies.query.filter_by(
+        is_featured=True, is_active=True, is_deleted=False
+    ).order_by(PortfolioCaseStudies.sort_order).limit(6).all()
+
     # Get featured products
     featured_products = Product.query.filter_by(
         is_featured=True, 
@@ -96,7 +106,7 @@ def home():
     if current_user.is_authenticated:
         cart_items_count = CartService.get_user_cart_count(current_user.id)
     else:
-        session_cart = CartService.get_session_cart_count(request.sid)
+        session_cart = CartService.get_session_cart_count(CartService.get_session_id())
         cart_items_count = session_cart
     
     seo = SEOService.get_seo_data('home')
@@ -104,6 +114,8 @@ def home():
     return render_template('public/home.html',
         page=home_page,
         sliders=slider_items,
+        active_services=active_services,
+        featured_portfolio=featured_portfolio,
         featured_products=featured_products,
         new_products=new_products,
         categories=categories,
@@ -175,7 +187,8 @@ def category(slug, page=1):
     per_page = current_app.config.get('ITEMS_PER_PAGE', 20)
     
     # Build query
-    query = category_obj.products.filter(
+    query = Product.query.filter(
+        Product.categories.any(id=category_obj.id),
         Product.is_active == True,
         Product.is_deleted == False
     )
@@ -216,9 +229,7 @@ def category(slug, page=1):
     ).order_by(Category.sort_order).all() if category_obj.show_children else []
     
     # Get brands in this category
-    brand_ids_in_category = [p.brand_id for p in category_obj.products.filter(
-        Product.brand_id.isnot(None)
-    ).all()]
+    brand_ids_in_category = [p.brand_id for p in category_obj.products if p.brand_id]
     brands = Brand.query.filter(Brand.id.in_(brand_ids_in_category)).all() if brand_ids_in_category else []
     
     seo = SEOService.get_category_seo(category_obj)
@@ -460,8 +471,8 @@ def cart():
         cart_items = CartService.get_user_cart(current_user.id)
         cart_total = CartService.get_user_cart_total(current_user.id)
     else:
-        cart_items = CartService.get_session_cart(request.sid)
-        cart_total = CartService.get_session_cart_total(request.sid)
+        cart_items = CartService.get_session_cart(CartService.get_session_id())
+        cart_total = CartService.get_session_cart_total(CartService.get_session_id())
     
     return render_template('public/cart.html',
         cart_items=cart_items,
@@ -487,10 +498,8 @@ def compare():
 @public_bp.route('/about')
 def about():
     """About us page"""
-    
-    page = Page.query.filter_by(page_type='about', is_active=True, is_deleted=False).first_or_404()
-    
-    return render_template('public/page.html', page=page)
+    page_obj = Page.query.filter_by(page_type='about', is_active=True, is_deleted=False).first()
+    return render_template('public/about.html', page=page_obj)
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
@@ -631,28 +640,26 @@ def api_quick_search():
         Category.title.ilike(search_pattern)
     ).limit(3).all()
     
-    results = {
-        'products': [
-            {
-                'id': p.id,
-                'title': p.title,
-                'slug': p.slug,
-                'price': p.current_price,
-                'image': p.main_image_url,
-                'type': 'product'
-            } for p in products
-        ],
-        'categories': [
-            {
-                'id': c.id,
-                'title': c.title,
-                'slug': c.slug,
-                'type': 'category'
-            } for c in categories
-        ]
-    }
+    results_list = []
+    for p in products:
+        results_list.append({
+            'id': p.id,
+            'title': p.title,
+            'url': f'/product/{p.slug}',
+            'price': f'{int(p.current_price):,} تومان' if p.current_price else 'استعلام قیمت',
+            'image': p.main_image_url,
+            'type': 'product'
+        })
+    for c in categories:
+        results_list.append({
+            'id': c.id,
+            'title': c.title,
+            'url': f'/category/{c.slug}',
+            'price': 'دسته‌بندی خدمات',
+            'type': 'category'
+        })
     
-    return jsonify(results)
+    return jsonify({'results': results_list})
 
 
 @public_bp.route('/api/price-history/<int:product_id>')

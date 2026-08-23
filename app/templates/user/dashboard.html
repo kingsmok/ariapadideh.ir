@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}پنل کاربری | {{ site_settings.general_site_name or 'آریا پدیده' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div style="background:#fff; border-radius:1rem; padding:2rem; border:1px solid #e2e8f0; margin-bottom:2rem;">
+        <h1 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;">
+            خوش آمدید، {{ current_user.full_name }} عزیز 👋
+        </h1>
+        <p style="color:#64748b; font-size:0.9rem; margin:0;">
+            از این بخش می‌توانید سفارشات، دانلود سورس‌کدها و اطلاعات کاربری خود را مدیریت کنید.
+        </p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div style="background:#eff6ff; border-radius:0.75rem; padding:1.25rem; border-right:4px solid #2563eb;">
+                <span style="font-size:0.85rem; color:#64748b; display:block;">تعداد سفارشات:</span>
+                <strong style="font-size:1.5rem; color:#1e3a8a; font-weight:800;">{{ stats.orders_count if stats else 0 }}</strong>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div style="background:#ecfdf5; border-radius:0.75rem; padding:1.25rem; border-right:4px solid #10b981;">
+                <span style="font-size:0.85rem; color:#64748b; display:block;">علاقه‌مندی‌ها:</span>
+                <strong style="font-size:1.5rem; color:#065f46; font-weight:800;">{{ stats.wishlist_count if stats else 0 }}</strong>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div style="background:#fef3c7; border-radius:0.75rem; padding:1.25rem; border-right:4px solid #f59e0b;">
+                <span style="font-size:0.85rem; color:#64748b; display:block;">سبد خرید:</span>
+                <strong style="font-size:1.5rem; color:#92400e; font-weight:800;">{{ stats.cart_count if stats else 0 }}</strong>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div style="background:#f1f5f9; border-radius:0.75rem; padding:1.25rem; border-right:4px solid #64748b;">
+                <span style="font-size:0.85rem; color:#64748b; display:block;">اعلان‌ها:</span>
+                <strong style="font-size:1.5rem; color:#1e293b; font-weight:800;">{{ unread_notifications if unread_notifications else 0 }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

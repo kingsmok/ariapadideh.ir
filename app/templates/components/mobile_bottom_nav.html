@@ -1,0 +1,25 @@
+<!-- Mobile Bottom Navigation Bar (Iranian Standard Modern Mobile UX) -->
+<nav class="mobile-bottom-nav">
+    <a href="{{ url_for('public.home') }}" class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.home' else '' }}">
+        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">🏠</span>
+        <span>صفحه اصلی</span>
+    </a>
+    
+    <a href="{{ url_for('public.categories_list') }}" class="bottom-nav-tab {{ 'active' if request.endpoint in ['public.categories_list', 'public.category'] else '' }}">
+        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">🗂️</span>
+        <span>خدمات ما</span>
+    </a>
+    
+    <a href="{{ url_for('public.cart') }}" class="bottom-nav-tab {{ 'active' if request.endpoint == 'public.cart' else '' }}">
+        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px; position:relative;">
+            🛒
+            <span class="badge-count cart-badge-count">{{ cart_items_count if cart_items_count else 0 }}</span>
+        </span>
+        <span>سبد خرید</span>
+    </a>
+    
+    <a href="{{ url_for('user.dashboard') if current_user.is_authenticated else url_for('user.login') }}" class="bottom-nav-tab {{ 'active' if 'user' in request.endpoint else '' }}">
+        <span class="nav-icon" style="font-size:1.2rem; margin-bottom:2px;">👤</span>
+        <span>{{ 'حساب من' if current_user.is_authenticated else 'ورود' }}</span>
+    </a>
+</nav>

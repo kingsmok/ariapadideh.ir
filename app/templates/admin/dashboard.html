@@ -1,0 +1,32 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}داشبورد مدیریت{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #2563eb;">
+            <span style="font-size:0.85rem; color:#64748b;">تعداد پکیج‌ها & محصولات</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.products_count if stats else 0 }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #10b981;">
+            <span style="font-size:0.85rem; color:#64748b;">کاربران ثبت‌نام شده</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.users_count if stats else 0 }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #f59e0b;">
+            <span style="font-size:0.85rem; color:#64748b;">کل سفارشات</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.orders_count if stats else 0 }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div style="background:#fff; border-radius:0.75rem; padding:1.25rem; border:1px solid #e2e8f0; border-right:4px solid #06b6d4;">
+            <span style="font-size:0.85rem; color:#64748b;">درخواست‌های استعلام</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">{{ stats.contacts_count if stats else 0 }}</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}
