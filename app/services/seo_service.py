@@ -115,24 +115,28 @@ class SEOService:
             'canonical': f'{SEOService.get_site_url()}/blog/{post.slug}',
             'robots': 'index, follow'
         }
-        
+
         seo['full_title'] = f"{seo['title']} | {SEOService.get_site_name()}"
         seo['og_type'] = 'article'
         seo['og_url'] = seo['canonical']
-        
+
         if post.author:
             seo['og_author'] = post.author.full_name
-        
+
         if post.published_at:
             seo['article_published_time'] = post.published_at.isoformat()
             seo['article_modified_time'] = post.updated_at.isoformat()
-        
+
         if post.category:
             seo['article_section'] = post.category.title
-        
+
+        # Tags as article:tag
+        if post.tags:
+            seo['og_tags'] = [t.name for t in post.tags]
+
         # Schema.org data
         seo['schema'] = post.get_schema_data()
-        
+
         return seo
     
     @staticmethod

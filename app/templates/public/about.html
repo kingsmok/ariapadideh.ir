@@ -3,6 +3,16 @@
 {% block title %}درباره ما و تیم مهندسی | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
 
 {% block content %}
+{# Person schema for team members — boosts E-E-A-T signals to Google #}
+{% set _team = [
+  {'name': 'علی خادمی', 'role': 'بنیان‌گذار و سرپرست فنی', 'bio': 'بیش از ۱۲ سال تجربه در توسعه نرم‌افزارهای سازمانی و معماری سیستم‌های مقیاس‌پذیر.'},
+  {'name': 'مریم احمدی', 'role': 'مدیر محصول', 'bio': 'متخصص طراحی تجربه کاربری و مدیریت محصول. عاشق خلق رابط‌های کاربری زیبا و کاربردی.'},
+  {'name': 'حسین رضایی', 'role': 'مهندس ارشد DevOps', 'bio': 'متخصص زیرساخت و استقرار. اطمینان از عملکرد بی‌نقص سیستم‌ها در مقیاس سازمانی.'}
+] %}
+{% block structured_data %}
+{% for member in _team %}{{ render_person_schema(member.name, member.role)|safe }}{% endfor %}
+{% endblock %}
+
 
 <!-- ==================== HERO ==================== -->
 <section class="hero-section">

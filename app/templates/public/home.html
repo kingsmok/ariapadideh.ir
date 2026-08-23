@@ -528,6 +528,37 @@
 </section>
 
 <!-- ==================== FEATURED PRODUCTS ==================== -->
+{% if faqs %}
+{# FAQ section with FAQPage schema for rich results in Google #}
+{% block structured_data %}{{ render_faq_schema(faqs)|safe }}{% endblock %}
+<section class="section" id="home-faq">
+    <div class="container" style="max-width:900px;">
+        <div class="section-divider">
+            <h2>سوالات متداول</h2>
+            <p>پاسخ کوتاه به پرتکرارترین سوالات شما درباره خدمات و محصولات ما</p>
+        </div>
+        <div class="faq-list">
+            {% for faq in faqs %}
+            <details class="accordion-item-rahsa">
+                <summary>
+                    <span>{{ faq.question }}</span>
+                </summary>
+                <div class="accordion-body-rahsa">
+                    {{ faq.answer|safe }}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('public.faq') }}" class="btn-rahsa-outline" style="padding:0.6rem 1.5rem; font-size:0.875rem;">
+                مشاهده همه سوالات
+                <span aria-hidden="true">←</span>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {% if featured_products %}
 <section class="section" style="padding-top:2rem;">
     <div class="container">
