@@ -1,0 +1,178 @@
+<header class="site-header">
+    <!-- Top Bar -->
+    <div class="header-top">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="top-links">
+                    <a href="{{ url_for('public.about') }}">درباره ما</a>
+                    <a href="{{ url_for('public.contact') }}">تماس با ما</a>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('user.dashboard') }}">پنل کاربری</a>
+                    {% endif %}
+                </div>
+                <div class="top-contact">
+                    <span><i class="fas fa-phone"></i> {{ site_settings.contact_phone or '021-12345678' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Header -->
+    <div class="header-main">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Logo -->
+                <div class="col-auto">
+                    <a href="{{ url_for('public.home') }}" class="logo">
+                        {% if site_settings.appearance_logo %}
+                            <img src="{{ site_settings.appearance_logo }}" alt="{{ site_settings.general_site_name }}">
+                        {% else %}
+                            <span class="logo-text">{{ site_settings.general_site_name or 'فلاسک پرو' }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+                
+                <!-- Search -->
+                <div class="col flex-grow-1 mx-4">
+                    <form action="{{ url_for('public.search') }}" method="GET" class="search-form">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" 
+                                   placeholder="جستجو در محصولات..." 
+                                   value="{{ request.args.get('q', '') }}"
+                                   autocomplete="off">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="search-results" class="search-results-dropdown"></div>
+                    </form>
+                </div>
+                
+                <!-- Actions -->
+                <div class="col-auto">
+                    <div class="header-actions">
+                        <!-- Compare -->
+                        <a href="{{ url_for('public.compare') }}" class="action-btn" title="مقایسه">
+                            <i class="fas fa-balance-scale"></i>
+                        </a>
+                        
+                        <!-- Cart -->
+                        <a href="{{ url_for('public.cart') }}" class="action-btn cart-btn" title="سبد خرید">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="badge" id="cart-count">{{ cart_items_count if cart_items_count else 0 }}</span>
+                        </a>
+                        
+                        <!-- User -->
+                        {% if current_user.is_authenticated %}
+                            <div class="dropdown">
+                                <button class="action-btn" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><span class="dropdown-item-text">{{ current_user.full_name }}</span></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('user.dashboard') }}">پنل کاربری</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('user.orders') }}">سفارش‌های من</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('user.wishlist') }}">علاقه‌مندی‌ها</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('user.logout') }}">خروج</a></li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('user.login') }}" class="action-btn" title="ورود">
+                                <i class="fas fa-user"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="header-nav">
+        <div class="container">
+            <div class="nav-wrapper">
+                <!-- Categories Button -->
+                <button class="categories-btn" id="categories-toggle">
+                    <i class="fas fa-bars"></i>
+                    <span>دسته‌بندی‌ها</span>
+                </button>
+                
+                <!-- Main Menu -->
+                <ul class="main-menu">
+                    <li><a href="{{ url_for('public.home') }}">صفحه اصلی</a></li>
+                    {% for category in categories[:6] if categories %}
+                        <li class="has-mega-menu">
+                            <a href="{{ url_for('public.category', slug=category.slug) }}">
+                                {{ category.title }}
+                            </a>
+                            {% if category.children.count() > 0 %}
+                                <div class="mega-menu">
+                                    <div class="container">
+                                        <div class="row">
+                                            {% for child in category.children.filter_by(is_active=True).limit(4) %}
+                                                <div class="col-3">
+                                                    <a href="{{ url_for('public.category', slug=child.slug) }}" class="mega-menu-title">
+                                                        {{ child.title }}
+                                                    </a>
+                                                    <ul class="mega-menu-items">
+                                                        {% for subchild in child.children.filter_by(is_active=True).limit(4) %}
+                                                            <li><a href="{{ url_for('public.category', slug=subchild.slug) }}">{{ subchild.title }}</a></li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if category.image or category.banner %}
+                                            <div class="mega-menu-banner">
+                                                <img src="{{ category.banner or category.image }}" alt="">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                    <li><a href="{{ url_for('public.blog') }}">وبلاگ</a></li>
+                    <li><a href="{{ url_for('public.faq') }}">سوالات متداول</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Categories Sidebar -->
+<div class="categories-sidebar" id="categories-sidebar">
+    <div class="sidebar-header">
+        <h5>دسته‌بندی‌ها</h5>
+        <button class="close-sidebar" id="close-categories">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="sidebar-content">
+        <ul class="categories-list">
+            {% for category in categories if categories %}
+                <li class="has-sub">
+                    <a href="{{ url_for('public.category', slug=category.slug) }}">
+                        {% if category.icon %}
+                            <i class="{{ category.icon }}"></i>
+                        {% endif %}
+                        {{ category.title }}
+                    </a>
+                    {% if category.children.count() > 0 %}
+                        <button class="toggle-sub"><i class="fas fa-chevron-down"></i></button>
+                        <ul class="sub-categories">
+                            {% for child in category.children.filter_by(is_active=True).limit(8) %}
+                                <li>
+                                    <a href="{{ url_for('public.category', slug=child.slug) }}">{{ child.title }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
