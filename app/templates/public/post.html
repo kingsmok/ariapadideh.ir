@@ -46,7 +46,9 @@
                     <div class="d-flex flex-wrap align-items-center gap-3 text-muted" style="font-size:0.85rem;">
                         <span class="d-flex align-items-center gap-1">
                             <span aria-hidden="true">📅</span>
-                            <span>{{ post.published_at|default(post.created_at)|string|truncate(10, true, '') }}</span>
+                            <time datetime="{{ post.published_at.isoformat() if post.published_at else post.created_at.isoformat() }}">
+                                {{ post.published_at|default(post.created_at)|string|truncate(10, true, '') }}
+                            </time>
                         </span>
                         {% if post.author %}
                         <span class="d-flex align-items-center gap-1">
@@ -58,21 +60,52 @@
                             <span aria-hidden="true">👁️</span>
                             <span><span data-persian-num>{{ post.views or 0 }}</span> بازدید</span>
                         </span>
+                        {% if post.updated_at and post.published_at and (post.updated_at - post.published_at).days > 7 %}
+                        <span class="d-flex align-items-center gap-1" style="font-size:0.75rem;" title="آخرین به‌روزرسانی">
+                            <span aria-hidden="true">🔄</span>
+                            <time datetime="{{ post.updated_at.isoformat() }}">
+                                به‌روزرسانی: {{ post.updated_at|string|truncate(10, true, '') }}
+                            </time>
+                        </span>
+                        {% endif %}
                     </div>
                 </header>
 
                 {% if post.featured_image %}
                 <div class="mb-4" style="border-radius:var(--radius-xl); overflow:hidden;">
                     <img src="{{ post.featured_image }}"
-                         alt="{{ post.title }}"
-                         loading="lazy"
+                         alt="{{ post.title }}{% if post.excerpt %} - {{ post.excerpt|striptags|truncate(120) }}{% endif %}"
+                         title="{{ post.title }}"
+                         loading="eager"
+                         fetchpriority="high"
                          decoding="async"
+                         width="1200"
+                         height="675"
                          style="width:100%; height:auto; display:block;">
                 </div>
                 {% endif %}
 
                 <div class="post-content" style="font-size:1rem; line-height:1.9; color:var(--text-gray-200);">
-                    {{ post.content|safe }}
+                    {% set _toc = extract_toc(post.content) %}
+                    {% if _toc and _toc|length >= 2 %}
+                    <nav class="toc-rahsa" aria-label="فهرست مطالب" style="background:rgba(10,17,40,0.5); border:1px solid var(--glass-border); border-right:3px solid var(--accent-gold); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-bottom:2rem;">
+                        <h2 class="text-white" style="font-size:0.95rem; font-weight:800; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">📑</span>
+                            <span>فهرست مطالب</span>
+                        </h2>
+                        <ol style="list-style:none; padding:0; margin:0; counter-reset:toc;">
+                            {% for item in _toc %}
+                            <li style="counter-increment:toc; padding:0.25rem 0; font-size:0.875rem; {% if item.level == 3 %}padding-right:1.5rem;{% endif %}">
+                                <a href="#{{ item.id }}" style="color:var(--text-gray-200); text-decoration:none; display:flex; align-items:baseline; gap:0.5rem;">
+                                    <span class="text-muted" style="font-size:0.75rem; min-width:1.5rem;" data-persian-num>{{ loop.index }}.</span>
+                                    <span>{{ item.title }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </nav>
+                    {% endif %}
+                    {{ inject_heading_ids(post.content)|safe }}
                 </div>
 
                 <!-- Tags -->
@@ -128,7 +161,11 @@
                     <a href="{{ url_for('public.post', slug=related.slug) }}" class="product-card d-block h-100 text-decoration-none">
                         <div class="product-card-image">
                             <img src="{{ related.featured_image or url_for('static', filename='images/no-image.png') }}"
-                                 alt="{{ related.title }}" loading="lazy" decoding="async">
+                                 alt="{{ related.title }}{% if related.excerpt %} - {{ related.excerpt|striptags|truncate(80) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="240">
                         </div>
                         <div class="product-card-body">
                             <h3 class="product-card-title">{{ related.title }}</h3>

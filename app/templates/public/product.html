@@ -45,10 +45,13 @@
             <div class="col-12 col-lg-5">
                 <div class="glass-card" style="padding:1rem; margin-bottom:1rem;">
                     <img src="{{ product.featured_image or url_for('static', filename='images/product_code_architect.png') }}"
-                         alt="{{ product.title }}"
+                         alt="{{ product.title }}{% if product.short_description %} - {{ product.short_description|striptags|truncate(80) }}{% endif %}"
                          title="{{ product.title }}"
                          loading="eager"
+                         fetchpriority="high"
                          decoding="async"
+                         width="800"
+                         height="500"
                          style="width:100%; height:auto; border-radius:var(--radius-lg); aspect-ratio:16/10; object-fit:cover;"
                          onerror="this.src='{{ url_for('static', filename='images/no-image.png') }}'">
                 </div>
@@ -57,10 +60,13 @@
                 <div class="row g-2 mb-3">
                     {% for img in product.images[:4] %}
                     <div class="col-3">
-                        <a href="{{ img.url }}" target="_blank" rel="noopener" aria-label="تصویر {{ loop.index }}">
+                        <a href="{{ img.url }}" target="_blank" rel="noopener" aria-label="تصویر {{ loop.index }} از {{ product.title }}">
                             <img src="{{ img.thumbnail_url or img.url }}"
-                                 alt="{{ product.title }} - تصویر {{ loop.index }}"
+                                 alt="{{ product.title }} - تصویر {{ loop.index }} از {{ product.images|length }}"
                                  loading="lazy"
+                                 decoding="async"
+                                 width="200"
+                                 height="200"
                                  style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--glass-border);">
                         </a>
                     </div>
@@ -135,7 +141,7 @@
                         </div>
                     </div>
 
-                    <a href="/#quote-section" class="btn-rahsa-outline w-100 " style="font-size:0.875rem; display:block; padding:0.7rem;" aria-label="درخواست تغییرات سفارشی">
+                    <a href="{{ url_for('public.contact') }}" class="btn-rahsa-outline w-100 " style="font-size:0.875rem; display:block; padding:0.7rem;" aria-label="درخواست تغییرات سفارشی">
                         🧮 درخواست تغییرات یا توسعه سفارشی روی این پکیج
                     </a>
 
@@ -179,7 +185,11 @@
                     <article class="product-card h-100">
                         <a href="{{ url_for('public.product', slug=related.slug) }}" class="product-card-image" aria-label="{{ related.title }}">
                             <img src="{{ related.featured_image or url_for('static', filename='images/no-image.png') }}"
-                                 alt="{{ related.title }}" loading="lazy" decoding="async">
+                                 alt="{{ related.title }}{% if related.short_description %} - {{ related.short_description|striptags|truncate(70) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="300">
                         </a>
                         <div class="product-card-body">
                             <h3 class="product-card-title">{{ related.title }}</h3>

@@ -29,10 +29,10 @@
                 </p>
 
                 <div class="d-flex flex-wrap gap-3 mb-4">
-                    <a href="/#quote-section" class="btn-rahsa-cta" aria-label="شروع پروژه">
-                        <span>شروع پروژه</span>
-                        <span aria-hidden="true">←</span>
-                    </a>
+                <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta" aria-label="شروع پروژه">
+                    <span>شروع پروژه</span>
+                    <span aria-hidden="true">←</span>
+                </a>
                     <a href="#values-section" class="btn-rahsa-outline" aria-label="مشاهده ارزش‌های ما">
                         <span>ارزش‌های ما</span>
                     </a>
@@ -42,10 +42,12 @@
             <div class="col-12 col-lg-5">
                 <div class="hero-visual glass-card">
                     <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}"
-                         alt="معماری رهسا دیو"
-                         title="Rahsa Architecture"
+                         alt="معماری رهسا دیو - آتلیه تخصصی توسعه نرم‌افزار در شیراز"
+                         title="معماری رهسا دیو"
                          loading="lazy"
                          decoding="async"
+                         width="800"
+                         height="600"
                          onerror="this.style.display='none'">
                 </div>
             </div>
@@ -162,7 +164,7 @@
             <p class="text-muted" style="font-size:0.95rem; max-width:500px; margin:0 auto 1.5rem;">
                 ایده‌های خود را با ما در میان بگذارید. تیم ما آماده تبدیل رؤیای شما به واقعیت است.
             </p>
-            <a href="/#quote-section" class="btn-rahsa-cta" aria-label="تماس با ما">
+            <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta" aria-label="تماس با ما">
                 <span>تماس با ما</span>
                 <span aria-hidden="true">←</span>
             </a>

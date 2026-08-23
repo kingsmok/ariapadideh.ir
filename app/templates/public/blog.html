@@ -55,15 +55,19 @@
 
                     <div class="product-card-image">
                         <img src="{{ post.featured_image or url_for('static', filename='images/no-image.png') }}"
-                             alt="{{ post.title }}"
+                             alt="{{ post.title }}{% if post.excerpt %} - {{ post.excerpt|striptags|truncate(80) }}{% endif %}"
                              loading="lazy"
-                             decoding="async">
+                             decoding="async"
+                             width="400"
+                             height="240">
                     </div>
 
                     <div class="product-card-body">
                         <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.8rem;">
                             <span aria-hidden="true">📅</span>
-                            <span>{{ post.published_at|default(post.created_at)|string|truncate(10, true, '') }}</span>
+                            <time datetime="{{ post.published_at.isoformat() if post.published_at else post.created_at.isoformat() }}">
+                                {{ post.published_at|default(post.created_at)|string|truncate(10, true, '') }}
+                            </time>
                         </div>
 
                         <h3 class="product-card-title">

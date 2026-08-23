@@ -174,11 +174,15 @@ def register_context_processors(app: Flask) -> None:
     @app.context_processor
     def utility_processor():
         """Add utility functions to templates"""
+        from app.utils.helpers import extract_toc, inject_heading_ids
         return {
             'format_price': format_price,
             'time_ago': time_ago,
             'truncate_text': truncate_text,
             'get_cdn_url': get_cdn_url,
+            'to_persian_digits': lambda s: s,
+            'extract_toc': extract_toc,
+            'inject_heading_ids': inject_heading_ids,
             # Schema helpers for templates
             'render_breadcrumb_schema': lambda items: _safe_breadcrumb(items),
             'render_faq_schema': lambda faqs: _safe_faq(faqs),

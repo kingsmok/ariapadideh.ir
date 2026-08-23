@@ -34,8 +34,9 @@
                              style="padding:1.25rem; border-bottom:1px solid var(--glass-border); transition:var(--transition);">
                         <a href="{{ url_for('public.product', slug=p.slug) }}" aria-label="{{ p.title }}" class="flex-shrink-0">
                             <img src="{{ p.main_image_url }}"
-                                 alt="{{ p.title }}"
+                                 alt="{{ p.title }}{% if p.short_description %} - {{ p.short_description|striptags|truncate(60) }}{% endif %}"
                                  loading="lazy"
+                                 decoding="async"
                                  width="80" height="80"
                                  style="width:80px; height:80px; object-fit:cover; border-radius:var(--radius-md);">
                         </a>
