@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'ویرایش آدرس' if address else 'آدرس جدید' }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:680px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.addresses') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">آدرس‌های من</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">{{ 'ویرایش آدرس' if address else 'آدرس جدید' }}</span>
+        </div>
+
+        <div class="glass-card" style="padding:2rem;">
+            <h1 class="text-white" style="font-size:1.3rem; font-weight:800; margin:0 0 1.5rem;">
+                {{ '✏️ ویرایش آدرس' if address else '➕ افزودن آدرس جدید' }}
+            </h1>
+
+            <form action="{{ request.path }}" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label for="title" class="form-label-rahsa">عنوان آدرس</label>
+                        <input type="text" id="title" name="title" class="form-control-rahsa"
+                               value="{{ address.title if address else '' }}" placeholder="مثلاً: خانه، محل کار">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="recipient_name" class="form-label-rahsa">نام گیرنده</label>
+                        <input type="text" id="recipient_name" name="recipient_name" class="form-control-rahsa"
+                               value="{{ address.recipient_name if address else '' }}">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="recipient_phone" class="form-label-rahsa">شماره تماس گیرنده</label>
+                        <input type="text" id="recipient_phone" name="recipient_phone" class="form-control-rahsa"
+                               value="{{ address.recipient_phone if address else '' }}">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="postal_code" class="form-label-rahsa">کد پستی</label>
+                        <input type="text" id="postal_code" name="postal_code" class="form-control-rahsa"
+                               value="{{ address.postal_code if address else '' }}">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="province" class="form-label-rahsa">استان</label>
+                        <input type="text" id="province" name="province" class="form-control-rahsa"
+                               value="{{ address.province if address else '' }}" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="city" class="form-label-rahsa">شهر</label>
+                        <input type="text" id="city" name="city" class="form-control-rahsa"
+                               value="{{ address.city if address else '' }}" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="address" class="form-label-rahsa">آدرس کامل</label>
+                        <textarea id="address" name="address" class="form-control-rahsa" rows="3" required>{{ address.address if address else '' }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="d-flex align-items-center gap-2" style="cursor:pointer;">
+                            <input type="checkbox" name="is_default" value="1"
+                                   {{ 'checked' if address and address.is_default else '' }}>
+                            <span class="text-white">تنظیم به‌عنوان آدرس پیش‌فرض</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap mt-4">
+                    <button type="submit" class="btn-rahsa-cta">
+                        <span>ذخیره آدرس</span>
+                        <span aria-hidden="true">✓</span>
+                    </button>
+                    <a href="{{ url_for('user.addresses') }}" class="btn-rahsa-outline">انصراف</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
