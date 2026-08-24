@@ -110,6 +110,24 @@
 
         </div>
 
+        {# فرم خبرنامه (الگوی قالب‌های مدرن مثل کرافتو) #}
+        {% if site_settings.features_newsletter_enabled != false %}
+        <div class="newsletter-rahsa" style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2rem; padding-top:2rem;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h3 style="color:#fff; font-size:1rem; font-weight:800; margin-bottom:0.3rem;">📬 از تخفیفها و مقالات جدید جا نمانید</h3>
+                    <p class="text-muted" style="font-size:0.8rem; margin:0;">عضویت در خبرنامه — بدون اسپم، لغو عضویت در هر لحظه.</p>
+                </div>
+                <form action="{{ url_for('public.newsletter_subscribe') }}" method="POST" class="d-flex gap-2 newsletter-form-rahsa" style="flex:1; max-width:420px;" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="email" name="email" class="form-control-rahsa" style="flex:1; padding:0.65rem 1rem; font-size:0.85rem;"
+                           placeholder="ایمیل شما" required aria-label="ایمیل برای خبرنامه">
+                    <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.3rem; font-size:0.85rem;">عضویت</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Copyright -->
         <div class="" style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2.5rem; padding-top:1.5rem;">
             <p class="text-muted" style="font-size:0.825rem; margin:0;">

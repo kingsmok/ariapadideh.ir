@@ -24,7 +24,9 @@ from app.models import (
     Page, PageComponent, Post, Comment,
     Menu, Slider, SliderItem, Banner, Media, Setting,
     Contact, FAQ, Resume, Log, Notification,
-    ServiceCatalog, PortfolioCaseStudies, ConsultationLeads
+    ServiceCatalog, PortfolioCaseStudies, ConsultationLeads,
+    TeamMember, PricingPlan, Story, Subscriber,
+    Ticket, TicketMessage, ProductVideo,
 )
 from app.services.media_service import MediaService
 from app.services.notification_service import NotificationService
@@ -324,12 +326,23 @@ def product_edit(product_id=None):
         # file-upload fields — those are assigned from real model objects / saved
         # files below to avoid assigning raw ints/None to relationships or wiping
         # stored file paths.
-        _skip = {'categories', 'tags', 'images', 'featured_image', 'csrf_token', 'submit'}
+        _skip = {'categories', 'tags', 'images', 'featured_image', 'csrf_token', 'submit',
+                 'variations', 'videos'}
         for field in form:
             if field.name in _skip:
                 continue
             if hasattr(product, field.name):
                 setattr(product, field.name, field.data)
+
+        # Variation Swatches — JSON list of {name, type, value, price, stock}
+        import json as _json
+        try:
+            variations = _json.loads(form.variations.data or '[]')
+            product.variations = variations if isinstance(variations, list) else []
+        except (ValueError, TypeError):
+            flash('فرمت JSON متغیرها نامعتبر بود — متغیرها ذخیره نشد.', 'warning')
+        except Exception:
+            product.variations = []
 
         # Ensure a slug exists (Product.slug is NOT NULL & unique)
         if not getattr(product, 'slug', None):
@@ -362,7 +375,33 @@ def product_edit(product_id=None):
                     )
                     db.session.add(image)
             db.session.commit()
-        
+
+        # Video gallery — هر خط: «عنوان | لینک» (یا فقط لینک)
+        ProductVideo.query.filter_by(product_id=product.id).update({'is_deleted': True})
+        for line in (form.videos.data or '').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if '|' in line:
+                title, url = [part.strip() for part in line.split('|', 1)]
+                title = title or None
+            else:
+                title, url = None, line
+            url_lower = url.lower()
+            if 'aparat.com' in url_lower:
+                provider = 'aparat'
+            elif 'youtube.com' in url_lower or 'youtu.be' in url_lower:
+                provider = 'youtube'
+            else:
+                provider = 'file'
+            db.session.add(ProductVideo(
+                product_id=product.id,
+                title=title or None,
+                provider=provider,
+                url=url,
+            ))
+        db.session.commit()
+
         # Log
         Log.log_action(
             'product_updated' if product_id else 'product_created',
@@ -380,7 +419,21 @@ def product_edit(product_id=None):
     categories = Category.query.filter_by(is_deleted=False).all()
     brands = Brand.query.filter_by(is_deleted=False).all()
     tags = Tag.query.filter_by(is_deleted=False).all()
-    
+
+    # Prefill swatches/videos fields from the product
+    import json as _json
+    if product:
+        form.variations.data = _json.dumps(product.variations or [], ensure_ascii=False, indent=1)
+        active_videos = ProductVideo.query.filter_by(
+            product_id=product.id, is_deleted=False
+        ).order_by(ProductVideo.sort_order).all()
+        form.videos.data = '\n'.join(
+            f'{v.title} | {v.url}' if v.title else v.url for v in active_videos
+        )
+    else:
+        form.variations.data = '[]'
+        form.videos.data = ''
+
     return render_template('admin/products/edit.html',
         form=form,
         product=product,
@@ -874,6 +927,11 @@ def settings():
             'title': 'پرداخت',
             'icon': 'fa-credit-card',
             'settings': Setting.query.filter_by(group='payment').order_by(Setting.sort_order).all()
+        },
+        'features': {
+            'title': 'قابلیت‌ها (استوری/خبرنامه/OTP)',
+            'icon': 'fa-magic',
+            'settings': Setting.query.filter_by(group='features').order_by(Setting.sort_order).all()
         }
     }
     
@@ -1512,5 +1570,320 @@ def theme_research():
         page_blueprint=CORPORATE_PAGE_BLUEPRINT,
         summary=theme_research_summary(),
     )
+
+
+# ==================== TICKETS (سیستم تیکت پشتیبانی) ====================
+
+@admin_bp.route('/tickets')
+@login_required
+@admin_required
+def tickets(page=1):
+    """Support tickets list"""
+    status = request.args.get('status', '')
+    q = Ticket.query.filter_by(is_deleted=False)
+    if status:
+        q = q.filter_by(status=status)
+    tickets_list = q.order_by(Ticket.last_reply_at.desc()).paginate(
+        page=page, per_page=30, error_out=False
+    )
+    return render_template('admin/tickets/list.html', tickets=tickets_list, current_status=status)
+
+
+@admin_bp.route('/tickets/<int:ticket_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def ticket_detail(ticket_id):
+    """View ticket + reply / change status"""
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    if request.method == 'POST':
+        action = request.form.get('action', 'reply')
+
+        if action == 'reply':
+            message = request.form.get('message', '').strip()
+            if message:
+                ticket.add_message(
+                    message, user_id=current_user.id, is_admin=True
+                )
+                Notification.send_to_user(
+                    user_id=ticket.user_id,
+                    title='پاسخ تیکت شما',
+                    message=f'تیکت «{ticket.subject}» پاسخ داده شد.',
+                    type='message',
+                    data={'ticket_id': ticket.id},
+                )
+                flash('پاسخ ثبت و به کاربر اطلاع‌رسانی شد.', 'success')
+            return redirect(url_for('admin.ticket_detail', ticket_id=ticket.id))
+
+        if action == 'close':
+            ticket.close(by_user_id=current_user.id)
+            flash('تیکت بسته شد.', 'success')
+        elif action == 'reopen':
+            ticket.reopen()
+            flash('تیکت بازگشایی شد.', 'success')
+        elif action == 'priority':
+            ticket.priority = request.form.get('priority', ticket.priority)
+            ticket.save()
+            flash('اولویت بروزرسانی شد.', 'success')
+        return redirect(url_for('admin.ticket_detail', ticket_id=ticket.id))
+
+    return render_template('admin/tickets/detail.html', ticket=ticket)
+
+
+# ==================== TEAM MEMBERS (تیم ما + مهارت‌ها) ====================
+
+def _parse_lines(raw: str):
+    return [line.strip() for line in (raw or '').splitlines() if line.strip()]
+
+
+def _parse_skills(raw: str):
+    """«Python:92» هر خط → [{name, level}]"""
+    skills = []
+    for line in _parse_lines(raw):
+        if ':' in line:
+            name, level = line.rsplit(':', 1)
+            try:
+                skills.append({'name': name.strip(), 'level': max(0, min(100, int(level.strip())))})
+            except ValueError:
+                continue
+    return skills
+
+
+@admin_bp.route('/team')
+@login_required
+@admin_required
+def team():
+    members = TeamMember.query.filter_by(is_deleted=False).order_by(
+        TeamMember.sort_order
+    ).all()
+    return render_template('admin/team/list.html', members=members)
+
+
+@admin_bp.route('/team/create', methods=['GET', 'POST'])
+@admin_bp.route('/team/<int:member_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def team_edit(member_id=None):
+    member = TeamMember.query.get_or_404(member_id) if member_id else None
+
+    if request.method == 'POST':
+        member = member or TeamMember()
+        member.full_name = request.form.get('full_name', '').strip()
+        member.role_title = request.form.get('role_title', '').strip() or None
+        member.bio = request.form.get('bio', '').strip() or None
+        member.avatar = request.form.get('avatar', '').strip() or None
+        member.skills = _parse_skills(request.form.get('skills', ''))
+        member.socials = {
+            key: val.strip()
+            for key in ('instagram', 'linkedin', 'telegram', 'email', 'website')
+            if (val := request.form.get(f'social_{key}', '')).strip()
+        }
+        member.sort_order = request.form.get('sort_order', 0, type=int)
+        member.is_active = request.form.get('is_active') == '1'
+        member.save()
+
+        Log.log_action('team.save', user_id=current_user.id,
+                       entity_type='TeamMember', entity_id=member.id)
+        flash('عضو تیم ذخیره شد.', 'success')
+        return redirect(url_for('admin.team'))
+
+    return render_template('admin/team/edit.html', member=member)
+
+
+@admin_bp.route('/team/<int:member_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def team_delete(member_id):
+    member = TeamMember.query.get_or_404(member_id)
+    member.delete()
+    flash('عضو تیم حذف شد.', 'success')
+    return redirect(url_for('admin.team'))
+
+
+# ==================== PRICING PLANS (جداول تعرفه) ====================
+
+@admin_bp.route('/pricing')
+@login_required
+@admin_required
+def pricing():
+    plans = PricingPlan.query.filter_by(is_deleted=False).order_by(
+        PricingPlan.sort_order
+    ).all()
+    return render_template('admin/pricing/list.html', plans=plans)
+
+
+@admin_bp.route('/pricing/create', methods=['GET', 'POST'])
+@admin_bp.route('/pricing/<int:plan_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def pricing_edit(plan_id=None):
+    plan = PricingPlan.query.get_or_404(plan_id) if plan_id else None
+
+    if request.method == 'POST':
+        plan = plan or PricingPlan()
+        plan.title = request.form.get('title', '').strip()
+        plan.subtitle = request.form.get('subtitle', '').strip() or None
+        plan.price_toman = request.form.get('price_toman', type=int)
+        plan.old_price_toman = request.form.get('old_price_toman', type=int)
+        plan.period = request.form.get('period', 'پروژه').strip()
+        plan.features = _parse_lines(request.form.get('features', ''))
+        plan.features_off = _parse_lines(request.form.get('features_off', ''))
+        plan.badge_text = request.form.get('badge_text', '').strip() or None
+        plan.is_featured = request.form.get('is_featured') == '1'
+        plan.button_text = request.form.get('button_text', 'سفارش').strip()
+        plan.button_url = request.form.get('button_url', '').strip() or None
+        plan.sort_order = request.form.get('sort_order', 0, type=int)
+        plan.is_active = request.form.get('is_active') == '1'
+        plan.save()
+        flash('پلن قیمتی ذخیره شد.', 'success')
+        return redirect(url_for('admin.pricing'))
+
+    return render_template('admin/pricing/edit.html', plan=plan)
+
+
+@admin_bp.route('/pricing/<int:plan_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def pricing_delete(plan_id):
+    plan = PricingPlan.query.get_or_404(plan_id)
+    plan.delete()
+    flash('پلن حذف شد.', 'success')
+    return redirect(url_for('admin.pricing'))
+
+
+# ==================== STORIES (استوری‌ساز) ====================
+
+@admin_bp.route('/stories')
+@login_required
+@admin_required
+def stories():
+    items = Story.query.filter_by(is_deleted=False).order_by(
+        Story.group_name, Story.sort_order
+    ).all()
+    return render_template('admin/stories/list.html', stories=items)
+
+
+@admin_bp.route('/stories/create', methods=['GET', 'POST'])
+@admin_bp.route('/stories/<int:story_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def story_edit(story_id=None):
+    story = Story.query.get_or_404(story_id) if story_id else None
+
+    if request.method == 'POST':
+        story = story or Story()
+        story.title = request.form.get('title', '').strip()
+        story.group_name = request.form.get('group_name', 'عمومی').strip() or 'عمومی'
+        story.media_type = request.form.get('media_type', 'image')
+        story.image = request.form.get('image', '').strip() or None
+        story.video_url = request.form.get('video_url', '').strip() or None
+        story.link = request.form.get('link', '').strip() or None
+        story.link_text = request.form.get('link_text', 'مشاهده').strip()
+        story.duration = request.form.get('duration', 5, type=int)
+        story.sort_order = request.form.get('sort_order', 0, type=int)
+        story.is_active = request.form.get('is_active') == '1'
+        story.save()
+        flash('استوری ذخیره شد.', 'success')
+        return redirect(url_for('admin.stories'))
+
+    return render_template('admin/stories/edit.html', story=story)
+
+
+@admin_bp.route('/stories/<int:story_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def story_delete(story_id):
+    story = Story.query.get_or_404(story_id)
+    story.delete()
+    flash('استوری حذف شد.', 'success')
+    return redirect(url_for('admin.stories'))
+
+
+# ==================== SUBSCRIBERS (خبرنامه) ====================
+
+@admin_bp.route('/subscribers')
+@login_required
+@admin_required
+def subscribers(page=1):
+    subs = Subscriber.query.order_by(Subscriber.created_at.desc()).paginate(
+        page=page, per_page=50, error_out=False
+    )
+    return render_template('admin/subscribers/list.html', subs=subs)
+
+
+@admin_bp.route('/subscribers/export')
+@login_required
+@admin_required
+def subscribers_export():
+    import csv
+    import io
+    from flask import Response
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(['email', 'source', 'created_at', 'active'])
+    for s in Subscriber.query.order_by(Subscriber.created_at.desc()).all():
+        writer.writerow([s.email, s.source, s.created_at, s.is_active_subscriber])
+
+    return Response(
+        '\ufeff' + out.getvalue(),  # BOM برای اکسل فارسی
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=subscribers.csv'},
+    )
+
+
+@admin_bp.route('/subscribers/<int:sub_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def subscriber_delete(sub_id):
+    sub = Subscriber.query.get_or_404(sub_id)
+    db.session.delete(sub)
+    db.session.commit()
+    flash('مشترک حذف شد.', 'success')
+    return redirect(url_for('admin.subscribers'))
+
+
+# ==================== ORDER INVOICE & LABEL (فاکتور و لیبل چاپی) ====================
+
+@admin_bp.route('/orders/<int:order_id>/invoice')
+@login_required
+@admin_required
+def order_invoice(order_id):
+    """فاکتور قابل چاپ / ذخیره PDF (Ctrl+P)"""
+    order = Order.query.get_or_404(order_id)
+    return render_template('admin/orders/invoice.html', order=order)
+
+
+@admin_bp.route('/orders/<int:order_id>/label')
+@login_required
+@admin_required
+def order_label(order_id):
+    """لیبل پستی قابل چاپ"""
+    order = Order.query.get_or_404(order_id)
+    return render_template('admin/orders/label.html', order=order)
+
+
+# ==================== AI CONTENT (پیش‌نویس با هوش مصنوعی) ====================
+
+@admin_bp.route('/ai/generate', methods=['POST'])
+@login_required
+@admin_required
+def ai_generate():
+    """AJAX: تولید پیش‌نویس محتوا — {preset, topic, extra} → {text}"""
+    from app.services.ai_service import AiService
+
+    data = request.get_json(silent=True) or {}
+    preset = data.get('preset', 'product_desc')
+    topic = (data.get('topic') or '').strip()
+
+    if not topic:
+        return jsonify({'success': False, 'message': 'موضوع را وارد کنید'}), 400
+
+    try:
+        text = AiService.generate(preset, topic, data.get('extra', ''))
+        return jsonify({'success': True, 'text': text})
+    except (RuntimeError, ValueError) as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 503
+
 
 

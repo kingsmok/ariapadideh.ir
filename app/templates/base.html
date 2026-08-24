@@ -75,6 +75,30 @@
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
+    {# شخصی‌سازی ظاهر از پنل: رنگ تأکید + فونت متن/تیتر (الگوی پنل تنظیمات قالب‌های راست‌چین) #}
+    {% if site_settings.appearance_accent_color or site_settings.appearance_body_font or site_settings.appearance_heading_font %}
+    <style id="custom-appearance">
+        {% if site_settings.appearance_accent_color %}
+        :root { --accent-gold: {{ site_settings.appearance_accent_color }}; --accent-yellow: {{ site_settings.appearance_accent_color }}; }
+        {% endif %}
+        {% if site_settings.appearance_body_font %}
+        :root { --font-primary: '{{ site_settings.appearance_body_font }}', 'Vazirmatn', 'IRANSans', 'Shabnam', sans-serif; }
+        {% endif %}
+        {% if site_settings.appearance_heading_font %}
+        h1, h2, h3, h4, h5, h6 { font-family: '{{ site_settings.appearance_heading_font }}', 'Vazirmatn', 'IRANSans', sans-serif; }
+        {% endif %}
+    </style>
+    {% endif %}
+
+    {# پیش‌بارگر (Preloader) — الگوی قالب ستیا (۴ طرح) و نادر (۱۰ طرح) #}
+    {% if site_settings.appearance_preloader_enabled == true %}
+    <style>
+        body.preloader-active { overflow: hidden; }
+        .preloader-rahsa { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: var(--bg-navy-dark); transition: opacity .4s ease, visibility .4s ease; }
+        .preloader-rahsa.hide { opacity: 0; visibility: hidden; }
+    </style>
+    {% endif %}
+
     {% block extra_css %}{% endblock %}
 
     <!-- Schema.org JSON-LD -->
@@ -93,6 +117,19 @@
     {% block structured_data %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
+
+    {% if site_settings.appearance_preloader_enabled == true %}
+    <!-- Preloader (الگوی قالب‌های شرکتی — قابل کنترل از تنظیمات) -->
+    <div class="preloader-rahsa preloader-{{ site_settings.appearance_preloader_style or 'spinner' }}" id="preloader" role="status" aria-label="در حال بارگذاری">
+        {% if site_settings.appearance_preloader_style == 'bar' %}
+        <div class="preloader-bar"><span></span></div>
+        {% elif site_settings.appearance_preloader_style == 'pulse' %}
+        <div class="preloader-pulse"><span class="preloader-logo">ر</span></div>
+        {% else %}
+        <div class="preloader-spinner" aria-hidden="true"></div>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Skip to main content (a11y) -->
     <a href="#main-content" class="skip-link">رفتن به محتوای اصلی</a>
@@ -144,6 +181,15 @@
     <button id="back-to-top" class="back-to-top-rahsa" aria-label="بازگشت به بالای صفحه" type="button">
         ↑
     </button>
+
+    {# دکمهٔ سوییچ تم تیره/روشن (الگوی قالب نادر/کرافتو) #}
+    {% if site_settings.appearance_allow_theme_switch != false %}
+    <button id="theme-toggle" class="theme-toggle-rahsa" type="button"
+            aria-label="تغییر تم روشن/تیره" title="تم روشن/تیره">
+        <span class="theme-toggle-icon theme-icon-sun" aria-hidden="true">☀️</span>
+        <span class="theme-toggle-icon theme-icon-moon" aria-hidden="true">🌙</span>
+    </button>
+    {% endif %}
 
     <!-- Main JavaScript (deferred for performance) -->
     <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>

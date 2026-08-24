@@ -1,0 +1,74 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}تیکت‌های پشتیبانی{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">مدیریت تیکت‌های پشتیبانی</h2>
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            <a href="{{ url_for('admin.tickets') }}" class="btn-rahsa-outline {{ 'is-active-filter' if not current_status else '' }}" style="padding:.3rem .8rem; font-size:.78rem;">همه</a>
+            {% for st, label in [('open','باز'), ('answered','پاسخ داده‌شده'), ('user_reply','پاسخ کاربر'), ('closed','بسته')] %}
+            <a href="{{ url_for('admin.tickets', status=st) }}" class="btn-rahsa-outline {{ 'is-active-filter' if current_status == st else '' }}" style="padding:.3rem .8rem; font-size:.78rem;">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <table class="table-rahsa" style="width:100%; font-size:.9rem;">
+        <thead>
+            <tr>
+                <th style="padding:.85rem;">شماره</th>
+                <th style="padding:.85rem;">موضوع / کاربر</th>
+                <th style="padding:.85rem;">دپارتمان</th>
+                <th style="padding:.85rem;">اولویت</th>
+                <th style="padding:.85rem;">وضعیت</th>
+                <th style="padding:.85rem;">آخرین فعالیت</th>
+                <th style="padding:.85rem; text-align:center;">عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if tickets.items %}
+                {% for t in tickets.items %}
+                <tr>
+                    <td style="padding:.85rem;" dir="ltr">{{ t.ticket_number }}</td>
+                    <td style="padding:.85rem;">
+                        <div class="font-bold" style="color:var(--text-white);">{{ t.subject }}</div>
+                        <div style="color:var(--text-gray-400); font-size:.78rem;">{{ t.user.full_name if t.user else '—' }}</div>
+                    </td>
+                    <td style="padding:.85rem;">{{ t.department_label }}</td>
+                    <td style="padding:.85rem;">
+                        {% if t.priority == 'high' %}<span class="badge-rahsa danger">فوری</span>
+                        {% elif t.priority == 'medium' %}<span class="badge-rahsa warning">متوسط</span>
+                        {% else %}<span class="badge-rahsa info">کم</span>{% endif %}
+                    </td>
+                    <td style="padding:.85rem;">
+                        {% if t.status == 'closed' %}<span class="badge-rahsa muted">بسته</span>
+                        {% elif t.status == 'answered' %}<span class="badge-rahsa success">پاسخ داده‌شده</span>
+                        {% elif t.status == 'user_reply' %}<span class="badge-rahsa warning">پاسخ کاربر</span>
+                        {% else %}<span class="badge-rahsa info">باز</span>{% endif %}
+                    </td>
+                    <td style="padding:.85rem; color:var(--text-gray-400); font-size:.8rem;">{{ t.last_reply_at|time_ago if t.last_reply_at else '—' }}</td>
+                    <td style="padding:.85rem; text-align:center;">
+                        <a href="{{ url_for('admin.ticket_detail', ticket_id=t.id) }}" class="btn-rahsa-outline" style="padding:.25rem .7rem; font-size:.78rem;">مشاهده و پاسخ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-gray-400);">تیکتی ثبت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% if tickets.pages > 1 %}
+    <div style="display:flex; gap:.4rem; justify-content:center; margin-top:1.5rem;">
+        {% for p in tickets.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if p %}
+            <a href="{{ url_for('admin.tickets', page=p, status=current_status) }}" class="btn-rahsa-outline {{ 'is-active-filter' if p == tickets.page else '' }}" style="padding:.25rem .7rem; font-size:.8rem;">{{ p }}</a>
+            {% else %}
+            <span style="color:var(--text-gray-500);">…</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

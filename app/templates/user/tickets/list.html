@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}تیکت‌های پشتیبانی | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:920px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">پنل کاربری</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">تیکت‌های پشتیبانی</span>
+            <a href="{{ url_for('user.ticket_new') }}" class="btn-rahsa-cta mr-auto" style="padding:0.5rem 1rem; font-size:0.85rem;">➕ تیکت جدید</a>
+        </div>
+
+        <!-- Status filter -->
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.tickets') }}" class="btn-rahsa-outline {{ '' if current_status else 'is-active-filter' }}" style="padding:0.35rem 0.9rem; font-size:0.8rem;">همه</a>
+            {% for st, label in [('open','باز'), ('answered','پاسخ داده‌شده'), ('user_reply','پاسخ کاربر'), ('closed','بسته')] %}
+            <a href="{{ url_for('user.tickets', status=st) }}" class="btn-rahsa-outline {{ 'is-active-filter' if current_status == st else '' }}" style="padding:0.35rem 0.9rem; font-size:0.8rem;">{{ label }}</a>
+            {% endfor %}
+        </div>
+
+        {% if tickets %}
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+            {% for t in tickets %}
+            <a href="{{ url_for('user.ticket_detail', ticket_id=t.id) }}" class="glass-card" style="padding:1.25rem 1.5rem; text-decoration:none; display:block;">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="text-white font-bold">{{ t.subject }}</span>
+                            <span class="badge-rahsa {% if t.status == 'closed' %}muted{% elif t.status == 'answered' %}success{% else %}info{% endif %}">{{ t.status_label }}</span>
+                            {% if t.priority == 'high' %}<span class="badge-rahsa danger">فوری</span>{% endif %}
+                        </div>
+                        <div class="text-muted" style="font-size:0.8rem; margin-top:0.4rem;">
+                            <span dir="ltr">{{ t.ticket_number }}</span> · {{ t.department_label }} · آخرین فعالیت {{ t.last_reply_at|time_ago if t.last_reply_at else '-' }}
+                        </div>
+                    </div>
+                    <span class="text-yellow" style="font-size:0.85rem;">مشاهده ←</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass-card empty-state-rahsa" style="padding:3rem; text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:1rem;" aria-hidden="true">🎫</div>
+            <h2 class="text-white" style="font-size:1.1rem; margin-bottom:0.5rem;">هنوز تیکتی ثبت نکرده‌اید</h2>
+            <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem;">سؤال یا مشکلی دارید؟ برای پشتیبانی تیکت ثبت کنید.</p>
+            <a href="{{ url_for('user.ticket_new') }}" class="btn-rahsa-cta">ثبت اولین تیکت</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

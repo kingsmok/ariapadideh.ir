@@ -110,6 +110,22 @@ def home():
         session_cart = CartService.get_session_cart_count(CartService.get_session_id())
         cart_items_count = session_cart
     
+    # Stories (استوری‌ساز — الگوی قالب نادر)
+    from app.models import Story, TeamMember, PricingPlan
+    stories = Story.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(Story.sort_order).limit(12).all()
+    stories = [s for s in stories if s.is_live]
+
+    # Team + pricing (الگوی قالب‌های شرکتی: آرنیکا/ستیا)
+    team_members = TeamMember.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(TeamMember.sort_order).limit(8).all()
+
+    pricing_plans = PricingPlan.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(PricingPlan.sort_order).limit(4).all()
+    
     seo = SEOService.get_seo_data('home')
     
     return render_template('public/home.html',
@@ -126,6 +142,9 @@ def home():
         latest_posts=latest_posts,
         faqs=faqs,
         cart_items_count=cart_items_count,
+        stories=stories,
+        team_members=team_members,
+        pricing_plans=pricing_plans,
         seo=seo
     )
 
@@ -294,6 +313,12 @@ def product(slug):
 
     seo = SEOService.get_product_seo(product_obj)
 
+    # Video gallery (گالری ویدئو — الگوی قالب نادر)
+    from app.models import ProductVideo
+    product_videos = ProductVideo.query.filter_by(
+        product_id=product_obj.id, is_active=True, is_deleted=False
+    ).order_by(ProductVideo.sort_order).all()
+
     return render_template('public/product.html',
         product=product_obj,
         images=images,
@@ -303,6 +328,7 @@ def product(slug):
         comments=comments,
         in_wishlist=in_wishlist,
         breadcrumb_categories=breadcrumb_categories,
+        product_videos=product_videos,
         seo=seo
     )
 
@@ -771,8 +797,12 @@ def cancel_order(order_number):
 @public_bp.route('/about')
 def about():
     """About us page"""
+    from app.models import TeamMember
     page_obj = Page.query.filter_by(page_type='about', is_active=True, is_deleted=False).first()
-    return render_template('public/about.html', page=page_obj)
+    team_members = TeamMember.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(TeamMember.sort_order).all()
+    return render_template('public/about.html', page=page_obj, team_members=team_members)
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
@@ -1015,3 +1045,50 @@ def feed_products():
     json_data = ExportService.generate_json_feed()
     
     return jsonify(json_data)
+
+
+# ==================== NEWSLETTER (خبرنامه) ====================
+
+@public_bp.route('/newsletter/subscribe', methods=['POST'])
+@rate_limit(limit=5, period=600, key_func=lambda: f'newsletter:{request.remote_addr}')
+def newsletter_subscribe():
+    """Subscribe email to newsletter (AJAX/form)"""
+    from app.models import Subscriber
+    import re
+
+    email = (request.form.get('email') or (request.get_json(silent=True) or {}).get('email') or '').strip().lower()
+
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'message': 'ایمیل معتبر وارد کنید'}), 400
+        flash('ایمیل معتبر وارد کنید.', 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
+    existing = Subscriber.query.filter_by(email=email).first()
+    if existing:
+        existing.unsubscribed_at = None  # resubscribe
+        existing.save()
+        message = 'ایمیل شما قبلاً ثبت شده بود — دوباره فعال شد. سپاس!'
+    else:
+        Subscriber(email=email, source=request.form.get('source', 'footer'),
+                   ip_address=request.remote_addr).save()
+        message = 'عضویت شما در خبرنامه ثبت شد. سپاس از همراهی!'
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'message': message})
+
+    flash(message, 'success')
+    return redirect(request.referrer or url_for('public.home'))
+
+
+# ==================== STORIES (استوری‌ساز) ====================
+
+@public_bp.route('/stories/<int:story_id>/view', methods=['POST'])
+def story_view(story_id):
+    """Increment story views (AJAX)"""
+    from app.models import Story
+
+    story = Story.query.get_or_404(story_id)
+    story.views = (story.views or 0) + 1
+    db.session.commit()
+    return jsonify({'success': True, 'views': story.views})

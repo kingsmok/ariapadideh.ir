@@ -2,7 +2,7 @@
 User Routes - User Panel
 """
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, abort
 from flask_login import login_required, current_user
 from sqlalchemy import or_, desc
 from werkzeug.datastructures import MultiDict
@@ -820,3 +820,182 @@ def api_compare_add():
         'message': 'محصول به لیست مقایسه اضافه شد',
         'count': current_count + 1
     })
+
+
+# ==================== OTP LOGIN (ورود/عضویت پیامکی — الگوی قالب نادر) ====================
+
+@user_bp.route('/otp-login', methods=['GET', 'POST'])
+@rate_limit(limit=12, period=900, key_func=lambda: f'otp:{request.remote_addr}')
+def otp_login():
+    """Two-step phone login: 1) phone → code  2) code → login/register"""
+    from flask import session
+    from app.models import OtpCode, Role
+    from app.services.sms_service import SmsService
+    from flask_login import login_user
+
+    if current_user.is_authenticated:
+        return redirect(url_for('user.dashboard'))
+
+    step = request.form.get('step', 'request')
+
+    # ---- Step 1: phone number → send code ----
+    if request.method == 'POST' and step == 'request':
+        phone = OtpCode.normalize_phone(request.form.get('phone', ''))
+
+        if not OtpCode.is_valid_phone(phone):
+            flash('شماره موبایل معتبر نیست (مثال: 09123456789).', 'error')
+            return render_template('user/auth/otp_login.html', step='request', phone=phone)
+
+        try:
+            otp = OtpCode.issue(phone, purpose='login', ip=request.remote_addr)
+        except ValueError as exc:
+            flash(str(exc), 'warning')
+            return render_template('user/auth/otp_login.html', step='request', phone=phone)
+
+        sent, detail = SmsService.send_otp(phone, otp._plain_code, OtpCode.TTL_MINUTES)
+
+        # در حالت درایور console و debug، کد را برای تست نشان می‌دهیم
+        dev_code = otp._plain_code if (SmsService.driver() == 'console' and current_app.debug) else None
+
+        if not sent:
+            flash('ارسال پیامک ناموفق بود؛ لطفاً بعداً تلاش کنید یا با رمز وارد شوید.', 'error')
+            return render_template('user/auth/otp_login.html', step='request', phone=phone)
+
+        session['otp_phone'] = phone
+        flash('کد تأیید پیامک شد.', 'success')
+        return render_template('user/auth/otp_login.html', step='verify', phone=phone, dev_code=dev_code)
+
+    # ---- Step 2: verify code ----
+    if request.method == 'POST' and step == 'verify':
+        phone = OtpCode.normalize_phone(request.form.get('phone', '') or session.get('otp_phone', ''))
+        code = (request.form.get('code') or '').strip()
+
+        otp = OtpCode.latest_for(phone, purpose='login')
+        if not otp or not otp.verify(code):
+            flash('کد وارد شده صحیح نیست یا منقضی شده است.', 'error')
+            return render_template('user/auth/otp_login.html', step='verify', phone=phone)
+
+        user = User.query.filter_by(phone=phone).first()
+        created = False
+        if not user:
+            # عضویت خودکار با موبایل (مثل قالب نادر)
+            user_role = Role.get_user_role()
+            user = User(
+                phone=phone,
+                username=f'u{phone[1:]}',
+                email=None,
+                role_id=user_role.id,
+                is_active=True,
+                is_verified=True,
+                phone_verified_at=datetime.utcnow(),
+            )
+            user.set_password(code)  # رمز اولیه؛ کاربر بعداً تغییر می‌دهد
+            user.save()
+            created = True
+        else:
+            if not user.phone_verified_at:
+                user.phone_verified_at = datetime.utcnow()
+            if not user.is_active:
+                flash('حساب شما غیرفعال است. با پشتیبانی تماس بگیرید.', 'warning')
+                return render_template('user/auth/otp_login.html', step='request')
+
+        login_user(user, remember=True)
+        user.update_last_login()
+        session.pop('otp_phone', None)
+
+        # Merge guest cart
+        try:
+            CartService.merge_carts(CartService.get_session_id(), user.id)
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.warning(f'Cart merge failed: {e}')
+
+        flash(('حساب شما ساخته شد؛ خوش آمدید! ' if created else '') + f'خوش آمدید {user.full_name}!', 'success')
+        return redirect(url_for('user.dashboard'))
+
+    return render_template('user/auth/otp_login.html', step='request')
+
+
+# ==================== SUPPORT TICKETS (تیکت پشتیبانی) ====================
+
+@user_bp.route('/tickets')
+@login_required
+def tickets():
+    """User tickets list"""
+    from app.models import Ticket
+
+    status = request.args.get('status', '')
+    q = Ticket.query.filter_by(user_id=current_user.id, is_deleted=False)
+    if status:
+        q = q.filter_by(status=status)
+    tickets_list = q.order_by(Ticket.last_reply_at.desc()).all()
+
+    return render_template('user/tickets/list.html', tickets=tickets_list, current_status=status)
+
+
+@user_bp.route('/tickets/new', methods=['GET', 'POST'])
+@login_required
+@rate_limit(limit=10, period=3600, key_func=lambda: f'ticket_new:{current_user.id}')
+def ticket_new():
+    """Create a new ticket"""
+    from app.models import Ticket
+    from app.services.notification_service import NotificationService
+
+    if request.method == 'POST':
+        subject = (request.form.get('subject') or '').strip()
+        message = (request.form.get('message') or '').strip()
+
+        if len(subject) < 5 or len(message) < 10:
+            flash('موضوع حداقل ۵ و متن حداقل ۱۰ کاراکتر باشد.', 'error')
+            return render_template('user/tickets/new.html',
+                                   form_data=request.form)
+
+        ticket = Ticket(
+            user_id=current_user.id,
+            ticket_number=Ticket.generate_number(),
+            subject=subject,
+            department=request.form.get('department', 'general'),
+            priority=request.form.get('priority', 'medium'),
+        )
+        ticket.save()
+        ticket.add_message(message, user_id=current_user.id, is_admin=False)
+
+        NotificationService.notify_admins(
+            title='تیکت جدید',
+            message=f'{current_user.full_name}: {subject}',
+            type='message',
+            data={'ticket_id': ticket.id},
+        )
+
+        flash('تیکت شما ثبت شد؛ کارشناسان ما به‌زودی پاسخ می‌دهند.', 'success')
+        return redirect(url_for('user.ticket_detail', ticket_id=ticket.id))
+
+    return render_template('user/tickets/new.html', form_data={})
+
+
+@user_bp.route('/tickets/<int:ticket_id>', methods=['GET', 'POST'])
+@login_required
+def ticket_detail(ticket_id):
+    """View ticket thread + reply / close"""
+    from app.models import Ticket
+
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    if ticket.user_id != current_user.id:
+        abort(404)
+
+    if request.method == 'POST':
+        action = request.form.get('action', 'reply')
+        if action == 'reply' and ticket.status != 'closed':
+            message = (request.form.get('message') or '').strip()
+            if message:
+                ticket.add_message(message, user_id=current_user.id, is_admin=False)
+                flash('پیام شما ارسال شد.', 'success')
+        elif action == 'close':
+            ticket.close(by_user_id=current_user.id)
+            flash('تیکت بسته شد.', 'success')
+        elif action == 'reopen':
+            ticket.reopen()
+            flash('تیکت بازگشایی شد.', 'success')
+        return redirect(url_for('user.ticket_detail', ticket_id=ticket.id))
+
+    return render_template('user/tickets/detail.html', ticket=ticket)

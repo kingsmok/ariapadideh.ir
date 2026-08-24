@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاکتور سفارش {{ order.order_number }}</title>
+    <style>
+        /* فاکتور — تم چاپ روشن، مستقل از پنل (الگوی فاکتورساز قالب نادر) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Vazirmatn', 'IRANSans', Tahoma, sans-serif;
+            background: #f1f5f9; color: #0f172a;
+            padding: 2rem; font-size: 14px; line-height: 1.9;
+        }
+        .invoice-sheet {
+            max-width: 800px; margin: 0 auto; background: #fff;
+            border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 24px rgba(0,0,0,.08);
+        }
+        .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #fbb03b; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+        .inv-brand { display: flex; align-items: center; gap: .75rem; }
+        .inv-logo { width: 48px; height: 48px; border-radius: 10px; background: #0a1128; color: #fbb03b; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem; }
+        .inv-title { font-size: 1.35rem; font-weight: 800; }
+        .inv-meta { text-align: left; font-size: .85rem; color: #475569; }
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .inv-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.25rem; font-size: .88rem; }
+        .inv-box h3 { font-size: .9rem; color: #0a1128; margin-bottom: .5rem; }
+        table.inv-items { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        table.inv-items th, table.inv-items td { border: 1px solid #e2e8f0; padding: .65rem .8rem; text-align: right; font-size: .88rem; }
+        table.inv-items th { background: #0a1128; color: #fff; font-weight: 600; }
+        table.inv-items tfoot td { background: #f8fafc; font-weight: 700; }
+        .inv-total { text-align: left; font-size: 1.15rem; font-weight: 800; color: #0a1128; margin-bottom: 1.5rem; }
+        .inv-note { font-size: .78rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 1rem; }
+        .inv-actions { text-align: center; margin: 1.5rem 0; }
+        .inv-actions button {
+            background: #0a1128; color: #fff; border: none; border-radius: 8px;
+            padding: .7rem 2rem; font: inherit; font-weight: 700; cursor: pointer;
+        }
+        .badge { display: inline-block; padding: .15rem .6rem; border-radius: 999px; font-size: .75rem; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .badge.unpaid { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .invoice-sheet { box-shadow: none; border-radius: 0; max-width: 100%; }
+            .inv-actions, .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-sheet">
+        <div class="inv-header">
+            <div class="inv-brand">
+                <div class="inv-logo">ر</div>
+                <div>
+                    <div class="inv-title">{{ site_settings.general_site_name or 'رهسا دیو' }}</div>
+                    <div style="font-size:.8rem; color:#64748b;">فاکتور فروش رسمی</div>
+                </div>
+            </div>
+            <div class="inv-meta">
+                <div>شماره فاکتور: <strong dir="ltr">{{ order.order_number }}</strong></div>
+                <div>تاریخ: {{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '—' }}</div>
+                <div>وضعیت پرداخت:
+                    {% if order.payment_status == 'paid' %}<span class="badge">پرداخت شده</span>
+                    {% else %}<span class="badge unpaid">پرداخت نشده</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="inv-grid">
+            <div class="inv-box">
+                <h3>اطلاعات خریدار</h3>
+                <div>{{ order.recipient_name or (order.user.full_name if order.user else '—') }}</div>
+                <div dir="ltr" style="text-align:right;">{{ order.recipient_phone or (order.user.phone if order.user and order.user.phone else '') }}</div>
+                {% if order.user and order.user.email %}<div dir="ltr" style="text-align:right;">{{ order.user.email }}</div>{% endif %}
+            </div>
+            <div class="inv-box">
+                <h3>آدرس تحویل</h3>
+                <div>{{ order.province or '' }}{{ '، ' + order.city if order.city else '' }}</div>
+                <div>{{ order.address or '—' }}</div>
+                {% if order.postal_code %}<div>کد پستی: <span dir="ltr">{{ order.postal_code }}</span></div>{% endif %}
+            </div>
+        </div>
+
+        <table class="inv-items">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>کالا / خدمت</th>
+                    <th>تعداد</th>
+                    <th>قیمت واحد</th>
+                    <th>جمع</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all() if order.items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.product.title if item.product else '—' }}
+                        {% if item.variations %}<small style="color:#64748b;">({{ item.variations | string }})</small>{% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ '{:,}'.format(item.unit_price or 0) }}</td>
+                    <td>{{ '{:,}'.format((item.unit_price or 0) * (item.quantity or 1)) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4">جمع کل اقلام</td>
+                    <td>{{ '{:,}'.format(order.subtotal or 0) }} تومان</td>
+                </tr>
+                {% if order.discount_amount %}
+                <tr>
+                    <td colspan="4">تخفیف {{ '(' + order.discount_code + ')' if order.discount_code else '' }}</td>
+                    <td>{{ '{:,}'.format(order.discount_amount) }}- تومان</td>
+                </tr>
+                {% endif %}
+                {% if order.shipping_amount %}
+                <tr>
+                    <td colspan="4">هزینه ارسال ({{ order.shipping_method or 'پست' }})</td>
+                    <td>{{ '{:,}'.format(order.shipping_amount) }} تومان</td>
+                </tr>
+                {% endif %}
+                {% if order.tax_amount %}
+                <tr>
+                    <td colspan="4">مالیات</td>
+                    <td>{{ '{:,}'.format(order.tax_amount) }} تومان</td>
+                </tr>
+                {% endif %}
+            </tfoot>
+        </table>
+
+        <div class="inv-total">مبلغ قابل پرداخت: {{ '{:,}'.format(order.total_amount or 0) }} تومان</div>
+
+        <div class="inv-note">
+            این فاکتور به‌صورت الکترونیکی صادر شده و اعتبار قانونی دارد. برای چاپ یا ذخیره PDF از دکمهٔ زیر استفاده کنید.
+            {% if order.tracking_code %}کد رهگیری مرسوله: <span dir="ltr">{{ order.tracking_code }}</span>{% endif %}
+        </div>
+
+        <div class="inv-actions no-print">
+            <button onclick="window.print()" type="button">🖨 چاپ / ذخیره PDF</button>
+        </div>
+    </div>
+</body>
+</html>

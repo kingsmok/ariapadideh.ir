@@ -1,0 +1,58 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}مشترکین خبرنامه{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">
+            مشترکین خبرنامه ({{ subs.total }} نفر)
+        </h2>
+        <a href="{{ url_for('admin.subscribers_export') }}" class="btn-rahsa-outline">📥 خروجی CSV</a>
+    </div>
+
+    <table class="table-rahsa" style="width:100%; font-size:.9rem;">
+        <thead>
+            <tr>
+                <th style="padding:.85rem;">ایمیل</th>
+                <th style="padding:.85rem;">منبع</th>
+                <th style="padding:.85rem;">تاریخ عضویت</th>
+                <th style="padding:.85rem; text-align:center;">وضعیت</th>
+                <th style="padding:.85rem; text-align:center;">عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if subs.items %}
+                {% for s in subs.items %}
+                <tr>
+                    <td style="padding:.85rem; color:var(--text-white); font-weight:600;" dir="ltr">{{ s.email }}</td>
+                    <td style="padding:.85rem;">{{ s.source }}</td>
+                    <td style="padding:.85rem; color:var(--text-gray-400);">{{ s.created_at.strftime('%Y-%m-%d') if s.created_at else '—' }}</td>
+                    <td style="padding:.85rem; text-align:center;">
+                        {% if s.is_active_subscriber %}<span class="badge-rahsa success">فعال</span>{% else %}<span class="badge-rahsa muted">لغو شده</span>{% endif %}
+                    </td>
+                    <td style="padding:.85rem; text-align:center;">
+                        <form action="{{ url_for('admin.subscriber_delete', sub_id=s.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                            <button class="btn-rahsa-danger" style="padding:.25rem .7rem; font-size:.78rem;">🗑</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-gray-400);">مشترکی ثبت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% if subs.pages > 1 %}
+    <div style="display:flex; gap:.4rem; justify-content:center; margin-top:1.5rem;">
+        {% for p in subs.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if p %}
+            <a href="{{ url_for('admin.subscribers', page=p) }}" class="btn-rahsa-outline {{ 'is-active-filter' if p == subs.page else '' }}" style="padding:.25rem .7rem; font-size:.8rem;">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

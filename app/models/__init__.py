@@ -11,6 +11,10 @@ from app.models.menu import (
     Notification, Resume, Contact, FAQ, Log
 )
 from app.models.agency import ServiceCatalog, PortfolioCaseStudies, ConsultationLeads
+from app.models.features import (
+    TeamMember, PricingPlan, Story, Subscriber,
+    Ticket, TicketMessage, OtpCode, ProductVideo,
+)
 
 __all__ = [
     'BaseModel', 'TimestampMixin', 'SoftDeleteMixin', 'ActiveMixin', 'SortOrderMixin', 'MetaMixin',
@@ -20,5 +24,7 @@ __all__ = [
     'Page', 'PageComponent', 'Post', 'Comment', 'PostTag',
     'Menu', 'Slider', 'SliderItem', 'Banner', 'Media', 'Setting',
     'Notification', 'Resume', 'Contact', 'FAQ', 'Log',
-    'ServiceCatalog', 'PortfolioCaseStudies', 'ConsultationLeads'
+    'ServiceCatalog', 'PortfolioCaseStudies', 'ConsultationLeads',
+    'TeamMember', 'PricingPlan', 'Story', 'Subscriber',
+    'Ticket', 'TicketMessage', 'OtpCode', 'ProductVideo',
 ]

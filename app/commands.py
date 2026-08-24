@@ -271,6 +271,96 @@ def seed_data():
     click.echo('\n✓ All data seeded successfully for Aria Padideh!')
 
 
+def seed_demo(preset: str = 'corporate'):
+    """دموی آمادهٔ قابلیت‌های جدید — الگوی بستهٔ نصبی قالب‌های راست‌چین"""
+    from app.models import (
+        TeamMember, PricingPlan, Story, Setting, Product, ProductVideo
+    )
+    from app.services.setting_service import SettingService
+
+    click.echo(f'Seeding demo preset: {preset} ...')
+
+    # 1) تنظیمات جدید (نقشه/ظاهر/قابلیت‌ها)
+    SettingService.init_default_settings()
+    click.echo('✓ Settings (features + appearance + OSM map) initialized')
+
+    # 2) تیم ما + نوار مهارت
+    if TeamMember.query.filter_by(is_deleted=False).count() == 0:
+        members = [
+            {'full_name': 'امیر رهنما', 'role_title': 'مدیرعامل و معمار ارشد نرم‌افزار',
+             'bio': '۱۵ سال تجربهٔ معماری سیستم‌های سازمانی و مقیاس‌پذیر.',
+             'skills': [{'name': 'معماری نرم‌افزار', 'level': 96}, {'name': 'Python', 'level': 92}, {'name': 'DevOps', 'level': 80}]},
+            {'full_name': 'سارا محمدی', 'role_title': 'مدیر محصول و UI/UX',
+             'bio': 'طراحی تجربهٔ کاربری برای بیش از ۵۰ محصول دیجیتال.',
+             'skills': [{'name': 'UI/UX', 'level': 94}, {'name': 'Figma', 'level': 90}, {'name': 'Research', 'level': 82}]},
+            {'full_name': 'رضا کریمی', 'role_title': 'مدیر فنی تیم توسعه',
+             'bio': 'متخصص فلاسک و زیرساخت‌های ابری.',
+             'skills': [{'name': 'Flask', 'level': 95}, {'name': 'PostgreSQL', 'level': 88}, {'name': 'Docker', 'level': 85}]},
+        ]
+        for i, m in enumerate(members):
+            TeamMember(**m, sort_order=i).save()
+        click.echo(f'✓ {len(members)} team members created')
+    else:
+        click.echo('• team members exist — skipped')
+
+    # 3) جداول تعرفه
+    if PricingPlan.query.filter_by(is_deleted=False).count() == 0:
+        plans = [
+            {'title': 'وب‌سایت شرکتی استاندارد', 'subtitle': 'برای کسب‌وکارهای در حال رشد',
+             'price_toman': 24_900_000, 'period': 'پروژه',
+             'features': ['طراحی ریسپانسیو اختصاصی', 'پنل مدیریت کامل', 'سئوی پایه', 'یک سال پشتیبانی'],
+             'features_off': ['فروشگاه آنلاین', 'ربات هوشمند'], 'sort_order': 0},
+            {'title': 'وب‌سایت + فروشگاه آنلاین', 'subtitle': 'پرفروش‌ترین پکیج',
+             'price_toman': 49_900_000, 'old_price_toman': 59_900_000, 'period': 'پروژه',
+             'badge_text': 'محبوب‌ترین', 'is_featured': True,
+             'features': ['همهٔ امکانات استاندارد', 'فروشگاه کامل و درگاه پرداخت', 'سئوی حرفه‌ای + اسکیما', 'ربات تلگرام فروشگاه', 'دو سال پشتیبانی'],
+             'sort_order': 1},
+            {'title': 'پلتفرم اختصاصی سازمانی', 'subtitle': 'سیستم‌های سفارشی و مقیاس‌پذیر',
+             'price_toman': None, 'period': 'استعلام',
+             'features': ['تحلیل و معماری اختصاصی', 'توسعهٔ چابک (Agile)', 'SLA و پشتیبانی ۲۴/۷', 'امنیت سازمانی'],
+             'button_text': 'درخواست مشاوره', 'sort_order': 2},
+        ]
+        for p in plans:
+            PricingPlan(**p).save()
+        click.echo(f'✓ {len(plans)} pricing plans created')
+    else:
+        click.echo('• pricing plans exist — skipped')
+
+    # 4) استوری‌ها
+    if Story.query.filter_by(is_deleted=False).count() == 0:
+        stories = [
+            {'title': 'معرفی خدمات', 'group_name': 'معرفی', 'media_type': 'image', 'duration': 5,
+             'link': '/categories/'},
+            {'title': 'نمونه‌کارهای اخیر', 'group_name': 'نمونه‌کار', 'media_type': 'image', 'duration': 6,
+             'link': '/#portfolio'},
+            {'title': 'مشاوره رایگان', 'group_name': 'مشاوره', 'media_type': 'image', 'duration': 5,
+             'link': '/contact'},
+        ]
+        for i, s in enumerate(stories):
+            Story(**s, sort_order=i).save()
+        click.echo(f'✓ {len(stories)} stories created')
+    else:
+        click.echo('• stories exist — skipped')
+
+    # 5) سواچ + ویدئو روی اولین محصول (فقط پرست شاپ)
+    if preset == 'shop':
+        product = Product.query.filter_by(is_deleted=False).order_by(Product.id).first()
+        if product and not product.variations:
+            product.variations = [
+                {'name': 'نسخه پایه', 'type': 'label', 'value': '', 'price': 0, 'stock': 10},
+                {'name': 'نسخه حرفه‌ای', 'type': 'label', 'value': '', 'price': 9_000_000, 'stock': 5},
+                {'name': 'پشتیبانی طلایی', 'type': 'color', 'value': '#fbb03b', 'price': 4_500_000, 'stock': 3},
+            ]
+            product.save()
+            click.echo(f'✓ variation swatches added to "{product.title[:40]}"')
+        if product and ProductVideo.query.filter_by(product_id=product.id, is_deleted=False).count() == 0:
+            ProductVideo(product_id=product.id, title='دموی محصول', provider='aparat',
+                         url='https://www.aparat.com/v/example').save()
+            click.echo('✓ demo video added')
+
+    click.echo(f'\n✓ Demo "{preset}" ready → /admin/team, /admin/pricing, /admin/stories, صفحهٔ اصلی')
+
+
 # Register commands
 def register_commands(app):
     """Register CLI commands"""
@@ -289,6 +379,16 @@ def register_commands(app):
     def seed_data_command():
         """Seed initial data"""
         seed_data()
+    
+    @app.cli.command('seed-demo')
+    @click.argument('preset', default='corporate', type=click.Choice(['corporate', 'shop']))
+    def seed_demo_command(preset):
+        """دموی آماده — درون‌ریزی یک‌کلیک (الگوی قالب‌های راست‌چین)
+
+        team/pricing/stories/سواچ/ویدئو/نقشه را نمونه‌سازی می‌کند.
+        idempotent است و دادهٔ تکراری نمی‌سازد.
+        """
+        seed_demo(preset)
     
     @app.cli.command('reset-db')
     def reset_db_command():

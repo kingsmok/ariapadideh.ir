@@ -269,6 +269,21 @@
                 <span class="icon" aria-hidden="true">❓</span>
                 <span>سوالات متداول</span>
             </a>
+            <a href="{{ url_for('admin.team') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.team') else '' }}">
+                <span class="icon" aria-hidden="true">🧑‍💻</span>
+                <span>تیم ما</span>
+            </a>
+            <a href="{{ url_for('admin.pricing') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.pricing') else '' }}">
+                <span class="icon" aria-hidden="true">💰</span>
+                <span>جداول تعرفه</span>
+            </a>
+            <a href="{{ url_for('admin.stories') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.stor') else '' }}">
+                <span class="icon" aria-hidden="true">📸</span>
+                <span>استوری‌ساز</span>
+            </a>
             <a href="{{ url_for('admin.menus') }}"
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.menu') else '' }}">
                 <span class="icon" aria-hidden="true">🧭</span>
@@ -286,6 +301,16 @@
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.user') else '' }}">
                 <span class="icon" aria-hidden="true">👥</span>
                 <span>کاربران</span>
+            </a>
+            <a href="{{ url_for('admin.tickets') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.ticket') else '' }}">
+                <span class="icon" aria-hidden="true">🎟️</span>
+                <span>تیکت‌های پشتیبانی</span>
+            </a>
+            <a href="{{ url_for('admin.subscribers') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.subscriber') else '' }}">
+                <span class="icon" aria-hidden="true">📬</span>
+                <span>خبرنامه</span>
             </a>
             <a href="{{ url_for('admin.contacts') }}"
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.contact') else '' }}">

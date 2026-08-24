@@ -113,6 +113,13 @@ class SettingService:
             'mobile': ('021-88991234', 'string', True, 'موبایل', ''),
             'address': ('شیراز، بلوار دلاوران / تهران، ناحیه نوآوری شریف', 'text', True, 'آدرس', ''),
             'working_hours': ('شنبه تا پنجشنبه: ۹ صبح تا ۱۸ عصر', 'string', True, 'ساعات کاری', ''),
+            # نقشهٔ OpenStreetMap در صفحهٔ تماس (الگوی قالب آرنیکا — بدون تحریم و API)
+            # مقدار: bbox یا iframe کامل از openstreetmap.org/export/embed.html
+            'osm_map_embed': (
+                'https://www.openstreetmap.org/export/embed.html?bbox=51.30%2C35.62%2C51.48%2C35.76&layer=mapnik',
+                'text', True, 'نقشهٔ OSM (embed)', 'لینک embed نقشهٔ openstreetmap برای صفحهٔ تماس'
+            ),
+            'osm_map_enabled': ('true', 'boolean', True, 'نمایش نقشه در تماس', ''),
         }
         
         # Social settings
@@ -140,14 +147,35 @@ class SettingService:
             'logo': ('', 'string', True, 'لوگو', ''),
             'favicon': ('', 'string', True, 'فاویکون', ''),
             'dark_mode': ('false', 'boolean', True, 'حالت تاریک', ''),
+            # --- قابلیت‌های جدید (تحلیل بازار قالب‌های شرکتی راست‌چین) ---
+            'accent_color': ('#fbb03b', 'color', True, 'رنگ تأکید (طلایی برند)',
+                             'رنگ دکمه‌ها و تأکیدها — از پنل قابل تغییر مثل قالب‌های راست‌چین'),
+            'allow_theme_switch': ('true', 'boolean', True, 'دکمهٔ تم تیره/روشن',
+                                   'کاربر بتواند بین تم تیره و روشن سوییچ کند (الگوی قالب نادر/کرافتو)'),
+            'body_font': ('Vazirmatn', 'string', True, 'فونت متن',
+                          'Vazirmatn / IRANSans / Shabnam / YekanBakh — مثل انتخاب فونت در قالب‌ها'),
+            'heading_font': ('Vazirmatn', 'string', True, 'فونت تیترها', ''),
+            'preloader_enabled': ('false', 'boolean', True, 'پیش‌بارگر (Preloader)',
+                                  'نمایش صفحهٔ بارگذاری اولیه'),
+            'preloader_style': ('spinner', 'string', True, 'طرح پیش‌بارگر', 'spinner / pulse / bar'),
         }
-        
+
+        # Features settings (خبرنامه / استوری / OTP)
+        default_features = {
+            'stories_enabled': ('true', 'boolean', True, 'نوار استوری صفحهٔ اصلی',
+                                'استوری‌ساز اینستاگرامی (الگوی قالب نادر)'),
+            'newsletter_enabled': ('true', 'boolean', True, 'فرم خبرنامه در فوتر', ''),
+            'otp_login_enabled': ('true', 'boolean', True, 'ورود با موبایل (OTP)',
+                                  'ورود/عضویت پیامکی — نیازمند تنظیم SMS_DRIVER در .env'),
+        }
+
         all_defaults = {
             'general': default_general,
             'contact': default_contact,
             'social': default_social,
             'seo': default_seo,
             'appearance': default_appearance,
+            'features': default_features,
         }
         
         for group, settings in all_defaults.items():

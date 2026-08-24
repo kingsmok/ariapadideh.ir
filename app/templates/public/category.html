@@ -74,16 +74,48 @@
         </div>
         {% endif %}
 
+        {# فیلتر ایجکسی محصولات — سئو-محور (الگوی قالب نادر) #}
+        <div class="filter-bar-rahsa" id="products-filter-bar"
+             data-category="{{ category.slug }}"
+             data-api="{{ url_for('api.filter_products') }}">
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-sort">مرتب‌سازی:</label>
+                <select id="filter-sort" class="form-control-rahsa">
+                    <option value="newest">جدیدترین</option>
+                    <option value="cheapest">ارزان‌ترین</option>
+                    <option value="expensive">گران‌ترین</option>
+                    <option value="popular">پرفروش‌ترین</option>
+                    <option value="discount">بیشترین تخفیف</option>
+                </select>
+            </div>
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-min-price">قیمت از (تومان)</label>
+                <input type="number" id="filter-min-price" class="form-control-rahsa" min="0" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-max-price">تا</label>
+                <input type="number" id="filter-max-price" class="form-control-rahsa" min="0" placeholder="∞" inputmode="numeric">
+            </div>
+            <label class="filter-check-rahsa">
+                <input type="checkbox" id="filter-in-stock"> فقط موجود
+            </label>
+            <label class="filter-check-rahsa">
+                <input type="checkbox" id="filter-on-sale"> دارای تخفیف
+            </label>
+            <button type="button" id="filter-apply" class="btn-rahsa-cta" style="padding:0.55rem 1.2rem; font-size:0.85rem;">اعمال فیلتر</button>
+            <button type="button" id="filter-reset" class="btn-rahsa-outline" style="padding:0.55rem 1rem; font-size:0.85rem;">حذف فیلترها</button>
+        </div>
+
         <!-- Products / Services Grid -->
-        <div class="row g-4">
+        <div class="row g-4" id="products-grid" aria-live="polite">
             {% if products and products.items %}
                 {% for product in products.items %}
-                <div class="col-12 col-md-6 col-lg-4">
+                <div class="col-12 col-md-6 col-lg-4 filter-product-item">
                     {{ product_card(product) }}
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="col-12">
+                <div class="col-12" id="products-empty-state">
                     <div class="empty-state">
                         <div class="empty-state-icon" aria-hidden="true">📦</div>
                         <h2 class="empty-state-title">محصولی در این دسته یافت نشد</h2>

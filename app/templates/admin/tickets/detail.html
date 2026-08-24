@@ -1,0 +1,82 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}تیکت {{ ticket.ticket_number }}{% endblock %}
+
+{% block admin_content %}
+<div style="max-width:900px; margin:0 auto;">
+
+    <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+            <div>
+                <h2 style="font-size:1.2rem; font-weight:800; color:var(--text-white); margin:0 0 .5rem;">{{ ticket.subject }}</h2>
+                <div style="display:flex; gap:.5rem; flex-wrap:wrap; font-size:.8rem; align-items:center;">
+                    <span dir="ltr" style="color:var(--text-gray-400);">{{ ticket.ticket_number }}</span>
+                    <span class="badge-rahsa info">{{ ticket.department_label }}</span>
+                    <span class="badge-rahsa {{ 'danger' if ticket.priority == 'high' else 'warning' }}">{{ ticket.priority_label }}</span>
+                    <span class="badge-rahsa {{ 'muted' if ticket.status == 'closed' else 'success' }}">{{ ticket.status_label }}</span>
+                    <span style="color:var(--text-gray-400);">کاربر: {{ ticket.user.full_name if ticket.user }}</span>
+                </div>
+            </div>
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                {% if ticket.status != 'closed' %}
+                <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="hidden" name="action" value="close">
+                    <button class="btn-rahsa-danger" style="padding:.4rem .9rem; font-size:.8rem;">بستن تیکت</button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="hidden" name="action" value="reopen">
+                    <button class="btn-rahsa-outline" style="padding:.4rem .9rem; font-size:.8rem;">بازگشایی</button>
+                </form>
+                {% endif %}
+                <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST" style="display:flex; gap:.3rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="hidden" name="action" value="priority">
+                    <select name="priority" class="form-control" style="width:auto; padding:.35rem .5rem; font-size:.78rem;">
+                        {% for val, label in [('low','کم'), ('medium','متوسط'), ('high','فوری')] %}
+                        <option value="{{ val }}" {{ 'selected' if ticket.priority == val else '' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn-rahsa-outline" style="padding:.4rem .8rem; font-size:.78rem;">تغییر اولویت</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thread -->
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+        {% for msg in ticket.messages %}
+        {% if msg.is_admin_reply %}
+        <div class="glass-card" style="padding:1.2rem 1.4rem; border-inline-start:3px solid var(--accent-success);">
+            <div style="font-size:.78rem; color:var(--text-gray-400); margin-bottom:.5rem;">
+                <strong style="color:var(--text-white);">پشتیبانی</strong> · {{ msg.created_at|time_ago if msg.created_at else '' }}
+            </div>
+            <div style="font-size:.88rem; line-height:2; white-space:pre-wrap; color:var(--text-gray-200);">{{ msg.message }}</div>
+        </div>
+        {% else %}
+        <div class="glass-card" style="padding:1.2rem 1.4rem; border-inline-start:3px solid var(--accent-gold); margin-inline-start:0;">
+            <div style="font-size:.78rem; color:var(--text-gray-400); margin-bottom:.5rem;">
+                <strong style="color:var(--text-white);">{{ ticket.user.full_name if ticket.user else 'کاربر' }}</strong> · {{ msg.created_at|time_ago if msg.created_at else '' }}
+            </div>
+            <div style="font-size:.88rem; line-height:2; white-space:pre-wrap; color:var(--text-gray-200);">{{ msg.message }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Reply -->
+    <div class="glass-card" style="padding:1.5rem; margin-top:1.5rem;">
+        <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+            <input type="hidden" name="action" value="reply">
+            <label class="form-label" style="color:var(--text-white); font-size:.85rem; margin-bottom:.5rem; display:block;">پاسخ پشتیبانی (به کاربر اطلاع‌رسانی می‌شود)</label>
+            <textarea name="message" class="form-control" rows="5" required placeholder="پاسخ خود را بنویسید…"></textarea>
+            <button type="submit" class="btn-rahsa-cta" style="padding:.6rem 1.5rem; margin-top:.8rem;">ارسال پاسخ</button>
+        </form>
+    </div>
+
+    <a href="{{ url_for('admin.tickets') }}" class="btn-rahsa-outline" style="padding:.5rem 1rem; font-size:.82rem; display:inline-block; margin-top:1.5rem;">→ بازگشت به لیست</a>
+</div>
+{% endblock %}

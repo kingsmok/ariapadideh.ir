@@ -1,0 +1,47 @@
+{# جداول قیمت/تعرفه خدمات — الگوی قالب آرنیکا #}
+{% if pricing_plans %}
+<section class="section" id="pricing-section" aria-labelledby="pricing-title">
+    <div class="container">
+        <div class="section-head-rahsa" style="text-align:center; margin-bottom:2.5rem;">
+            <h2 id="pricing-title" class="text-white" style="font-size:1.6rem; font-weight:900;">تعرفه خدمات</h2>
+            <p class="text-muted" style="font-size:0.9rem; margin-top:0.5rem;">پلن مناسب کسب‌وکار خود را انتخاب کنید</p>
+        </div>
+
+        <div class="pricing-grid-rahsa">
+            {% for plan in pricing_plans %}
+            <article class="pricing-card-rahsa {{ 'is-featured' if plan.is_featured else '' }}">
+                {% if plan.badge_text or plan.is_featured %}
+                <span class="pricing-badge-rahsa">{{ plan.badge_text or 'پیشنهاد ما' }}</span>
+                {% endif %}
+
+                <h3 class="text-white" style="font-size:1.1rem; font-weight:800; margin:0 0 0.25rem;">{{ plan.title }}</h3>
+                {% if plan.subtitle %}<p class="text-muted" style="font-size:0.82rem; margin:0 0 1rem;">{{ plan.subtitle }}</p>{% endif %}
+
+                <div class="pricing-price-rahsa">
+                    {% if plan.price_toman %}
+                        {% if plan.old_price_toman %}<s class="pricing-old-rahsa">{{ '{:,}'.format(plan.old_price_toman) }}</s>{% endif %}
+                        <strong>{{ '{:,}'.format(plan.price_toman) }}</strong>
+                        <span class="text-muted">تومان / {{ plan.period }}</span>
+                    {% else %}
+                        <strong style="font-size:1.3rem;">استعلام قیمت</strong>
+                    {% endif %}
+                </div>
+
+                <ul class="pricing-features-rahsa">
+                    {% for feature in plan.feature_list() %}
+                    <li><span class="pricing-check" aria-hidden="true">✓</span> {{ feature }}</li>
+                    {% endfor %}
+                    {% for feature in plan.feature_off_list() %}
+                    <li class="off"><span class="pricing-cross" aria-hidden="true">✕</span> {{ feature }}</li>
+                    {% endfor %}
+                </ul>
+
+                <a href="{{ plan.button_url or url_for('public.contact') }}" class="btn-rahsa-cta {{ '' if plan.is_featured else 'btn-ghost-rahsa' }} pricing-cta-rahsa">
+                    {{ plan.button_text or 'سفارش' }}
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

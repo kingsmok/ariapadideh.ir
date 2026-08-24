@@ -122,6 +122,13 @@ class ProductForm(FlaskForm):
     ])
     
     description = TextAreaField('توضیحات کامل')
+
+    # Variation Swatches (رنگ/تصویر/دکمه) — JSON
+    # [{name:'رنگ', value:'#ff0000', type:'color', price:0, stock:10}, ...]
+    variations = TextAreaField('متغیرها / سواچ (JSON)', validators=[Optional()])
+
+    # گالری ویدئو — هر خط: عنوان | لینک (آپارات/یوتیوب/فایل)
+    videos = TextAreaField('ویدئوهای محصول (هر خط: عنوان | لینک)', validators=[Optional()])
     
     price = FloatField('قیمت', validators=[
         DataRequired(message='قیمت الزامی است'),
