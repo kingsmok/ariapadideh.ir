@@ -180,20 +180,21 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     
     def get_related_posts(self, limit: int = 5) -> List['Post']:
         """Get related posts by tags and category"""
-        from app.models.content import Post
-        
+        from app.models.content import Post, PostTag
+
         tag_ids = [tag.id for tag in self.tags]
         related = Post.query.filter(
             Post.id != self.id,
             Post.status == 'published',
             Post.is_deleted == False
         )
-        
+
         if tag_ids:
-            related = related.join(post_tags).filter(post_tags.c.tag_id.in_(tag_ids))
+            related = related.join(PostTag, PostTag.post_id == Post.id).filter(
+                PostTag.tag_id.in_(tag_ids))
         elif self.category_id:
             related = related.filter(Post.category_id == self.category_id)
-        
+
         return related.distinct().limit(limit).all()
     
     def get_schema_data(self) -> dict:

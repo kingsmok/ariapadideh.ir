@@ -163,12 +163,29 @@ def register_context_processors(app: Flask) -> None:
         """Inject global variables into templates"""
         settings = SettingService.get_public_settings()
 
+        # منوهای داینامیک هدر/فوتر (Header/Footer Builder)
+        # اگر در دیتابیس منویی تعریف نشده باشد لیست خالی برمی‌گردد و
+        # قالب به نسخهٔ پیش‌فرض خود برمی‌گردد.
+        from flask_login import current_user
+        from app.services.menu_service import get_nav
+        try:
+            is_auth = bool(current_user and current_user.is_authenticated)
+        except Exception:
+            is_auth = False
+        try:
+            nav_header = get_nav('header', is_auth)
+            nav_footer = get_nav('footer', is_auth)
+        except Exception:
+            nav_header, nav_footer = [], []
+
         return {
             'site_settings': settings,
             'current_year': __import__('datetime').datetime.now().year,
             # Global JSON-LD (Organization + WebSite) — computed once per request
             'organization_schema': get_organization_schema(),
             'website_schema': get_website_schema(),
+            'nav_header': nav_header,
+            'nav_footer': nav_footer,
         }
 
     @app.context_processor
@@ -277,6 +294,7 @@ def create_directories(app: Flask) -> None:
         app.config['UPLOAD_FOLDER'] / 'resumes',
         app.config['BASE_DIR'] / 'logs',
         app.config['BASE_DIR'] / 'instance',
+        app.config['BASE_DIR'] / 'instance' / 'ticket_attachments',
     ]
     
     for directory in directories:

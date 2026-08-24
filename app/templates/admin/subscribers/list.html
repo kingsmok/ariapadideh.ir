@@ -8,7 +8,10 @@
         <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">
             مشترکین خبرنامه ({{ subs.total }} نفر)
         </h2>
-        <a href="{{ url_for('admin.subscribers_export') }}" class="btn-rahsa-outline">📥 خروجی CSV</a>
+        <div style="display:flex; gap:0.5rem;">
+            <a href="{{ url_for('admin.subscribers_send') }}" class="btn-rahsa-cta">📨 ارسال خبرنامه</a>
+            <a href="{{ url_for('admin.subscribers_export') }}" class="btn-rahsa-outline">📥 خروجی CSV</a>
+        </div>
     </div>
 
     <table class="table-rahsa" style="width:100%; font-size:.9rem;">

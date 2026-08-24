@@ -2008,3 +2008,131 @@ html[dir="rtl"] .pricing-badge-rahsa { transform: translateX(50%); }
 @media (prefers-reduced-motion: reduce) {
     .preloader-spinner, .preloader-bar span, .preloader-pulse::before, .preloader-pulse::after { animation: none; }
 }
+
+/* ==========================================================================
+   ۱۴) هدر/فوتر داینامیک + مگامنو (Header/Footer Builder)
+   ========================================================================== */
+.menu-badge-pill {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.22rem 0.45rem;
+    border-radius: 999px;
+    background: var(--accent-gold, #fbb03b);
+    color: #14213d;
+    margin-inline-start: 0.35rem;
+    vertical-align: middle;
+}
+
+.mega-menu-panel {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: var(--transition);
+    position: absolute;
+    top: 100%;
+    inset-inline-end: 0;
+    width: min(560px, calc(100vw - 3rem));
+    background: rgba(10, 17, 40, 0.96);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-dropdown);
+}
+
+.dropdown-hover-parent:hover .mega-menu-panel,
+.dropdown-hover-parent:focus-within .mega-menu-panel {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+.mega-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.mega-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-md, 10px);
+    color: var(--text-gray-300, #cbd5e1);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.mega-menu-item:hover {
+    background: rgba(139, 92, 246, 0.12);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.mega-menu-item strong { color: #ffffff; font-size: 0.9rem; }
+
+/* ---------- سواچ روی کارت محصول (الگوی قالب‌های فروشگاهی راست‌چین) ---------- */
+.card-swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.card-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    display: inline-block;
+    flex: 0 0 auto;
+}
+
+.card-swatch-label {
+    font-size: 0.68rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    color: var(--text-gray-300, #cbd5e1);
+}
+
+.card-swatch-more { font-size: 0.68rem; color: var(--text-gray-400, #94a3b8); }
+
+/* ---------- درگ‌انددراپ لیست‌های پنل (منوساز/صفحه‌ساز) ---------- */
+.drag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    background: rgba(20, 33, 61, 0.55);
+    margin-bottom: 0.5rem;
+    cursor: grab;
+    transition: var(--transition);
+}
+
+.drag-item.dragging { opacity: 0.45; border-style: dashed; }
+.drag-item.drag-over { border-color: var(--accent-gold, #fbb03b); }
+.drag-handle { font-size: 1.1rem; color: var(--text-gray-400, #94a3b8); user-select: none; }
+
+/* ---------- نقشهٔ تعاملی تماس (Leaflet) ---------- */
+#contact-leaflet-map {
+    height: 360px;
+    width: 100%;
+    border-radius: var(--radius-lg, 14px);
+    border: 1px solid var(--glass-border);
+    z-index: 1;
+    filter: saturate(0.9);
+}
+
+[data-theme="light"] #contact-leaflet-map { filter: none; }

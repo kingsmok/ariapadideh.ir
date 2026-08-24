@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}ارسال خبرنامه{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:760px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:0.5rem;">
+        📨 ارسال گروهی خبرنامه
+    </h2>
+    <p style="color:var(--text-gray-400); font-size:0.85rem; margin-bottom:1.5rem;">
+        ایمیل برای <strong style="color:var(--accent-gold);">{{ active_count }}</strong> مشترک فعال ارسال می‌شود
+        (لغو اشتراک‌شده‌ها حذف می‌شوند).
+        اگر SMTP تنظیم نشده باشد، ایمیل‌ها به‌جای ارسال واقعی در لاگ سرور ثبت می‌شوند — برای فعال‌سازی MAIL_SERVER را در .env تنظیم کنید.
+    </p>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+        <div class="mb-3">
+            <label class="form-label-rahsa">موضوع ایمیل *</label>
+            <input type="text" name="subject" class="form-control-rahsa" required
+                   placeholder="مثلاً: تخفیف ویژهٔ پکیج‌های جدید">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label-rahsa">متن ایمیل * (HTML ساده: p، h2، a)</label>
+            <textarea name="body" class="form-control-rahsa" rows="10" required
+                      placeholder="&lt;h2&gt;سلام&lt;/h2&gt;&#10;&lt;p&gt;متن خبر…&lt;/p&gt;"></textarea>
+        </div>
+
+        <div style="display:flex; gap:0.6rem;">
+            <button type="submit" class="btn-rahsa-cta flex-fill"
+                    onclick="return confirm('ارسال به {{ active_count }} مشترک قطعی است؟');">
+                🚀 ارسال به {{ active_count }} مشترک
+            </button>
+            <a href="{{ url_for('admin.subscribers') }}" class="btn-rahsa-outline" style="text-decoration:none;">انصراف</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

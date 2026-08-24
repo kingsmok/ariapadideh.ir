@@ -24,6 +24,10 @@ from app.utils.decorators import rate_limit
 def home():
     """Home page with dynamic components"""
     from app.models.agency import ServiceCatalog, PortfolioCaseStudies
+    from app.services.home_builder_service import get_sections
+
+    # ترتیب بخش‌های صفحهٔ اول — از صفحه‌ساز پنل مدیریت
+    home_sections = get_sections()
     
     # Get home page data
     home_page = Page.query.filter_by(page_type='home', is_active=True, is_deleted=False).first()
@@ -145,6 +149,7 @@ def home():
         stories=stories,
         team_members=team_members,
         pricing_plans=pricing_plans,
+        home_sections=home_sections,
         seo=seo
     )
 

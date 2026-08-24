@@ -460,6 +460,23 @@
         const renderCard = function (p) {
             const col = document.createElement('div');
             col.className = 'col-12 col-md-6 col-lg-4';
+
+            // سواچ‌های رنگی نسخه‌ها روی کارت (الگوی قالب‌های فروشگاهی)
+            let swatches = '';
+            try {
+                const vars = (typeof p.variations === 'string') ? JSON.parse(p.variations) : (p.variations || []);
+                const colors = (vars || []).filter(function (v) { return v && v.type === 'color' && v.value; });
+                if (colors.length) {
+                    swatches = '<div class="card-swatch-row">' +
+                        colors.slice(0, 5).map(function (v) {
+                            return '<span class="card-swatch" title="' + esc(v.name || '') + '" style="background:' + esc(v.value) + ';' + (!v.stock ? 'opacity:0.35;' : '') + '"></span>';
+                        }).join('') +
+                        (colors.length > 5 ? '<span class="card-swatch-more">+' + (colors.length - 5) + '</span>' : '') +
+                        '<span class="card-swatch-more">' + colors.length + ' رنگ</span>' +
+                        '</div>';
+                }
+            } catch (e) { /* variations نبود یا خراب — بی‌صدا رد شو */ }
+
             col.innerHTML = '' +
                 '<article class="product-card">' +
                 '  <a href="' + esc(p.url) + '" class="product-card-link">' +
@@ -469,6 +486,7 @@
                 '    </div>' +
                 '    <div class="product-card-body">' +
                 '      <h3 class="product-card-title">' + esc(p.title) + '</h3>' +
+                swatches +
                 '      <div class="product-card-price" data-persian-num>' +
                 '        ' + (p.price ? parseInt(p.price, 10).toLocaleString('fa-IR') + ' تومان' : 'استعلام قیمت') +
                 (p.old_price ? ' <s class="product-card-price-old">' + parseInt(p.old_price, 10).toLocaleString('fa-IR') + '</s>' : '') +

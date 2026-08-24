@@ -2,7 +2,7 @@
 User Routes - User Panel
 """
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, abort
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, abort, send_file
 from flask_login import login_required, current_user
 from sqlalchemy import or_, desc
 from werkzeug.datastructures import MultiDict
@@ -957,7 +957,17 @@ def ticket_new():
             priority=request.form.get('priority', 'medium'),
         )
         ticket.save()
-        ticket.add_message(message, user_id=current_user.id, is_admin=False)
+
+        # پیوست اختیاری تیکت جدید
+        attachment = None
+        error = None
+        if 'attachment' in request.files:
+            from app.services.ticket_file_service import save_ticket_attachment
+            attachment, error = save_ticket_attachment(request.files['attachment'])
+        if error:
+            flash(f'تیکت ثبت شد اما پیوست نشد: {error}', 'error')
+        ticket.add_message(message, user_id=current_user.id, is_admin=False,
+                           attachment=attachment)
 
         NotificationService.notify_admins(
             title='تیکت جدید',
@@ -987,8 +997,16 @@ def ticket_detail(ticket_id):
         action = request.form.get('action', 'reply')
         if action == 'reply' and ticket.status != 'closed':
             message = (request.form.get('message') or '').strip()
-            if message:
-                ticket.add_message(message, user_id=current_user.id, is_admin=False)
+            attachment = None
+            error = None
+            if 'attachment' in request.files:
+                from app.services.ticket_file_service import save_ticket_attachment
+                attachment, error = save_ticket_attachment(request.files['attachment'])
+            if error:
+                flash(error, 'error')
+            elif message or attachment:
+                ticket.add_message(message or '(پیوست)', user_id=current_user.id,
+                                   is_admin=False, attachment=attachment)
                 flash('پیام شما ارسال شد.', 'success')
         elif action == 'close':
             ticket.close(by_user_id=current_user.id)
@@ -999,3 +1017,31 @@ def ticket_detail(ticket_id):
         return redirect(url_for('user.ticket_detail', ticket_id=ticket.id))
 
     return render_template('user/tickets/detail.html', ticket=ticket)
+
+
+@user_bp.route('/tickets/message/<int:message_id>/attachment')
+@login_required
+def ticket_attachment_download(message_id):
+    """دانلود پیوست پیام تیکت — فقط صاحب تیکت یا ادمین"""
+    from app.models import TicketMessage
+    from app.services.ticket_file_service import attachment_path
+
+    msg = TicketMessage.query.get_or_404(message_id)
+    ticket = msg.ticket
+
+    is_owner = ticket and ticket.user_id == current_user.id
+    try:
+        is_admin_user = current_user.is_admin()
+    except Exception:
+        is_admin_user = False
+
+    if not (is_owner or is_admin_user):
+        abort(404)
+
+    path = attachment_path(msg.attachment or '')
+    if not path:
+        abort(404)
+
+    ext = path.rsplit('.', 1)[-1] if '.' in path else ''
+    name = f'ticket-{ticket.id}-msg-{msg.id}.{ext}' if ext else f'ticket-{ticket.id}-msg-{msg.id}'
+    return send_file(path, as_attachment=True, download_name=name)

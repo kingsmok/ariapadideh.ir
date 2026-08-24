@@ -337,7 +337,7 @@ class PostForm(FlaskForm):
 # ==================== MENU FORMS ====================
 
 class MenuForm(FlaskForm):
-    """Menu create/edit form"""
+    """Menu create/edit form — فیلدهای والد/بولی/ترتیب در روت به‌صورت خام خوانده می‌شوند"""
     
     title = StringField('عنوان', validators=[
         DataRequired(message='عنوان الزامی است'),
@@ -349,7 +349,7 @@ class MenuForm(FlaskForm):
         Length(max=500)
     ])
     
-    icon = StringField('آیکون', description='کلاس FontAwesome (مثال: fa fa-home)')
+    icon = StringField('آیکون', description='کلاس FontAwesome یا ایموجی')
     
     position = SelectField('موقعیت', default='header', choices=[
         ('header', 'هدر'),
@@ -358,25 +358,13 @@ class MenuForm(FlaskForm):
         ('sidebar', 'سایدبار')
     ])
     
-    parent_id = SelectField('منوی والد', coerce=int, validate_choice=False, validators=[Optional()])
-    
     target = SelectField('باز شدن لینک', default='_self', choices=[
         ('_self', 'در همان تب'),
         ('_blank', 'در تب جدید')
     ])
     
-    no_follow = BooleanField('nofollow')
-    
     badge_text = StringField('متن بج', validators=[Length(max=100)])
     badge_color = StringField('رنگ بج')
-    
-    is_mega_menu = BooleanField('مگامنو')
-    
-    is_active = BooleanField('فعال')
-    show_logged_in = BooleanField('نمایش برای کاربران')
-    show_guest = BooleanField('نمایش برای مهمانان')
-    
-    sort_order = IntegerField('ترتیب', default=0, validators=[Optional(), NumberRange(min=0)])
     
     submit = SubmitField('ذخیره')
 

@@ -15,7 +15,7 @@
         <div class="glass-card" style="padding:2rem;">
             <h1 class="text-white" style="font-size:1.2rem; font-weight:800; margin-bottom:1.5rem;">ثبت تیکت پشتیبانی</h1>
 
-            <form action="{{ url_for('user.ticket_new') }}" method="POST" novalidate>
+            <form action="{{ url_for('user.ticket_new') }}" method="POST" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
                 <div class="mb-3">
@@ -49,6 +49,11 @@
                     <label for="tk_message" class="form-label-rahsa">شرح درخواست <span style="color:var(--accent-danger);">*</span></label>
                     <textarea id="tk_message" name="message" class="form-control-rahsa" rows="6" required
                               placeholder="مشکل یا سؤال خود را کامل توضیح دهید…">{{ form_data.message or '' }}</textarea>
+            <div class="mb-3 mt-2">
+                <label class="form-label-rahsa" style="font-size:0.8rem;">📎 پیوست (اختیاری — تصویر/PDF/ZIP تا ۵ مگابایت)</label>
+                <input type="file" name="attachment" class="form-control-rahsa" style="padding:0.4rem;"
+                       accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.zip,.rar,.7z,.txt,.doc,.docx,.xls,.xlsx,.csv">
+            </div>
                 </div>
 
                 <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem;">ارسال تیکت</button>

@@ -137,8 +137,45 @@
 
         </div>
 
-        {# نقشهٔ OpenStreetMap — بدون تحریم و بدون API (الگوی قالب آرنیکا) #}
-        {% if site_settings.contact_osm_map_enabled != false and site_settings.contact_osm_map_embed %}
+        {# نقشهٔ تعاملی Leaflet (پین قابل کلیک) — یا fallback به iframe OSM (الگوی قالب آرنیکا — بدون تحریم و API) #}
+        {% if site_settings.contact_osm_map_enabled != false and site_settings.contact_map_lat and site_settings.contact_map_lng %}
+        <div class="glass-card osm-map-rahsa" style="margin-top:2.5rem; padding:1rem;">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span aria-hidden="true" style="font-size:1.3rem;">🗺️</span>
+                <h2 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">ما را روی نقشه پیدا کنید</h2>
+            </div>
+            <div id="contact-leaflet-map" aria-label="موقعیت مکانی روی نقشهٔ تعاملی"></div>
+            <p class="text-muted" style="font-size:0.75rem; margin:0.6rem 0 0;">
+                © مشارکت‌کنندگان
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="text-muted">OpenStreetMap</a>
+            </p>
+        </div>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+              integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            (function () {
+                var lat = parseFloat('{{ site_settings.contact_map_lat }}') || 35.7056;
+                var lng = parseFloat('{{ site_settings.contact_map_lng }}') || 51.3850;
+                var zoom = parseInt('{{ site_settings.contact_map_zoom }}', 10) || 15;
+                var siteName = {{ (site_settings.general_site_name or 'رهسا دیو') | tojson }};
+                var addr = {{ (site_settings.contact_address or '') | tojson }};
+                try {
+                    var map = L.map('contact-leaflet-map', { scrollWheelZoom: false }).setView([lat, lng], zoom);
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(map);
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    marker.bindPopup('<strong>' + siteName + '</strong><br><span style="font-size:.8rem">' + addr + '</span>');
+                    marker.on('click', function () { map.flyTo([lat, lng], Math.min(zoom + 2, 18)); });
+                    map.on('click', function () { map.scrollWheelZoom.enable(); });
+                } catch (e) { /* اگر CDN در دسترس نبود، بی‌صدا رد می‌شود */ }
+            })();
+        </script>
+        {% elif site_settings.contact_osm_map_enabled != false and site_settings.contact_osm_map_embed %}
         <div class="glass-card osm-map-rahsa" style="margin-top:2.5rem; padding:1rem;">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <span aria-hidden="true" style="font-size:1.3rem;">🗺️</span>

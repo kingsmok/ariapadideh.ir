@@ -120,6 +120,11 @@ class SettingService:
                 'text', True, 'نقشهٔ OSM (embed)', 'لینک embed نقشهٔ openstreetmap برای صفحهٔ تماس'
             ),
             'osm_map_enabled': ('true', 'boolean', True, 'نمایش نقشه در تماس', ''),
+            # نقشهٔ تعاملی Leaflet با پین قابل کلیک (اولویت بالاتر از embed)
+            # اگر lat/lng تنظیم شود نقشهٔ تعاملی با مارکر نمایش داده می‌شود؛ خالی = iframe
+            'map_lat': ('35.7056', 'string', True, 'عرض جغرافیایی (نقشهٔ تعاملی)', 'مثلاً 35.7056 — خالی=y iframe'),
+            'map_lng': ('51.3850', 'string', True, 'طول جغرافیایی (نقشهٔ تعاملی)', 'مثلاً 51.3850'),
+            'map_zoom': ('15', 'string', True, 'زوم نقشهٔ تعاملی', 'عدد بین 3 تا 19'),
         }
         
         # Social settings

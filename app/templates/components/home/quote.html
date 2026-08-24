@@ -1,0 +1,63 @@
+<!-- ==================== CONSULTATION LEAD FORM ==================== -->
+<section id="quote-section" class="section">
+    <div class="container">
+        <div class="quote-section-card">
+
+            <div class=" mb-4">
+                <div aria-hidden="true" style="font-size:2.8rem; margin-bottom:0.5rem; color:#FBB03B;">💬</div>
+                <h2 class="text-white" style="font-size:1.8rem; font-weight:900; margin-bottom:0.5rem;">
+                    {{ (sec.title if sec is defined and sec.title else 'درخواست مشاوره تخصصی') }}
+                </h2>
+                <p class="text-muted" style="font-size:0.925rem; margin:0;">
+                    برای بررسی معماری نرم‌افزار یا نیازهای سازمانی خود، اطلاعات زیر را تکمیل کنید.
+                </p>
+            </div>
+
+            <form action="/api/v1/leads" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+                <div class="row gy-3">
+                    <div class="col-12 col-md-6">
+                        <label for="full_name" class="form-label-rahsa">نام و نام خانوادگی</label>
+                        <input type="text" id="full_name" name="full_name" class="form-control-rahsa"
+                               placeholder="مثال: علی رضایی" required minlength="3" maxlength="100">
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="phone" class="form-label-rahsa">شماره تماس</label>
+                        <input type="tel" id="phone" name="phone" class="form-control-rahsa bidi-plaintext"
+                               placeholder="09123456789" required pattern="[0-9]{11}">
+                    </div>
+
+                    <div class="col-12">
+                        <label for="requested_service" class="form-label-rahsa">نوع درخواست</label>
+                        <select id="requested_service" name="requested_service" class="form-select-rahsa-rahsa" required>
+                            <option value="">انتخاب کنید...</option>
+                            <option value="سیستم‌های سازمانی (ERP)">سیستم‌های سازمانی (ERP)</option>
+                            <option value="توسعه پلتفرم وب">توسعه پلتفرم وب</option>
+                            <option value="ربات هوشمند (تلگرام/ایتا)">ربات هوشمند (تلگرام/ایتا)</option>
+                            <option value="طراحی UI/UX">طراحی UI/UX</option>
+                            <option value="سایر موارد">سایر موارد</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="notes" class="form-label-rahsa">شرح مختصری از پروژه</label>
+                        <textarea id="notes" name="notes" class="form-control-rahsa" rows="4"
+                                  placeholder="نیازها و چالش‌های کسب‌وکار خود را بنویسید..." maxlength="2000"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100 mt-4" style="padding:0.85rem; font-size:1rem;" aria-label="ارسال درخواست مشاوره">
+                    <span>ارسال درخواست</span>
+                    <span aria-hidden="true">✈️</span>
+                </button>
+
+                <p class="text-muted " style="font-size:0.75rem; margin-top:1rem;">
+                    🔒 اطلاعات شما نزد تیم مهندسی رهسا دیو کاملاً محفوظ است.
+                </p>
+            </form>
+
+        </div>
+    </div>
+</section>

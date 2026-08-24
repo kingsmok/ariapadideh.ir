@@ -358,7 +358,88 @@ def seed_demo(preset: str = 'corporate'):
                          url='https://www.aparat.com/v/example').save()
             click.echo('✓ demo video added')
 
-    click.echo(f'\n✓ Demo "{preset}" ready → /admin/team, /admin/pricing, /admin/stories, صفحهٔ اصلی')
+    # 6) مقالات نمونهٔ وبلاگ (هر دو پرست — وبلاگ خالی بد است!)
+    from app.models import Post, Category as BlogCat, Tag as BlogTag, User
+    from app.extensions import db as _db
+    from datetime import datetime, timedelta
+    if Post.query.filter_by(is_deleted=False).count() == 0:
+        cat = BlogCat.query.filter_by(is_deleted=False, is_active=True).order_by(BlogCat.id).first()
+        cat_id = cat.id if cat else None
+        admin_user = User.query.filter_by(is_active=True).order_by(User.id).first()
+        demo_posts = [
+            {'title': 'چرا فلاسک برای استارتاپ‌های ایرانی انتخاب هوشمندانه‌ای است؟',
+             'slug': 'why-flask-for-iranian-startups',
+             'excerpt': 'مقایسهٔ هزینه، سرعت توسعه و مقیاس‌پذیری فلاسک با فریمورک‌های دیگر برای تیم‌های کوچک.',
+             'tags': ['فلاسک', 'پایتون', 'استارتاپ'],
+             'days_ago': 4, 'featured': True},
+            {'title': 'راهنمای انتخاب هاست و سرور برای فروشگاه‌های آنلاین',
+             'slug': 'hosting-guide-online-shops',
+             'excerpt': 'از هاست اشتراکی تا سرور اختصاصی — چطور بستهٔ مناسب کسب‌وکارتان را انتخاب کنید.',
+             'tags': ['هاست', 'سرور', 'فروشگاه آنلاین'],
+             'days_ago': 11, 'featured': False},
+            {'title': 'اتوماسیون با ربات تلگرام: ۵ کاربرد واقعی برای کسب‌وکارها',
+             'slug': 'telegram-bot-automation-usecases',
+             'excerpt': 'پشتیبانی خودکار، فروش، اطلاع‌رسانی، نظرسنجی و اتوماسیون داخلی با یک ربات.',
+             'tags': ['ربات تلگرام', 'اتوماسیون', 'ایتیا'],
+             'days_ago': 21, 'featured': False},
+        ]
+        for i, p in enumerate(demo_posts):
+            post = Post(
+                title=p['title'], slug=p['slug'], excerpt=p['excerpt'],
+                content=(
+                    f'<p>{p["excerpt"]}</p>'
+                    '<h2>چرا این موضوع مهم است؟</h2>'
+                    '<p>در سال‌های اخیر سرعت توسعه و هزینهٔ نگهداری به مهم‌ترین معیارهای انتخاب فناوری تبدیل شده‌اند. '
+                    'تیمی که بتواند نسخهٔ اول محصول را سریع‌تر و با هزینهٔ کمتر عرضه کند، شانس بیشتری برای پیدا کردن بازار دارد.</p>'
+                    '<h2>نکات کلیدی</h2>'
+                    '<ul><li>شروع سریع با حداقل وابستگی</li>'
+                    '<li>هزینهٔ پایین نگهداری و مقیاس‌پذیری تدریجی</li>'
+                    '<li>جامعهٔ فعال و مستندات فارسی</li>'
+                    '<li>امکان مهاجرت تدریجی به معماری سرویس‌محور</li></ul>'
+                    '<h2>جمع‌بندی</h2>'
+                    '<p>انتخاب فناوری باید بر اساس نیاز واقعی کسب‌وکار باشد نه هیاهوی فناوری‌های روز. '
+                    'برای مشاورهٔ رایگان با تیم ما در تماس باشید.</p>'
+                ),
+                status='published', category_id=cat_id,
+                author_id=admin_user.id if admin_user else None,
+                published_at=datetime.utcnow() - timedelta(days=p['days_ago']),
+                is_active=True, show_in_home=True, is_featured=p['featured'],
+                views=(340 - i * 77),
+            )
+            _db.session.add(post)
+            for name in p['tags']:
+                tag = BlogTag.query.filter_by(name=name).first()
+                if not tag:
+                    tag_counter = (BlogTag.query.count() or 0) + 1
+                    tag = BlogTag(name=name, slug=f'demo-tag-{tag_counter}')
+                    _db.session.add(tag)
+                post.tags.append(tag)
+        _db.session.commit()
+        click.echo(f'✓ {len(demo_posts)} demo blog posts created')
+
+    # 7) منوی نمونهٔ هدر (مگامنو) + فوتر — نمایش قابلیت منوساز
+    from app.models import Menu
+    if Menu.query.filter_by(position='header', is_mega_menu=True, is_deleted=False).count() == 0:
+        mega = Menu(title='خدمات ما', slug='demo-mega-services', url='/categories',
+                    position='header', icon='🧩', is_mega_menu=True,
+                    badge_text='جدید', badge_color='#fbb03b', sort_order=1)
+        _db.session.add(mega)
+        _db.session.flush()
+        for t, u, ic in [('طراحی وب‌سایت', '/category/web-design', '💻'),
+                         ('ربات‌های هوشمند', '/category/smart-bots', '🤖'),
+                         ('نرم‌افزار و اتوماسیون', '/category/software-automation', '⚙️'),
+                         ('برنامه‌نویسی و اسکریپت', '/category/programming-scripts', '📝')]:
+            _db.session.add(Menu(title=t, url=u, slug=f'demo-sub-{u.split("/")[-1]}',
+                                 position='header', icon=ic, parent_id=mega.id, sort_order=0))
+        _db.session.commit()
+        click.echo('✓ demo header mega-menu created')
+    if Menu.query.filter_by(position='footer', is_deleted=False).count() == 0:
+        for j, (t, u) in enumerate([('درباره ما', '/about'), ('تماس با ما', '/contact'), ('سوالات متداول', '/faq')]):
+            _db.session.add(Menu(title=t, url=u, slug=f'demo-footer-{j}', position='footer', sort_order=j))
+        _db.session.commit()
+        click.echo('✓ demo footer menu created')
+
+    click.echo(f'\n✓ Demo "{preset}" ready → /admin/team, /admin/pricing, /admin/stories, /admin/posts, صفحهٔ اصلی')
 
 
 # Register commands

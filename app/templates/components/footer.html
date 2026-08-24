@@ -58,11 +58,23 @@
             <div class="col-6 col-md-3">
                 <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">دسترسی سریع</h4>
                 <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
+                    {% if nav_footer %}
+                        {# منوی فوتر داینامیک — از پنل مدیریت (منوها، موقعیت: فوتر) #}
+                        {% for item in nav_footer %}
+                        <li>
+                            <a href="{{ item.url }}" class="footer-link-hover text-muted"
+                               {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                {% if item.icon %}{{ item.icon }} {% endif %}{{ item.title }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
                     <li><a href="{{ url_for('public.categories_list') }}" class="footer-link-hover text-muted">خدمات نرم‌افزاری</a></li>
                     <li><a href="/#quote-section" class="footer-link-hover text-muted">مشاوره استراتژیک</a></li>
                     <li><a href="{{ url_for('public.about') }}" class="footer-link-hover text-muted">درباره ما</a></li>
                     <li><a href="{{ url_for('public.contact') }}" class="footer-link-hover text-muted">تماس با ما</a></li>
                     <li><a href="{{ url_for('public.faq') }}" class="footer-link-hover text-muted">سوالات متداول</a></li>
+                    {% endif %}
                 </ul>
             </div>
 

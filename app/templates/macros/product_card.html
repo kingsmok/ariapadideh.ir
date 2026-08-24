@@ -39,6 +39,24 @@
         </p>
         {% endif %}
 
+        
+        {# سواچ‌های نسخه (فقط نوع color) روی کارت — الگوی قالب‌های فروشگاهی راست‌چین #}
+        {% if product.variations %}
+            {% set color_vars = [] %}
+            {% for v in product.variations if v.type == 'color' and v.value %}
+                {% if color_vars.append(v) %}{% endif %}
+            {% endfor %}
+            {% if color_vars %}
+            <div class="card-swatch-row" aria-label="رنگ‌های موجود">
+                {% for v in color_vars[:5] %}
+                    <span class="card-swatch" title="{{ v.name }}{{ '‌(ناموجود)' if v.stock == 0 else '' }}" style="background:{{ v.value }};{% if v.stock == 0 %}opacity:0.35;{% endif %}"></span>
+                {% endfor %}
+                {% if color_vars|length > 5 %}<span class="card-swatch-more">+{{ color_vars|length - 5 }}</span>{% endif %}
+                <span class="card-swatch-more">{{ color_vars|length }} رنگ</span>
+            </div>
+            {% endif %}
+        {% endif %}
+
         <div class="mt-auto pt-3" style="border-top:1px dashed var(--glass-border);">
             <div class="d-flex align-items-center justify-content-between gap-2">
                 <div>

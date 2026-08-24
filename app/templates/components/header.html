@@ -15,6 +15,55 @@
 
             <!-- Desktop Navigation Menu -->
             <nav class="d-none d-md-flex align-items-center gap-1" aria-label="منوی اصلی">
+                {% if nav_header %}
+                    {# منوی داینامیک — از پنل مدیریت (منوها) #}
+                    {% for item in nav_header %}
+                        {% if item.children %}
+                            <div class="dropdown-hover-parent {{ 'mega-parent' if item.is_mega else '' }}">
+                                <a href="{{ item.url }}"
+                                   class="nav-link-item {{ 'active' if request.path == item.url else '' }}"
+                                   aria-haspopup="true" {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                    {{ item.title }}
+                                    <span aria-hidden="true" style="font-size:0.7em; margin-inline-start:4px;">▾</span>
+                                    {% if item.badge_text %}<span class="menu-badge-pill" {% if item.badge_color %}style="background:{{ item.badge_color }}"{% endif %}>{{ item.badge_text }}</span>{% endif %}
+                                </a>
+                                {% if item.is_mega %}
+                                <div class="mega-menu-panel" role="menu">
+                                    <div class="mega-menu-grid">
+                                        {% for child in item.children %}
+                                        <a href="{{ child.url }}" class="mega-menu-item" role="menuitem" {% if child.target == '_blank' %}target="_blank" rel="noopener"{% endif %}>
+                                            {% if child.icon %}<span aria-hidden="true">{{ child.icon }}</span>{% else %}<span aria-hidden="true">🔗</span>{% endif %}
+                                            <span>
+                                                <strong>{{ child.title }}</strong>
+                                                {% if child.badge_text %}<span class="menu-badge-pill" {% if child.badge_color %}style="background:{{ child.badge_color }}"{% endif %}>{{ child.badge_text }}</span>{% endif %}
+                                            </span>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="dropdown-menu-glass" role="menu">
+                                    {% for child in item.children %}
+                                    <a href="{{ child.url }}" role="menuitem" {% if child.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if child.no_follow %} rel="nofollow"{% endif %}>
+                                        {% if child.icon %}<span aria-hidden="true">{{ child.icon }}</span>{% else %}<span aria-hidden="true">•</span>{% endif %}
+                                        {{ child.title }}
+                                        {% if child.badge_text %}<span class="menu-badge-pill" {% if child.badge_color %}style="background:{{ child.badge_color }}"{% endif %}>{{ child.badge_text }}</span>{% endif %}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <a href="{{ item.url }}"
+                               class="nav-link-item {{ 'active' if request.path == item.url else '' }}"
+                               {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                {{ item.title }}
+                                {% if item.badge_text %}<span class="menu-badge-pill" {% if item.badge_color %}style="background:{{ item.badge_color }}"{% endif %}>{{ item.badge_text }}</span>{% endif %}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                {# نسخهٔ پیش‌فرض — تا وقتی از پنل منویی ساخته نشده #}
                 <a href="{{ url_for('public.home') }}"
                    class="nav-link-item {{ 'active' if request.endpoint == 'public.home' else '' }}">
                     صفحه اصلی
@@ -59,6 +108,7 @@
                    class="nav-link-item {{ 'active' if request.endpoint == 'public.contact' else '' }}">
                     تماس با ما
                 </a>
+                {% endif %}
             </nav>
 
             <!-- Actions CTA & Mobile Hamburger -->

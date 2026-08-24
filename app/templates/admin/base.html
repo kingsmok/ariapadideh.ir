@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="theme-color" content="#0a1128">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}پنل مدیریت{% endblock %} | {{ site_settings.general_site_name or 'رهسا دیو' }}</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -249,8 +250,8 @@
                 <span class="icon" aria-hidden="true">📄</span>
                 <span>صفحات</span>
             </a>
-            <a href="{{ url_for('public.blog') }}"
-               class="admin-sidebar-link {{ 'active' if ep.startswith('blog') else '' }}">
+            <a href="{{ url_for('admin.posts') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.post') else '' }}">
                 <span class="icon" aria-hidden="true">📰</span>
                 <span>مقالات / وبلاگ</span>
             </a>
@@ -288,6 +289,11 @@
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.menu') else '' }}">
                 <span class="icon" aria-hidden="true">🧭</span>
                 <span>منوها</span>
+            </a>
+            <a href="{{ url_for('admin.home_builder') }}"
+               class="admin-sidebar-link {{ 'active' if ep == 'admin.home_builder' else '' }}">
+                <span class="icon" aria-hidden="true">🏠</span>
+                <span>صفحه‌ساز خانه</span>
             </a>
             <a href="{{ url_for('admin.media') }}"
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.media') else '' }}">

@@ -651,6 +651,127 @@ def page_delete(page_id):
     return redirect(url_for('admin.pages'))
 
 
+# ==================== POSTS (BLOG) MANAGEMENT ====================
+
+@admin_bp.route('/posts')
+@admin_bp.route('/posts/<int:page>')
+@login_required
+@admin_required
+def posts(page=1):
+    """مدیریت مقالات وبلاگ"""
+    q = (request.args.get('q') or '').strip()
+    status = (request.args.get('status') or '').strip()
+
+    query = Post.query.filter(Post.is_deleted == False)
+    if q:
+        query = query.filter(Post.title.like(f'%{q}%'))
+    if status in ('draft', 'published', 'scheduled', 'archived'):
+        query = query.filter(Post.status == status)
+
+    pagination = query.order_by(Post.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False)
+
+    return render_template('admin/posts/list.html',
+        posts=pagination.items, pagination=pagination, q=q, status=status)
+
+
+@admin_bp.route('/posts/create', methods=['GET', 'POST'])
+@admin_bp.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def post_edit(post_id=None):
+    """ایجاد/ویرایش مقاله"""
+    post = Post.query.get_or_404(post_id) if post_id else None
+
+    # نکته: published_at خالی نباید خطای اعتبارسنجی بدهد — مقدار خالی حذف می‌شود
+    if request.method == 'POST':
+        from werkzeug.datastructures import MultiDict
+        raw = request.form.to_dict(flat=False)
+        if not (raw.get('published_at', [''])[0] or '').strip():
+            raw.pop('published_at', None)
+        form = PostForm(form=MultiDict(raw), obj=post)
+    else:
+        form = PostForm(obj=post)
+
+    # گزینه‌های دسته‌بندی (نوع post یا دسته‌های عمومی)
+    cats = Category.query.filter_by(is_deleted=False).order_by(Category.sort_order).all()
+    form.category_id.choices = [(0, '— بدون دسته‌بندی —')] + [(c.id, c.title) for c in cats]
+
+    if form.validate_on_submit():
+        post = post or Post()
+        was_new = post.id is None
+
+        # فایل تصویر شاخص (اختیاری)
+        featured = None
+        if 'featured_image' in request.files and request.files['featured_image'].filename:
+            featured = save_file(request.files['featured_image'], 'posts')
+
+        # پرکردن دستی — tags (relationship) و featured_image (فایل) جداگانه مدیریت می‌شوند
+        for name, field in form._fields.items():
+            if name in ('tags', 'featured_image', 'csrf_token', 'submit'):
+                continue
+            setattr(post, name, field.data)
+        if featured:
+            post.featured_image = featured
+
+        if not post.slug:
+            post.slug = unique_slug(Post, post.title or 'post', exclude_id=post.id)
+
+        # دسته‌بندی: 0 → None
+        if not post.category_id:
+            post.category_id = None
+
+        # نویسنده و تاریخ انتشار
+        if was_new:
+            post.author_id = current_user.id
+        if post.status == 'published' and not post.published_at:
+            from datetime import datetime
+            post.published_at = datetime.utcnow()
+
+        # برچسب‌ها (با کاما فارسی/انگلیسی)
+        post.tags = []
+        tags_raw = (request.form.get('tags') or '').replace('،', ',')
+        for name in tags_raw.split(','):
+            name = name.strip()
+            if not name:
+                continue
+            tag = Tag.query.filter_by(name=name).first()
+            if not tag:
+                tag = Tag(name=name, slug=slugify(name) or f'tag-{Tag.query.count() + 1}')
+                db.session.add(tag)
+            post.tags.append(tag)
+
+        db.session.add(post)
+        db.session.commit()
+
+        Log.log_action('post_save', user_id=current_user.id,
+                       entity_type='post', entity_id=post.id,
+                       description=f'مقاله ذخیره شد: {post.title}')
+
+        flash('مقاله با موفقیت ذخیره شد.', 'success')
+        return redirect(url_for('admin.posts'))
+
+    # پیش‌پرکردن برچسب‌ها برای ویرایش
+    if post and request.method == 'GET':
+        form.tags.data = '، '.join(t.name for t in post.tags)
+
+    return render_template('admin/posts/edit.html', form=form, post=post)
+
+
+@admin_bp.route('/posts/<int:post_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def post_delete(post_id):
+    """حذف نرم مقاله"""
+    post = Post.query.get_or_404(post_id)
+    post.delete()
+    Log.log_action('post_delete', user_id=current_user.id,
+                   entity_type='post', entity_id=post_id,
+                   description=f'مقاله حذف شد: {post.title}')
+    flash('مقاله حذف شد.', 'success')
+    return redirect(url_for('admin.posts'))
+
+
 # ==================== MENUS MANAGEMENT ====================
 
 @admin_bp.route('/menus')
@@ -663,13 +784,42 @@ def menus():
     positions = ['header', 'footer', 'mobile', 'sidebar']
     
     for position in positions:
-        menus_dict[position] = Menu.query.filter_by(
+        tops = Menu.query.filter_by(
             position=position,
             is_deleted=False,
             parent_id=None
         ).order_by(Menu.sort_order).all()
+        # فرزندان هر آیتم برای نمایش درختی
+        menus_dict[position] = [
+            (m, m.get_children_ordered()) for m in tops
+        ]
     
     return render_template('admin/menus/list.html', menus=menus_dict)
+
+
+@admin_bp.route('/menus/reorder', methods=['POST'])
+@login_required
+@admin_required
+def menu_reorder():
+    """تغییر ترتیب منوها با درگ‌انددراپ — آرایهٔ JSON از id ها"""
+    from app.services.menu_service import clear_cache as clear_menu_cache
+    
+    data = request.get_json(silent=True) or {}
+    order = data.get('order', [])
+    if not isinstance(order, list):
+        return jsonify(ok=False, error='ساختار نامعتبر'), 400
+    
+    for idx, mid in enumerate(order):
+        try:
+            item = Menu.query.get(int(mid))
+        except (TypeError, ValueError):
+            continue
+        if item:
+            item.sort_order = idx
+    db.session.commit()
+    
+    clear_menu_cache()
+    return jsonify(ok=True, count=len(order))
 
 
 @admin_bp.route('/menus/create', methods=['GET', 'POST'])
@@ -691,12 +841,29 @@ def menu_edit(menu_id=None):
         # Menu model requires a unique slug; auto-generate one if missing.
         if not getattr(menu, 'slug', None):
             menu.slug = unique_slug(Menu, menu.title or 'menu', exclude_id=menu.id)
+        # فیلدهای خام (والد/ترتیب/بولی‌ها) — چک‌باکس ارسال‌نشده = خاموش
+        parent_raw = request.form.get('parent_id', '')
+        if parent_raw and parent_raw.isdigit():
+            parent = Menu.query.get(int(parent_raw))
+            menu.parent_id = parent.id if parent else None
+        else:
+            menu.parent_id = None
+        sort_raw = request.form.get('sort_order', '0').strip()
+        menu.sort_order = int(sort_raw) if sort_raw.isdigit() else 0
+        menu.no_follow = bool(request.form.get('no_follow'))
+        menu.is_mega_menu = bool(request.form.get('is_mega_menu'))
+        menu.is_active = bool(request.form.get('is_active'))
+        menu.show_logged_in = bool(request.form.get('show_logged_in'))
+        menu.show_guest = bool(request.form.get('show_guest'))
+        # جلوگیری از والد‌شدن خود item
+        if menu.parent_id == menu.id:
+            menu.parent_id = None
         menu.save()
-        
+
         # Clear cache
-        cache.delete('menu_header')
-        cache.delete('menu_footer')
-        
+        from app.services.menu_service import clear_cache as clear_menu_cache
+        clear_menu_cache()
+
         flash('منو با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.menus'))
     
@@ -716,11 +883,14 @@ def menu_delete(menu_id):
     """Delete menu item"""
     
     menu = Menu.query.get_or_404(menu_id)
+    # فرزندان هم حذف شوند (نرم)
+    for child in menu.children.all():
+        child.delete()
     menu.delete()
-    
-    cache.delete('menu_header')
-    cache.delete('menu_footer')
-    
+
+    from app.services.menu_service import clear_cache as clear_menu_cache
+    clear_menu_cache()
+
     flash('منو با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.menus'))
 
@@ -1535,6 +1705,33 @@ def agency_lead_update_status(lead_id):
 
 # ==================== THEME RESEARCH (RTL-Theme Market Analysis) ====================
 
+@admin_bp.route('/theme/home-builder', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def home_builder():
+    """صفحه‌ساز خانه — ترتیب/نمایش/عنوان بخش‌های صفحهٔ اول (درگ‌انددراپ)"""
+    from app.services.home_builder_service import get_sections, save_sections, SECTION_LABELS
+
+    if request.method == 'POST':
+        sections = []
+        for key in request.form.getlist('section_key[]'):
+            if not key:
+                continue
+            sections.append({
+                'key': key,
+                'title': request.form.get(f'title_{key}', '').strip()[:120],
+                'enabled': key in request.form.getlist('enabled[]'),
+            })
+        save_sections(sections or get_sections())
+        flash('چیدمان صفحهٔ اول ذخیره شد.', 'success')
+        return redirect(url_for('admin.home_builder'))
+
+    sections = get_sections()
+    return render_template('admin/theme/home_builder.html',
+                           sections=sections,
+                           section_labels=SECTION_LABELS)
+
+
 @admin_bp.route('/theme-research')
 @login_required
 @admin_required
@@ -1601,9 +1798,17 @@ def ticket_detail(ticket_id):
 
         if action == 'reply':
             message = request.form.get('message', '').strip()
-            if message:
+            attachment = None
+            error = None
+            if 'attachment' in request.files:
+                from app.services.ticket_file_service import save_ticket_attachment
+                attachment, error = save_ticket_attachment(request.files['attachment'])
+            if error:
+                flash(f'پیوست نشد: {error}', 'error')
+            if message or attachment:
                 ticket.add_message(
-                    message, user_id=current_user.id, is_admin=True
+                    message or '(پیوست)', user_id=current_user.id, is_admin=True,
+                    attachment=attachment,
                 )
                 Notification.send_to_user(
                     user_id=ticket.user_id,
@@ -1809,6 +2014,56 @@ def subscribers(page=1):
         page=page, per_page=50, error_out=False
     )
     return render_template('admin/subscribers/list.html', subs=subs)
+
+
+@admin_bp.route('/subscribers/send', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def subscribers_send():
+    """ارسال گروهی ایمیل خبرنامه (الگوی قالب‌های راست‌چین)
+
+    بدون SMTP، ایمیل‌ها در لاگ ثبت می‌شوند (console fallback) و گزارش
+    «در لاگ ثبت شد» برمی‌گردد — خطا نمی‌دهد.
+    """
+    from app.services.email_service import EmailService
+
+    if request.method == 'POST':
+        subject = (request.form.get('subject') or '').strip()
+        body_html = (request.form.get('body') or '').strip()
+
+        if len(subject) < 3 or len(body_html) < 10:
+            flash('موضوع حداقل ۳ و متن حداقل ۱۰ کاراکتر باشد.', 'error')
+            return redirect(url_for('admin.subscribers_send'))
+
+        recipients = Subscriber.query.filter(Subscriber.unsubscribed_at.is_(None)).all()
+        sent = logged = 0
+        for sub in recipients:
+            ok = EmailService.send(
+                to=sub.email,
+                subject=subject,
+                html_body=body_html,
+            )
+            if ok:
+                sent += 1
+            else:
+                # بدون SMTP، سرویس در لاگ ثبت کرده و False برمی‌گرداند
+                logged += 1
+
+        Log.log_action('newsletter_send', user_id=current_user.id,
+                       description=f'خبرنامه ارسال شد: «{subject}» به {len(recipients)} مشترک '
+                                   f'(ارسال {sent}، ثبت‌درلاگ {logged})')
+
+        if sent:
+            flash(f'✓ خبرنامه به {sent} مشترک ایمیل شد.', 'success')
+        else:
+            flash(f'ارسال واقعی نشد — SMTP در دسترس نیست ({logged} ایمیل؛ جزئیات در لاگ سرور). '
+                  f'برای فعال‌سازی، MAIL_SERVER را در .env تنظیم کنید.', 'info')
+        if len(recipients) - sent - logged:
+            flash('برخی مشترکین رد شدند.', 'warning')
+        return redirect(url_for('admin.subscribers'))
+
+    active_count = Subscriber.query.filter(Subscriber.unsubscribed_at.is_(None)).count()
+    return render_template('admin/subscribers/send.html', active_count=active_count)
 
 
 @admin_bp.route('/subscribers/export')

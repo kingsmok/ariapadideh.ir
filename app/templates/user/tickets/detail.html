@@ -51,6 +51,14 @@
                     <span class="text-muted">{{ msg.created_at|time_ago if msg.created_at else '' }}</span>
                 </div>
                 <div class="ticket-msg-body text-gray-200" style="font-size:0.9rem; line-height:2; white-space:pre-wrap;">{{ msg.message }}</div>
+                    {% if msg.attachment %}
+                    <div style="margin-top:0.45rem;">
+                        <a href="{{ url_for('user.ticket_attachment_download', message_id=msg.id) }}"
+                           class="btn-rahsa-outline" style="padding:0.2rem 0.7rem; font-size:0.75rem; text-decoration:none;">
+                            📎 دانلود پیوست
+                        </a>
+                    </div>
+                    {% endif %}
             </div>
             {% else %}
             <div class="glass-card" style="padding:1.25rem 1.5rem; border-inline-start:3px solid var(--accent-gold); margin-inline-start:2.5rem;">
@@ -59,6 +67,14 @@
                     <span class="text-muted">{{ msg.created_at|time_ago if msg.created_at else '' }}</span>
                 </div>
                 <div class="ticket-msg-body text-gray-200" style="font-size:0.9rem; line-height:2; white-space:pre-wrap;">{{ msg.message }}</div>
+                    {% if msg.attachment %}
+                    <div style="margin-top:0.45rem;">
+                        <a href="{{ url_for('user.ticket_attachment_download', message_id=msg.id) }}"
+                           class="btn-rahsa-outline" style="padding:0.2rem 0.7rem; font-size:0.75rem; text-decoration:none;">
+                            📎 دانلود پیوست
+                        </a>
+                    </div>
+                    {% endif %}
             </div>
             {% endif %}
             {% endfor %}
@@ -67,11 +83,16 @@
         <!-- Reply -->
         {% if ticket.status != 'closed' %}
         <div class="glass-card mt-4" style="padding:1.5rem;">
-            <form action="{{ url_for('user.ticket_detail', ticket_id=ticket.id) }}" method="POST" novalidate>
+            <form action="{{ url_for('user.ticket_detail', ticket_id=ticket.id) }}" method="POST" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
                 <input type="hidden" name="action" value="reply">
                 <label for="tk_reply" class="form-label-rahsa">پاسخ شما</label>
                 <textarea id="tk_reply" name="message" class="form-control-rahsa" rows="4" required placeholder="پیام خود را بنویسید…"></textarea>
+                <div style="margin-top:0.6rem;">
+                    <label class="form-label-rahsa" style="font-size:0.8rem;">📎 پیوست (اختیاری — تصویر/PDF/ZIP تا ۵ مگابایت)</label>
+                    <input type="file" name="attachment" class="form-control-rahsa" style="padding:0.4rem;"
+                           accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.zip,.rar,.7z,.txt,.doc,.docx,.xls,.xlsx,.csv">
+                </div>
                 <button type="submit" class="btn-rahsa-cta mt-3" style="padding:0.6rem 1.4rem;">ارسال پاسخ</button>
             </form>
         </div>

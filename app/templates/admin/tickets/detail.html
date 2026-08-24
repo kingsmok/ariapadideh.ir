@@ -54,6 +54,14 @@
                 <strong style="color:var(--text-white);">پشتیبانی</strong> · {{ msg.created_at|time_ago if msg.created_at else '' }}
             </div>
             <div style="font-size:.88rem; line-height:2; white-space:pre-wrap; color:var(--text-gray-200);">{{ msg.message }}</div>
+            {% if msg.attachment %}
+            <div style="margin-top:0.4rem;">
+                <a href="{{ url_for('user.ticket_attachment_download', message_id=msg.id) }}"
+                   class="btn-rahsa-outline" style="padding:0.2rem 0.7rem; font-size:0.75rem; text-decoration:none;" target="_blank">
+                    📎 دانلود پیوست
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="glass-card" style="padding:1.2rem 1.4rem; border-inline-start:3px solid var(--accent-gold); margin-inline-start:0;">
@@ -61,6 +69,14 @@
                 <strong style="color:var(--text-white);">{{ ticket.user.full_name if ticket.user else 'کاربر' }}</strong> · {{ msg.created_at|time_ago if msg.created_at else '' }}
             </div>
             <div style="font-size:.88rem; line-height:2; white-space:pre-wrap; color:var(--text-gray-200);">{{ msg.message }}</div>
+            {% if msg.attachment %}
+            <div style="margin-top:0.4rem;">
+                <a href="{{ url_for('user.ticket_attachment_download', message_id=msg.id) }}"
+                   class="btn-rahsa-outline" style="padding:0.2rem 0.7rem; font-size:0.75rem; text-decoration:none;" target="_blank">
+                    📎 دانلود پیوست
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
         {% endfor %}
@@ -68,11 +84,16 @@
 
     <!-- Reply -->
     <div class="glass-card" style="padding:1.5rem; margin-top:1.5rem;">
-        <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST" novalidate>
+        <form action="{{ url_for('admin.ticket_detail', ticket_id=ticket.id) }}" method="POST" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
             <input type="hidden" name="action" value="reply">
             <label class="form-label" style="color:var(--text-white); font-size:.85rem; margin-bottom:.5rem; display:block;">پاسخ پشتیبانی (به کاربر اطلاع‌رسانی می‌شود)</label>
             <textarea name="message" class="form-control" rows="5" required placeholder="پاسخ خود را بنویسید…"></textarea>
+            <div style="margin-top:0.6rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.8rem; margin-bottom:.35rem; display:block;">📎 پیوست (اختیاری — تا ۵ مگابایت)</label>
+                <input type="file" name="attachment" class="form-control" style="padding:0.4rem;"
+                       accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.zip,.rar,.7z,.txt,.doc,.docx,.xls,.xlsx,.csv">
+            </div>
             <button type="submit" class="btn-rahsa-cta" style="padding:.6rem 1.5rem; margin-top:.8rem;">ارسال پاسخ</button>
         </form>
     </div>
