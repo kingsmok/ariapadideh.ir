@@ -30,7 +30,7 @@ from app.services.media_service import MediaService
 from app.services.notification_service import NotificationService
 from app.utils.helpers import (
     save_file, delete_file, resize_image, 
-    get_pagination_data
+    get_pagination_data, slugify, unique_slug
 )
 
 
@@ -320,8 +320,21 @@ def product_edit(product_id=None):
             old_values = product.to_dict()
         
         product = product or Product()
-        form.populate_obj(product)
-        
+        # Populate all scalar/simple fields, but skip relationship-backed and
+        # file-upload fields — those are assigned from real model objects / saved
+        # files below to avoid assigning raw ints/None to relationships or wiping
+        # stored file paths.
+        _skip = {'categories', 'tags', 'images', 'featured_image', 'csrf_token', 'submit'}
+        for field in form:
+            if field.name in _skip:
+                continue
+            if hasattr(product, field.name):
+                setattr(product, field.name, field.data)
+
+        # Ensure a slug exists (Product.slug is NOT NULL & unique)
+        if not getattr(product, 'slug', None):
+            product.slug = unique_slug(Product, product.title or 'product', exclude_id=product.id)
+
         # Handle categories
         if form.categories.data:
             product.categories = Category.query.filter(
@@ -427,7 +440,10 @@ def category_edit(category_id=None):
     if form.validate_on_submit():
         category = category or Category()
         form.populate_obj(category)
-        
+        # Category.slug is NOT NULL & unique — auto-generate if left blank
+        if not getattr(category, 'slug', None):
+            category.slug = unique_slug(Category, category.title or 'category', exclude_id=category.id)
+
         # Handle image upload
         if form.image.data:
             filename = MediaService.save_category_image(form.image.data)
@@ -525,6 +541,9 @@ def page_edit(page_id=None):
     if form.validate_on_submit():
         page_obj = page_obj or Page()
         form.populate_obj(page_obj)
+        # Page.slug is NOT NULL & unique — auto-generate if left blank
+        if not getattr(page_obj, 'slug', None):
+            page_obj.slug = unique_slug(Page, page_obj.title or 'page', exclude_id=page_obj.id)
         page_obj.save()
         
         Log.log_action(
@@ -616,6 +635,9 @@ def menu_edit(menu_id=None):
     if form.validate_on_submit():
         menu = menu or Menu()
         form.populate_obj(menu)
+        # Menu model requires a unique slug; auto-generate one if missing.
+        if not getattr(menu, 'slug', None):
+            menu.slug = unique_slug(Menu, menu.title or 'menu', exclude_id=menu.id)
         menu.save()
         
         # Clear cache
@@ -687,6 +709,7 @@ def slider_edit(slider_id=None):
         else:
             slider = Slider(
                 title=title,
+                slug=unique_slug(Slider, title or 'slider'),
                 position=position,
                 autoplay=autoplay
             )

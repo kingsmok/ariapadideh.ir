@@ -223,79 +223,113 @@
                 <span>داشبورد</span>
             </a>
 
+            {% set ep = request.endpoint or '' %}
             <div class="admin-sidebar-section">فروشگاه</div>
 
-            <a href="{{ url_for('admin.products_list') if url_for('admin.products_list', _external=False) else '#' }}"
-               class="admin-sidebar-link">
+            <a href="{{ url_for('admin.products') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.product') else '' }}">
                 <span class="icon" aria-hidden="true">📦</span>
                 <span>محصولات</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.categories') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.categor') else '' }}">
                 <span class="icon" aria-hidden="true">🗂️</span>
                 <span>دسته‌بندی‌ها</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
-                <span class="icon" aria-hidden="true">🏷️</span>
-                <span>برندها</span>
-            </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.orders') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.order') else '' }}">
                 <span class="icon" aria-hidden="true">🛒</span>
                 <span>سفارشات</span>
             </a>
 
             <div class="admin-sidebar-section">محتوا</div>
 
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.pages') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.page') else '' }}">
                 <span class="icon" aria-hidden="true">📄</span>
                 <span>صفحات</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('public.blog') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('blog') else '' }}">
                 <span class="icon" aria-hidden="true">📰</span>
-                <span>مقالات</span>
+                <span>مقالات / وبلاگ</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.sliders') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.slider') else '' }}">
                 <span class="icon" aria-hidden="true">🎬</span>
                 <span>اسلایدرها</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.banners') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.banner') else '' }}">
                 <span class="icon" aria-hidden="true">🖼️</span>
                 <span>بنرها</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.faqs') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.faq') else '' }}">
                 <span class="icon" aria-hidden="true">❓</span>
                 <span>سوالات متداول</span>
             </a>
+            <a href="{{ url_for('admin.menus') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.menu') else '' }}">
+                <span class="icon" aria-hidden="true">🧭</span>
+                <span>منوها</span>
+            </a>
+            <a href="{{ url_for('admin.media') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.media') else '' }}">
+                <span class="icon" aria-hidden="true">🎞️</span>
+                <span>رسانه‌ها</span>
+            </a>
 
-            <div class="admin-sidebar-section">کاربران</div>
+            <div class="admin-sidebar-section">کاربران و ارتباط</div>
 
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.users') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.user') else '' }}">
                 <span class="icon" aria-hidden="true">👥</span>
                 <span>کاربران</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.contacts') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.contact') else '' }}">
                 <span class="icon" aria-hidden="true">💬</span>
                 <span>پیام‌ها</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
-                <span class="icon" aria-hidden="true">📄</span>
+            <a href="{{ url_for('admin.resumes') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.resume') else '' }}">
+                <span class="icon" aria-hidden="true">📑</span>
                 <span>رزومه‌ها</span>
             </a>
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.comments') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.comment') else '' }}">
+                <span class="icon" aria-hidden="true">🗨️</span>
+                <span>نظرات</span>
+            </a>
+            <a href="{{ url_for('admin.agency_services') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.agency') else '' }}">
                 <span class="icon" aria-hidden="true">💼</span>
                 <span>آژانس / خدمات</span>
             </a>
 
             <div class="admin-sidebar-section">سیستم</div>
 
-            <a href="#" class="admin-sidebar-link">
+            <a href="{{ url_for('admin.settings') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.settings') else '' }}">
                 <span class="icon" aria-hidden="true">⚙️</span>
                 <span>تنظیمات</span>
+            </a>
+            <a href="{{ url_for('admin.logs') }}"
+               class="admin-sidebar-link {{ 'active' if ep.startswith('admin.logs') else '' }}">
+                <span class="icon" aria-hidden="true">📜</span>
+                <span>لاگ‌ها</span>
+            </a>
+            <a href="{{ url_for('admin.profile') }}"
+               class="admin-sidebar-link {{ 'active' if ep == 'admin.profile' else '' }}">
+                <span class="icon" aria-hidden="true">👤</span>
+                <span>پروفایل مدیریت</span>
             </a>
             <a href="{{ url_for('public.home') }}" class="admin-sidebar-link" target="_blank" rel="noopener">
                 <span class="icon" aria-hidden="true">🌐</span>
                 <span>مشاهده سایت</span>
             </a>
-            <a href="{{ url_for('admin.logout') if url_for('admin.logout', _external=False) else '#' }}"
+            <a href="{{ url_for('admin.logout') }}"
                class="admin-sidebar-link" style="color:var(--accent-danger);">
                 <span class="icon" aria-hidden="true">🚪</span>
                 <span>خروج</span>

@@ -67,7 +67,7 @@ class UserForm(FlaskForm):
         Length(min=8, message='رمز عبور باید حداقل ۸ کاراکتر باشد')
     ])
     
-    role_id = SelectField('نقش', coerce=int, validators=[Optional()])
+    role_id = SelectField('نقش', coerce=int, validate_choice=False, validators=[Optional()])
     
     is_active = BooleanField('فعال')
     is_verified = BooleanField('تأیید شده')
@@ -143,18 +143,18 @@ class ProductForm(FlaskForm):
         NumberRange(min=0)
     ])
     
-    stock_status = SelectField('وضعیت موجودی', choices=[
+    stock_status = SelectField('وضعیت موجودی', default='in_stock', choices=[
         ('in_stock', 'موجود'),
         ('out_of_stock', 'ناموجود'),
         ('limited', 'محدود'),
         ('preorder', 'پیش‌سفارش')
     ])
     
-    brand_id = SelectField('برند', coerce=int, validators=[Optional()])
+    brand_id = SelectField('برند', coerce=int, validate_choice=False, validators=[Optional()])
     
-    categories = SelectMultipleField('دسته‌بندی‌ها', coerce=int)
+    categories = SelectMultipleField('دسته‌بندی‌ها', coerce=int, validate_choice=False)
     
-    tags = SelectMultipleField('برچسب‌ها', coerce=int)
+    tags = SelectMultipleField('برچسب‌ها', coerce=int, validate_choice=False)
     
     featured_image = FileField('تصویر اصلی', validators=[
         FileAllowed(['jpg', 'jpeg', 'png', 'webp'], 'فقط تصاویر مجاز هستند')
@@ -194,7 +194,7 @@ class CategoryForm(FlaskForm):
     
     description = TextAreaField('توضیحات')
     
-    parent_id = SelectField('دسته‌بندی والد', coerce=int, validators=[Optional()])
+    parent_id = SelectField('دسته‌بندی والد', coerce=int, validate_choice=False, validators=[Optional()])
     
     icon = StringField('آیکون', description='نام کلاس FontAwesome یا SVG')
     
@@ -208,7 +208,7 @@ class CategoryForm(FlaskForm):
     
     color = StringField('رنگ', description='کد هگزادسیمال (مثال: #FF5733)')
     
-    sort_order = IntegerField('ترتیب نمایش', validators=[NumberRange(min=0)])
+    sort_order = IntegerField('ترتیب نمایش', default=0, validators=[Optional(), NumberRange(min=0)])
     
     is_active = BooleanField('فعال')
     is_menu = BooleanField('نمایش در منو')
@@ -239,7 +239,7 @@ class PageForm(FlaskForm):
     
     content = TextAreaField('محتوا')
     
-    page_type = SelectField('نوع صفحه', choices=[
+    page_type = SelectField('نوع صفحه', default='default', choices=[
         ('default', 'پیش‌فرض'),
         ('home', 'صفحه اصلی'),
         ('about', 'درباره ما'),
@@ -250,7 +250,7 @@ class PageForm(FlaskForm):
         ('landing', 'صفحه فرود')
     ])
     
-    template = SelectField('قالب', choices=[
+    template = SelectField('قالب', default='default', choices=[
         ('default', 'پیش‌فرض'),
         ('fullwidth', 'تمام عرض'),
         ('sidebar', 'سایدبار'),
@@ -263,7 +263,7 @@ class PageForm(FlaskForm):
     show_breadcrumb = BooleanField('نمایش مسیر')
     show_sidebar = BooleanField('نمایش سایدبار')
     
-    sort_order = IntegerField('ترتیب نمایش', validators=[NumberRange(min=0)])
+    sort_order = IntegerField('ترتیب نمایش', default=0, validators=[Optional(), NumberRange(min=0)])
     
     is_active = BooleanField('فعال')
     
@@ -303,11 +303,11 @@ class PostForm(FlaskForm):
         FileAllowed(['jpg', 'jpeg', 'png', 'webp'], 'فقط تصاویر مجاز هستند')
     ])
     
-    category_id = SelectField('دسته‌بندی', coerce=int, validators=[Optional()])
+    category_id = SelectField('دسته‌بندی', coerce=int, validate_choice=False, validators=[Optional()])
     
     tags = StringField('برچسب‌ها', description='برچسب‌ها را با کاما جدا کنید')
     
-    status = SelectField('وضعیت', choices=[
+    status = SelectField('وضعیت', default='draft', choices=[
         ('draft', 'پیش‌نویس'),
         ('published', 'منتشر شده'),
         ('scheduled', 'زمان‌بندی شده'),
@@ -344,16 +344,16 @@ class MenuForm(FlaskForm):
     
     icon = StringField('آیکون', description='کلاس FontAwesome (مثال: fa fa-home)')
     
-    position = SelectField('موقعیت', choices=[
+    position = SelectField('موقعیت', default='header', choices=[
         ('header', 'هدر'),
         ('footer', 'فوتر'),
         ('mobile', 'موبایل'),
         ('sidebar', 'سایدبار')
     ])
     
-    parent_id = SelectField('منوی والد', coerce=int, validators=[Optional()])
+    parent_id = SelectField('منوی والد', coerce=int, validate_choice=False, validators=[Optional()])
     
-    target = SelectField('باز شدن لینک', choices=[
+    target = SelectField('باز شدن لینک', default='_self', choices=[
         ('_self', 'در همان تب'),
         ('_blank', 'در تب جدید')
     ])
@@ -369,7 +369,7 @@ class MenuForm(FlaskForm):
     show_logged_in = BooleanField('نمایش برای کاربران')
     show_guest = BooleanField('نمایش برای مهمانان')
     
-    sort_order = IntegerField('ترتیب', validators=[NumberRange(min=0)])
+    sort_order = IntegerField('ترتیب', default=0, validators=[Optional(), NumberRange(min=0)])
     
     submit = SubmitField('ذخیره')
 
@@ -406,21 +406,21 @@ class BannerForm(FlaskForm):
     
     url = StringField('لینک', validators=[Optional()])
     
-    position = SelectField('موقعیت', choices=[
+    position = SelectField('موقعیت', default='home_top', choices=[
         ('home_top', 'بالای صفحه اصلی'),
         ('home_middle', 'میانه صفحه اصلی'),
         ('home_bottom', 'پایین صفحه اصلی'),
         ('sidebar', 'سایدبار')
     ])
     
-    size = SelectField('اندازه', choices=[
+    size = SelectField('اندازه', default='medium', choices=[
         ('small', 'کوچک'),
         ('medium', 'متوسط'),
         ('large', 'بزرگ'),
         ('wide', 'عریض')
     ])
     
-    sort_order = IntegerField('ترتیب', validators=[NumberRange(min=0)])
+    sort_order = IntegerField('ترتیب', default=0, validators=[Optional(), NumberRange(min=0)])
     
     start_date = DateTimeField('تاریخ شروع', format='%Y-%m-%d %H:%M', validators=[Optional()])
     end_date = DateTimeField('تاریخ پایان', format='%Y-%m-%d %H:%M', validators=[Optional()])

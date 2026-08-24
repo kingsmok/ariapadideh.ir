@@ -482,3 +482,31 @@ def inject_heading_ids(html_content: str, min_level: int = 2, max_level: int = 3
     )
     return pattern.sub(repl, html_content)
 
+
+
+def unique_slug(model, text, slug_field='slug', exclude_id=None, max_attempts=1000):
+    """Generate a guaranteed-unique slug for a SQLAlchemy model.
+
+    Falls back to a short random token when ``text`` produces an empty slug
+    (e.g. purely Persian input), so models with a NOT NULL/unique ``slug``
+    never raise an IntegrityError on create.
+    """
+    import secrets
+    base = slugify(text)
+    if not base:
+        table = getattr(model, '__tablename__', 'item') or 'item'
+        base = f"{table}-{secrets.token_hex(3)}"
+
+    slug = base
+    n = 1
+    field = getattr(model, slug_field)
+    for _ in range(max_attempts):
+        q = model.query.filter(field == slug)
+        if exclude_id is not None:
+            q = q.filter(model.id != exclude_id)
+        if not q.first():
+            return slug
+        slug = f"{base}-{n}"
+        n += 1
+    # Extremely unlikely fallback
+    return f"{base}-{secrets.token_hex(3)}"

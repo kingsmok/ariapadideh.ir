@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}کامپوننت‌های صفحه: {{ page.title }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+        <div>
+            <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">🧩 کامپوننت‌های صفحه</h2>
+            <p style="margin:0.35rem 0 0; color:var(--text-gray-400); font-size:0.85rem;">
+                صفحه: <span class="text-yellow font-bold">{{ page.title }}</span>
+                (نوع: {{ page.page_type }})
+            </p>
+        </div>
+        <a href="{{ url_for('admin.pages') }}" class="btn-rahsa-outline">↩ بازگشت به لیست صفحات</a>
+    </div>
+
+    {% if components %}
+        <div style="display:flex; flex-direction:column; gap:0.85rem;">
+            {% for c in components %}
+            <div class="glass-card" style="padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.85rem; flex:1; min-width:240px;">
+                    <span class="badge-rahsa gold">{{ c.component_type }}</span>
+                    <div>
+                        <div class="text-white font-bold">
+                            {{ c.title or 'بدون عنوان' }}
+                            {% if not c.is_active %}<span class="badge-rahsa danger" style="font-size:0.7rem;">غیرفعال</span>{% endif %}
+                        </div>
+                        {% if c.subtitle %}<div class="text-muted" style="font-size:0.8rem; margin-top:0.2rem;">{{ truncate_text(c.subtitle, 90) }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size:0.8rem;">
+                    ترتیب: {{ c.sort_order }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align:center; padding:3rem; color:var(--text-gray-400);">
+            <div class="empty-state-icon mx-auto" style="margin-bottom:1rem;" aria-hidden="true">🧩</div>
+            <p>این صفحه هنوز کامپوننتی ندارد.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
