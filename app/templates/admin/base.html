@@ -310,6 +310,11 @@
 
             <div class="admin-sidebar-section">سیستم</div>
 
+            <a href="{{ url_for('admin.theme_research') }}"
+               class="admin-sidebar-link {{ 'active' if ep == 'admin.theme_research' else '' }}">
+                <span class="icon" aria-hidden="true">🎨</span>
+                <span>تحلیل بازار قالب‌ها</span>
+            </a>
             <a href="{{ url_for('admin.settings') }}"
                class="admin-sidebar-link {{ 'active' if ep.startswith('admin.settings') else '' }}">
                 <span class="icon" aria-hidden="true">⚙️</span>

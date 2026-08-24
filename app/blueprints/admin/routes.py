@@ -1474,3 +1474,43 @@ def agency_lead_update_status(lead_id):
         flash('وضعیت لید با موفقیت بروزرسانی شد.', 'success')
     return redirect(url_for('admin.agency_leads'))
 
+
+# ==================== THEME RESEARCH (RTL-Theme Market Analysis) ====================
+
+@admin_bp.route('/theme-research')
+@login_required
+@admin_required
+def theme_research():
+    """Market research: RTL-Theme business WordPress themes analysis.
+
+    Data is a static reference dataset (app/data/theme_research.py) collected
+    from https://www.rtl-theme.com/category/wp-themes/business-wordpress/
+    """
+    from app.data.theme_research import (
+        RESEARCH_META, THEMES, DESIGN_TRENDS, FEATURE_MATRIX,
+        MARKETPLACE_NOTES, SELECTION_CRITERIA, CORPORATE_PAGE_BLUEPRINT,
+        theme_research_summary,
+    )
+
+    themes_sorted = sorted(THEMES, key=lambda t: t['sales'], reverse=True)
+    categories = [
+        ('all', 'همه'),
+        ('corporate', 'شرکتی'),
+        ('multipurpose', 'چندمنظوره'),
+        ('specialized', 'تخصصی'),
+    ]
+
+    return render_template(
+        'admin/theme_research.html',
+        meta=RESEARCH_META,
+        themes=themes_sorted,
+        categories=categories,
+        trends=DESIGN_TRENDS,
+        feature_matrix=FEATURE_MATRIX,
+        marketplace_notes=MARKETPLACE_NOTES,
+        selection_criteria=SELECTION_CRITERIA,
+        page_blueprint=CORPORATE_PAGE_BLUEPRINT,
+        summary=theme_research_summary(),
+    )
+
+
