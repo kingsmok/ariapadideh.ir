@@ -304,7 +304,8 @@ function refreshPaymentCards() {
     });
     const gw = document.getElementById('gateway-picker');
     const online = document.querySelector('input[name="payment_method"][value="online"]');
-    if (gw) gw.style.display = (online && online.checked) ? 'flex' : 'none';
+    // با کلاس d-none مخفی می‌کنیم چون .d-flex با !important است و style.display اثر ندارد
+    if (gw) gw.classList.toggle('d-none', !(online && online.checked));
 }
 document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
     radio.addEventListener('change', refreshPaymentCards);

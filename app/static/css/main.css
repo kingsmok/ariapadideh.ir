@@ -2183,3 +2183,92 @@ html[dir="ltr"] .mega-menu-panel {
     inset-inline-end: auto;
     inset-inline-start: 0;
 }
+
+/* ============================================================
+   Utilities — Bootstrap-compatible subset used by templates
+   (گاترهای عمودی گرید، ستون‌ها، اسپیسینگ، بج، دکمه ثانویه، اسپینر)
+   ============================================================ */
+
+/* --- گاترهای عمودی ردیف‌ها (g-2/g-3/g-4/gy-3/gy-4) ---
+   بدون Bootstrap، ردیف‌های wrap‌شده فاصلهٔ عمودی نداشتند. */
+.row.g-2 > * { padding-block: 0.25rem; }
+.row.g-3 > * { padding-block: 0.5rem; }
+.row.g-4 > * { padding-block: 0.75rem; }
+.row.gy-3 > * { padding-block: 0.5rem; }
+.row.gy-4 > * { padding-block: 0.75rem; }
+.row.gy-5 > * { padding-block: 1rem; }
+
+/* --- ستون‌های استفاده‌شده که در گرید نبودند --- */
+.col-3 { flex: 0 0 25%; max-width: 25%; }
+.col-6 { flex: 0 0 50%; max-width: 50%; }
+@media (min-width: 768px) {
+    .col-md-2 { flex: 0 0 16.6667%; max-width: 16.6667%; }
+    .text-md-start { text-align: start; }
+}
+
+/* --- اسپیسینگ و فلکس --- */
+.mb-1 { margin-bottom: 0.25rem; }
+.pt-3 { padding-top: 1rem; }
+.pt-4 { padding-top: 1.5rem; }
+.my-5 { margin-block: 3rem; }
+.mt-auto { margin-top: auto; }
+.flex-shrink-0 { flex-shrink: 0; }
+.align-items-baseline { align-items: baseline; }
+.d-inline { display: inline; }
+.text-start { text-align: start; }
+
+/* --- بج (نشان درگاه‌ها در تسویه حساب) --- */
+.badge {
+    display: inline-block;
+    padding: 0.35em 0.7em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.4rem;
+}
+
+/* --- دکمهٔ ثانویه (صفحات پرداخت/سفارش) --- */
+.btn-rahsa-secondary {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-gray-300, #cbd5e1) !important;
+    font-weight: 700;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    transition: var(--transition);
+    text-decoration: none;
+}
+.btn-rahsa-secondary:hover {
+    background: var(--glass-hover-bg, rgba(255,255,255,0.06));
+    border-color: var(--glass-hover-border, var(--glass-border));
+    color: var(--text-white, #fff) !important;
+    transform: translateY(-1px);
+}
+
+/* --- اسپینر (دکمهٔ ثبت سفارش) --- */
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: -0.125em;
+    border: 0.14em solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: rahsa-spin 0.75s linear infinite;
+}
+.spinner-border-sm {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-width: 0.11em;
+}
+@keyframes rahsa-spin {
+    to { transform: rotate(360deg); }
+}
