@@ -559,3 +559,112 @@ class TestFullFlow:
         order, _ = _make_order(app)
         resp = client.get(f'/order/{order.order_number}/card-payment')
         assert resp.status_code == 200
+
+
+# ==================== Production CSRF readiness ====================
+
+class TestCsrfProductionReadiness:
+    """در production (WTF_CSRF_ENABLED=True) فرم‌های قالب باید فیلد csrf_token داشته
+    باشند وگرنه ارسال آن‌ها 400 می‌شود (بایدِ قبلی checkout/payment_mock/…)."""
+
+    @pytest.fixture()
+    def csrf_app(self, tmp_path):
+        os.environ['DATABASE_URL'] = 'sqlite://'
+        os.environ['CACHE_TYPE'] = 'SimpleCache'
+        os.environ['SESSION_TYPE'] = 'filesystem'
+        os.environ['ENABLED_PAYMENT_GATEWAYS'] = 'mock,zarinpal'
+        os.environ['PAYMENT_CURRENCY_UNIT'] = 'toman'
+        app = create_app('testing')
+        app.config.update(
+            TESTING=True,
+            WTF_CSRF_ENABLED=True,   # ← شبیه production
+            SQLALCHEMY_DATABASE_URI='sqlite://',
+            CACHE_TYPE='SimpleCache',
+            SERVER_NAME='localhost',
+        )
+        with app.app_context():
+            db.create_all()
+            _seed_minimal()
+            yield app
+            db.session.remove()
+            db.drop_all()
+
+    def _form_fields(self, html):
+        """فیلدهای hidden + name=action موجود در فرم POST قالب را استخراج می‌کند."""
+        import re as _re
+        fields = {}
+        form = _re.search(r'<form[^>]*method=["\']POST["\'][^>]*>(.*?)</form>', html, _re.S)
+        assert form, 'فرم POST در قالب پیدا نشد'
+        for m in _re.finditer(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"', form.group(1)):
+            fields[m.group(1)] = m.group(2)
+        return fields
+
+    def _token_from(self, client, path='/product/test-product'):
+        """توکن CSRF صفحه را از فرم‌های موجود قالب برمی‌دارد."""
+        import re as _re
+        html = client.get(path).get_data(as_text=True)
+        m = _re.search(r'name="csrf_token"[^>]*value="([^"]+)"', html)
+        return m.group(1) if m else ''
+
+    def test_checkout_form_carries_csrf_token(self, csrf_app):
+        client = csrf_app.test_client()
+        product = Product.query.first()
+        token = self._token_from(client)
+        client.post('/cart', data={'csrf_token': token, 'product_id': product.id})
+        resp = client.get('/checkout')
+        fields = self._form_fields(resp.get_data(as_text=True))
+        assert 'csrf_token' in fields, 'فرم checkout فیلد csrf_token ندارد → در production خطای 400'
+        # ارسال دقیقاً با فیلدهای خود فرم باید پذیرفته شود
+        data = dict(fields)
+        data.update({
+            'recipient_name': 'تست CSRF', 'recipient_phone': '09121112233',
+            'province': 'تهران', 'city': 'تهران', 'postal_code': '1111111111',
+            'address': 'تست', 'payment_method': 'online', 'gateway': 'mock',
+        })
+        resp = client.post('/checkout', data=data)
+        assert resp.status_code == 302, f'checkout در حالت CSRF فعال پاسخ {resp.status_code} داد'
+        assert '/payment/mock/' in resp.headers['Location']
+
+    def test_payment_mock_form_carries_csrf_token(self, csrf_app):
+        client = csrf_app.test_client()
+        product = Product.query.first()
+        token = self._token_from(client)
+        client.post('/cart', data={'csrf_token': token, 'product_id': product.id})
+        resp = client.get('/checkout')
+        fields = self._form_fields(resp.get_data(as_text=True))
+        assert 'csrf_token' in fields
+        data = dict(fields)
+        data.update({
+            'recipient_name': 'تست CSRF', 'recipient_phone': '09121112233',
+            'province': 'تهران', 'city': 'تهران', 'postal_code': '1111111111',
+            'address': 'تست', 'payment_method': 'online', 'gateway': 'mock',
+        })
+        resp = client.post('/checkout', data=data)
+        assert resp.status_code == 302
+        import re as _re
+        m = _re.search(r'/payment/mock/(ORD-[A-Z0-9\-]+)', resp.headers.get('Location', ''))
+        assert m
+        page = client.get(m.group(0))
+        fields = self._form_fields(page.get_data(as_text=True))
+        assert 'csrf_token' in fields, 'فرم درگاه آزمایشی فیلد csrf_token ندارد → 400 در production'
+        data = dict(fields); data['action'] = 'pay'
+        resp = client.post(m.group(0), data=data)
+        assert resp.status_code == 302
+
+    def test_forgot_password_form_carries_csrf_token(self, csrf_app):
+        client = csrf_app.test_client()
+        resp = client.get('/user/forgot-password')
+        html = resp.get_data(as_text=True)
+        fields = self._form_fields(html)
+        assert 'csrf_token' in fields, 'فرم فراموشی رمز فیلد csrf_token ندارد'
+
+    def test_csrf_rejects_tokenless_post(self, csrf_app):
+        """بدون توکن باید 400 بگیریم (یعنی CSRF واقعاً فعال است و تست‌های بالا معتبرند)."""
+        client = csrf_app.test_client()
+        client.get('/checkout')  # سشن ساخته شود
+        resp = client.post('/checkout', data={
+            'recipient_name': 'بدون توکن', 'recipient_phone': '09121112233',
+            'province': 'تهران', 'city': 'تهران', 'postal_code': '1111111111',
+            'address': 'ت', 'payment_method': 'cash',
+        })
+        assert resp.status_code == 400, 'CSRF فعال نیست — تست‌های production-readiness بی‌معنا می‌شوند'
