@@ -174,6 +174,44 @@ class SettingService:
                                   'ورود/عضویت پیامکی — نیازمند تنظیم SMS_DRIVER در .env'),
         }
 
+        # Payment settings — درگاه‌های پرداخت (محرمانه؛ is_public=False)
+        default_payment = {
+            # زرین‌پال (PG v4)
+            'zarinpal_merchant_id': ('', 'string', False, 'زرین‌پال — مرچنت آیدی (UUID ۳۶ کاراکتری)',
+                                     'از پنل merchant.zarinpal.com'),
+            'zarinpal_sandbox': ('false', 'boolean', False, 'زرین‌پال — حالت Sandbox',
+                                 'برای تست؛ نیازمند مرچنت تست sandbox.zarinpal.com'),
+            # آی‌دی‌پی (v1.1)
+            'idpay_api_key': ('', 'string', False, 'آی‌دی‌پی — کلید API',
+                              'از پنل idpay.ir بخش وب‌سرویس'),
+            'idpay_sandbox': ('false', 'boolean', False, 'آی‌دی‌پی — حالت Sandbox', ''),
+            # دیجی‌پی (UPG)
+            'digipay_client_id': ('', 'string', False, 'دیجی‌پی — Client ID', 'از پشتیبانی دیجی‌پی'),
+            'digipay_client_secret': ('', 'string', False, 'دیجی‌پی — Client Secret', ''),
+            'digipay_username': ('', 'string', False, 'دیجی‌پی — نام کاربری', ''),
+            'digipay_password': ('', 'string', False, 'دیجی‌پی — رمز عبور', ''),
+            'digipay_sandbox': ('false', 'boolean', False, 'دیجی‌پی — حالت تست (uat)', ''),
+            # اسنپ‌پی (اقساطی)
+            'snapppay_client_id': ('', 'string', False, 'اسنپ‌پی — Client ID',
+                                   'از پشتیبانی اسنپ‌پی (مستندات محرمانه ارسال می‌شود)'),
+            'snapppay_client_secret': ('', 'string', False, 'اسنپ‌پی — Client Secret', ''),
+            'snapppay_username': ('', 'string', False, 'اسنپ‌پی — نام کاربری', ''),
+            'snapppay_password': ('', 'string', False, 'اسنپ‌پی — رمز عبور', ''),
+            'snapppay_sandbox': ('false', 'boolean', False, 'اسنپ‌پی — حالت Sandbox', ''),
+            # بانک سپه (الگوی استاندارد شاپرک)
+            'sepah_terminal_id': ('', 'string', False, 'بانک سپه — شماره پایانه (Terminal ID)',
+                                  'پذیرندگی سپه از طریق PSP همکار صادر می‌شود'),
+            'sepah_api_base': ('https://sepehr.shaparak.ir:8081', 'string', False,
+                               'بانک سپه — آدرس API (GetToken/Verify)',
+                               'برای PSP غیر از سپهر این آدرس را مطابق قراردادتان تغییر دهید'),
+            'sepah_pay_base': ('https://sepehr.shaparak.ir:8080', 'string', False,
+                               'بانک سپه — آدرس صفحه پرداخت', ''),
+            # کارت به کارت
+            'bank_card_number': ('', 'string', False, 'شماره کارت پرداخت دستی',
+                                 'برای سفارش‌های «کارت به کارت»'),
+            'bank_card_holder': ('', 'string', False, 'نام صاحب کارت', ''),
+        }
+
         all_defaults = {
             'general': default_general,
             'contact': default_contact,
@@ -181,6 +219,7 @@ class SettingService:
             'seo': default_seo,
             'appearance': default_appearance,
             'features': default_features,
+            'payment': default_payment,
         }
         
         for group, settings in all_defaults.items():
@@ -198,11 +237,55 @@ class SettingService:
                     )
                     db.session.add(setting)
                 else:
-                    setting.value = value
+                    # مقدار گروه payment (کلیدهای درگاه) هرگز با پیش‌فرض بازنویسی
+                    # نمی‌شود تا پیکربندی ادمین از بین نرود.
+                    if group != 'payment':
+                        setting.value = value
                     setting.is_public = is_public
         
         db.session.commit()
     
+    @staticmethod
+    def ensure_payment_settings() -> None:
+        """
+        ردیف‌های تنظیمات درگاه پرداخت را فقط در صورت نبود ایجاد می‌کند
+        (idempotent) — مقدار ذخیره‌شدهٔ ادمین هرگز بازنویسی نمی‌شود.
+        """
+        from app.models import Setting
+
+        defaults = {
+            'zarinpal_merchant_id': ('', 'string', False, 'زرین‌پال — مرچنت آیدی (UUID ۳۶ کاراکتری)', 'از پنل merchant.zarinpal.com'),
+            'zarinpal_sandbox': ('false', 'boolean', False, 'زرین‌پال — حالت Sandbox', 'برای تست؛ نیازمند مرچنت تست sandbox.zarinpal.com'),
+            'idpay_api_key': ('', 'string', False, 'آی‌دی‌پی — کلید API', 'از پنل idpay.ir بخش وب‌سرویس'),
+            'idpay_sandbox': ('false', 'boolean', False, 'آی‌دی‌پی — حالت Sandbox', ''),
+            'digipay_client_id': ('', 'string', False, 'دیجی‌پی — Client ID', 'از پشتیبانی دیجی‌پی'),
+            'digipay_client_secret': ('', 'string', False, 'دیجی‌پی — Client Secret', ''),
+            'digipay_username': ('', 'string', False, 'دیجی‌پی — نام کاربری', ''),
+            'digipay_password': ('', 'string', False, 'دیجی‌پی — رمز عبور', ''),
+            'digipay_sandbox': ('false', 'boolean', False, 'دیجی‌پی — حالت تست (uat)', ''),
+            'snapppay_client_id': ('', 'string', False, 'اسنپ‌پی — Client ID', 'از پشتیبانی اسنپ‌پی (مستندات محرمانه ارسال می‌شود)'),
+            'snapppay_client_secret': ('', 'string', False, 'اسنپ‌پی — Client Secret', ''),
+            'snapppay_username': ('', 'string', False, 'اسنپ‌پی — نام کاربری', ''),
+            'snapppay_password': ('', 'string', False, 'اسنپ‌پی — رمز عبور', ''),
+            'snapppay_sandbox': ('false', 'boolean', False, 'اسنپ‌پی — حالت Sandbox', ''),
+            'sepah_terminal_id': ('', 'string', False, 'بانک سپه — شماره پایانه (Terminal ID)', 'پذیرندگی سپه از طریق PSP همکار صادر می‌شود'),
+            'sepah_api_base': ('https://sepehr.shaparak.ir:8081', 'string', False, 'بانک سپه — آدرس API (GetToken/Verify)', 'برای PSP غیر از سپهر این آدرس را مطابق قراردادتان تغییر دهید'),
+            'sepah_pay_base': ('https://sepehr.shaparak.ir:8080', 'string', False, 'بانک سپه — آدرس صفحه پرداخت', ''),
+            'bank_card_number': ('', 'string', False, 'شماره کارت پرداخت دستی', 'برای سفارش‌های «کارت به کارت»'),
+            'bank_card_holder': ('', 'string', False, 'نام صاحب کارت', ''),
+        }
+        added = 0
+        for key, (value, stype, is_public, label, desc) in defaults.items():
+            exists = Setting.query.filter_by(group='payment', key=key).first()
+            if not exists:
+                db.session.add(Setting(
+                    group='payment', key=key, value=value, type=stype,
+                    is_public=is_public, label=label, description=desc,
+                ))
+                added += 1
+        if added:
+            db.session.commit()
+
     @staticmethod
     def clear_cache() -> None:
         """Clear settings cache"""

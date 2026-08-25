@@ -137,10 +137,27 @@
                                 <input type="radio" name="payment_method" value="online" checked style="width:20px; height:20px; accent-color:var(--accent-primary);">
                                 <div style="flex:1;">
                                     <div class="text-white font-bold" style="font-size:1rem;">پرداخت آنلاین</div>
-                                    <div class="text-muted" style="font-size:0.85rem;">پرداخت از طریق درگاه بانکی (درگاه آزمایشی)</div>
+                                    <div class="text-muted" style="font-size:0.85rem;">پرداخت از طریق درگاه بانکی</div>
                                 </div>
                                 <span style="font-size:1.5rem;" aria-hidden="true">💳</span>
                             </label>
+
+                            <!-- Gateway picker — انتخاب درگاه آنلاین -->
+                            {% if payment_gateways %}
+                            <div id="gateway-picker" class="d-flex flex-column gap-2" style="margin:0.25rem 0 0.5rem 1.75rem; padding:0.85rem; border:1px dashed var(--glass-border); border-radius:var(--radius-md);">
+                                <span class="text-muted" style="font-size:0.8rem; font-weight:700;">انتخاب درگاه پرداخت:</span>
+                                {% for g in payment_gateways %}
+                                <label class="payment-method-card gateway-option" style="cursor:pointer; padding:0.7rem 0.85rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); display:flex; align-items:center; gap:0.75rem; transition:var(--transition); {{ 'border-color:var(--accent-primary); background:rgba(251,176,59,0.08);' if loop.first }}">
+                                    <input type="radio" name="gateway" value="{{ g.id }}" {{ 'checked' if loop.first }} style="width:17px; height:17px; accent-color:var(--accent-primary);">
+                                    <div style="flex:1;">
+                                        <div class="text-white font-bold" style="font-size:0.92rem;">{{ g.label }}</div>
+                                        <div class="text-muted" style="font-size:0.76rem;">{{ g.description }}</div>
+                                    </div>
+                                    <span class="badge rounded-pill" style="background:rgba(251,176,59,0.15); color:var(--accent-primary); font-size:0.7rem; font-weight:800; direction:ltr;">{{ g.badge }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
 
                             <label class="payment-method-card" style="cursor:pointer; padding:1rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); display:flex; align-items:center; gap:1rem; transition:var(--transition);">
                                 <input type="radio" name="payment_method" value="cash" style="width:20px; height:20px; accent-color:var(--accent-primary);">
@@ -272,20 +289,34 @@ document.getElementById('checkout-form')?.addEventListener('submit', function(e)
     }
 });
 
-// Highlight selected payment method
+// Highlight selected payment method + toggle gateway picker
+function refreshPaymentCards() {
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        const inp = card.querySelector('input');
+        if (inp && inp.checked) {
+            card.style.borderColor = 'var(--accent-primary)';
+            card.style.background = 'rgba(251,176,59,0.08)';
+        } else if (!card.classList.contains('gateway-option')) {
+            card.style.borderColor = 'var(--glass-border)';
+            card.style.background = 'transparent';
+        }
+    });
+    const gw = document.getElementById('gateway-picker');
+    const online = document.querySelector('input[name="payment_method"][value="online"]');
+    if (gw) gw.style.display = (online && online.checked) ? 'flex' : 'none';
+}
 document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', refreshPaymentCards);
+});
+document.querySelectorAll('input[name="gateway"]').forEach(radio => {
     radio.addEventListener('change', function() {
-        document.querySelectorAll('.payment-method-card').forEach(card => {
+        document.querySelectorAll('.gateway-option').forEach(card => {
             const inp = card.querySelector('input');
-            if (inp.checked) {
-                card.style.borderColor = 'var(--accent-primary)';
-                card.style.background = 'rgba(251,176,59,0.08)';
-            } else {
-                card.style.borderColor = 'var(--glass-border)';
-                card.style.background = 'transparent';
-            }
+            card.style.borderColor = inp && inp.checked ? 'var(--accent-primary)' : 'var(--glass-border)';
+            card.style.background = inp && inp.checked ? 'rgba(251,176,59,0.08)' : 'transparent';
         });
     });
 });
+refreshPaymentCards();
 </script>
 {% endblock %}

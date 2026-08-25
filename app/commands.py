@@ -32,6 +32,11 @@ def _ensure_schema_upgrades():
                 if col not in cols:
                     db.session.execute(text(f'ALTER TABLE posts ADD COLUMN {col} TEXT'))
                     click.echo(f'  + posts.{col} added (multilingual upgrade)')
+
+        # نسخهٔ درگاه‌های پرداخت — ردیف‌های تنظیمات payment فقط در صورت نبود
+        from app.services.setting_service import SettingService
+        SettingService.ensure_payment_settings()
+
         db.session.commit()
     except Exception as exc:  # noqa: BLE001 — ارتقا نباید بوت را متوقف کند
         click.echo(f'  ! schema upgrade skipped: {exc}')
