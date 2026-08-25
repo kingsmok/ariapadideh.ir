@@ -2136,3 +2136,50 @@ html[dir="rtl"] .pricing-badge-rahsa { transform: translateX(50%); }
 }
 
 [data-theme="light"] #contact-leaflet-map { filter: none; }
+
+/* ==========================================================================
+   ۱۵) چندزبانه — دکمهٔ سوییچ زبان و تنظیمات LTR نسخهٔ انگلیسی
+   ========================================================================== */
+.lang-switch-rahsa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 34px;
+    padding: 0 0.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--text-gray-200, #e2e8f0);
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.lang-switch-rahsa:hover {
+    background: rgba(139, 92, 246, 0.25);
+    color: #fff;
+    text-decoration: none;
+    border-color: var(--accent-gold, #fbb03b);
+}
+
+/* نسخهٔ انگلیسی (LTR): فونت لاتین تمیزتر برای تیترها و متن */
+html[dir="ltr"] body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html[dir="ltr"] h1,
+html[dir="ltr"] h2,
+html[dir="ltr"] h3 {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.2px;
+}
+
+/* دراپ‌داون‌ها و مگامنو در LTR از سمت راستِ آیتم باز شوند */
+html[dir="ltr"] .dropdown-menu-glass,
+html[dir="ltr"] .mega-menu-panel {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+}

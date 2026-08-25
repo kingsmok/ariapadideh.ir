@@ -56,7 +56,7 @@
 
             <!-- Quick Links -->
             <div class="col-6 col-md-3">
-                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">دسترسی سریع</h4>
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Quick Links' if g.get('lang','fa') == 'en' else 'دسترسی سریع' }}</h4>
                 <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
                     {% if nav_footer %}
                         {# منوی فوتر داینامیک — از پنل مدیریت (منوها، موقعیت: فوتر) #}
@@ -80,7 +80,7 @@
 
             <!-- Services -->
             <div class="col-6 col-md-2">
-                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">خدمات</h4>
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Services' if g.get('lang','fa') == 'en' else 'خدمات' }}</h4>
                 <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
                     <li><a href="/category/web-design" class="footer-link-hover text-muted">طراحی وب</a></li>
                     <li><a href="/category/smart-bots" class="footer-link-hover text-muted">ربات هوشمند</a></li>
@@ -91,7 +91,7 @@
 
             <!-- Address & Contact -->
             <div class="col-12 col-md-3">
-                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">ارتباط با ما</h4>
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Contact Us' if g.get('lang','fa') == 'en' else 'ارتباط با ما' }}</h4>
                 <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.875rem;" class="text-muted">
                     {% if site_settings.contact_address %}
                     <li class="d-flex align-items-start gap-2 mb-2">
@@ -128,7 +128,7 @@
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div>
                     <h3 style="color:#fff; font-size:1rem; font-weight:800; margin-bottom:0.3rem;">📬 از تخفیفها و مقالات جدید جا نمانید</h3>
-                    <p class="text-muted" style="font-size:0.8rem; margin:0;">عضویت در خبرنامه — بدون اسپم، لغو عضویت در هر لحظه.</p>
+                    <p class="text-muted" style="font-size:0.8rem; margin:0;">{{ 'Subscribe to our newsletter — no spam, unsubscribe anytime.' if g.get('lang','fa') == 'en' else 'عضویت در خبرنامه — بدون اسپم، لغو عضویت در هر لحظه.' }}</p>
                 </div>
                 <form action="{{ url_for('public.newsletter_subscribe') }}" method="POST" class="d-flex gap-2 newsletter-form-rahsa" style="flex:1; max-width:420px;" novalidate>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">

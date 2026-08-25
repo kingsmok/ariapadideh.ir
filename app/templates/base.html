@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+{% set lang = g.get('lang', 'fa') if g is defined else 'fa' %}
+<html lang="{{ lang }}" dir="{{ 'ltr' if lang == 'en' else 'rtl' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
@@ -64,10 +65,20 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-    <!-- Hreflang (Persian primary, English optional alternate) -->
+    <!-- Hreflang (Persian primary, English alternate when a mirror exists) -->
+    {% set lang = g.get('lang', 'fa') if g is defined else 'fa' %}
+    {% if lang == 'en' %}
+    <link rel="alternate" hreflang="fa" href="{{ request.url_root.rstrip('/') }}{{ fa_url or '/' }}">
+    <link rel="alternate" hreflang="en" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    <link rel="alternate" hreflang="x-default" href="{{ request.url_root.rstrip('/') }}{{ fa_url or '/' }}">
+    {% else %}
     <link rel="alternate" hreflang="fa" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
     <link rel="alternate" hreflang="fa-IR" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    {% if en_url is defined and en_url %}
+    <link rel="alternate" hreflang="en" href="{{ request.url_root.rstrip('/') }}{{ en_url }}">
+    {% endif %}
     <link rel="alternate" hreflang="x-default" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    {% endif %}
 
     <!-- Preconnect to any external resources (none currently, but ready) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -132,7 +143,7 @@
     {% endif %}
 
     <!-- Skip to main content (a11y) -->
-    <a href="#main-content" class="skip-link">رفتن به محتوای اصلی</a>
+    <a href="#main-content" class="skip-link">{{ 'Skip to main content' if lang == 'en' else 'رفتن به محتوای اصلی' }}</a>
 
     <!-- Site Header -->
     {% block header %}

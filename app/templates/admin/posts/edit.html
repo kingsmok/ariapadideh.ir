@@ -78,6 +78,30 @@
             <label class="d-flex align-items-center gap-2 cursor-pointer"><input type="checkbox" name="allow_comments" value="y" {{ 'checked' if form.allow_comments.data else '' }}> 💬 اجازه نظرات</label>
         </div>
 
+
+        <details class="mt-3" style="border:1px solid var(--glass-border); border-radius:12px; padding:1rem 1.2rem; background:rgba(20,33,61,.35);">
+            <summary style="cursor:pointer; font-weight:800; color:var(--text-white); font-size:.95rem;">
+                🇬🇧 English version (اختیاری — برای نمایش در /en/blog)
+            </summary>
+            <div style="margin-top:1rem;">
+                <div class="mb-3">
+                    <label class="form-label-rahsa">English title</label>
+                    <input type="text" name="title_en" value="{{ post.title_en or '' }}" class="form-control-rahsa" dir="ltr">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-rahsa">English excerpt</label>
+                    <textarea name="excerpt_en" rows="2" class="form-control-rahsa" dir="ltr">{{ post.excerpt_en or '' }}</textarea>
+                </div>
+                <div>
+                    <label class="form-label-rahsa">English content (HTML)</label>
+                    <textarea name="content_en" rows="10" class="form-control-rahsa" dir="ltr">{{ post.content_en or '' }}</textarea>
+                </div>
+                <p style="color:var(--text-gray-400); font-size:.75rem; margin:.6rem 0 0;">
+                    اگر خالی بماند، صفحهٔ انگلیسی مقاله نسخهٔ فارسی را با یادداشت «هنوز ترجمه نشده» نمایش می‌دهد.
+                </p>
+            </div>
+        </details>
+
         <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-4">💾 ذخیره مقاله</button>
     </form>
 </div>

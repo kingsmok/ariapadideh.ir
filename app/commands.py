@@ -9,7 +9,36 @@ from app.extensions import db
 def init_db():
     """Initialize database and create tables"""
     db.create_all()
+    _ensure_schema_upgrades()
     click.echo('✓ Database tables created')
+
+
+def _ensure_schema_upgrades():
+    """
+    ارتقاهای کوچک و idempotent برای دیتابیس‌های موجود.
+
+    create_all فقط جدول‌های تازه می‌سازد؛ ستون‌های جدیدِ مدل‌ها را به
+    جدول‌های قدیمی اضافه نمی‌کند. اینجا ستون‌های اضافه‌شده در نسخه‌های
+    جدید را با ALTER امن اضافه می‌کنیم (اگر نباشند).
+    """
+    from sqlalchemy import inspect, text
+
+    try:
+        inspector = inspect(db.engine)
+        # نسخهٔ چندزبانه — ستون‌های انگلیسی مقالات
+        if 'posts' in inspector.get_table_names():
+            cols = {c['name'] for c in inspector.get_columns('posts')}
+            for col in ('title_en', 'excerpt_en', 'content_en'):
+                if col not in cols:
+                    db.session.execute(text(f'ALTER TABLE posts ADD COLUMN {col} TEXT'))
+                    click.echo(f'  + posts.{col} added (multilingual upgrade)')
+        db.session.commit()
+    except Exception as exc:  # noqa: BLE001 — ارتقا نباید بوت را متوقف کند
+        click.echo(f'  ! schema upgrade skipped: {exc}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
 
 
 def create_admin():
@@ -371,7 +400,24 @@ def seed_demo(preset: str = 'corporate'):
              'slug': 'why-flask-for-iranian-startups',
              'excerpt': 'مقایسهٔ هزینه، سرعت توسعه و مقیاس‌پذیری فلاسک با فریمورک‌های دیگر برای تیم‌های کوچک.',
              'tags': ['فلاسک', 'پایتون', 'استارتاپ'],
-             'days_ago': 4, 'featured': True},
+             'days_ago': 4, 'featured': True,
+             # نسخهٔ انگلیسی — دموی چندزبانه (/en/blog/…)
+             'title_en': 'Why Flask Is a Smart Choice for Iranian Startups',
+             'excerpt_en': 'Cost, development speed and scalability of Flask compared to other frameworks for small teams.',
+             'content_en': (
+                 '<p>For early-stage teams, shipping fast and keeping maintenance costs low matter more than '
+                 'following hype. Flask lets a two-person team build and deploy a production-grade product in weeks.</p>'
+                 '<h2>Why it matters</h2>'
+                 '<p>Speed of delivery and low maintenance have become the key criteria when choosing a stack. '
+                 'A team that ships v1 faster and cheaper has a better chance of finding its market.</p>'
+                 '<h2>Key points</h2>'
+                 '<ul><li>Quick start with minimal dependencies</li>'
+                 '<li>Low maintenance cost, gradual scaling</li>'
+                 '<li>Active community and Persian documentation</li>'
+                 '<li>Smooth migration path to a service-oriented architecture later</li></ul>'
+                 '<h2>Bottom line</h2>'
+                 '<p>Choose technology based on real business needs. Need help deciding? <a href="/en/contact">Talk to us</a>.</p>'
+             )},
             {'title': 'راهنمای انتخاب هاست و سرور برای فروشگاه‌های آنلاین',
              'slug': 'hosting-guide-online-shops',
              'excerpt': 'از هاست اشتراکی تا سرور اختصاصی — چطور بستهٔ مناسب کسب‌وکارتان را انتخاب کنید.',
@@ -405,6 +451,8 @@ def seed_demo(preset: str = 'corporate'):
                 published_at=datetime.utcnow() - timedelta(days=p['days_ago']),
                 is_active=True, show_in_home=True, is_featured=p['featured'],
                 views=(340 - i * 77),
+                title_en=p.get('title_en'), excerpt_en=p.get('excerpt_en'),
+                content_en=p.get('content_en'),
             )
             _db.session.add(post)
             for name in p['tags']:

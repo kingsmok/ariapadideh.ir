@@ -14,8 +14,15 @@
             </a>
 
             <!-- Desktop Navigation Menu -->
-            <nav class="d-none d-md-flex align-items-center gap-1" aria-label="منوی اصلی">
-                {% if nav_header %}
+            <nav class="d-none d-md-flex align-items-center gap-1" aria-label="{{ 'Main menu' if g.get('lang','fa') == 'en' else 'منوی اصلی' }}">
+                {% if g.get('lang','fa') == 'en' %}
+                    {# English chrome — نسخهٔ انگلیسی (الگوی چندزبانهٔ قالب‌های راست‌چین) #}
+                    <a href="{{ url_for('en.home') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.home' else '' }}">Home</a>
+                    <a href="{{ url_for('en.products') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.products' else '' }}">Products</a>
+                    <a href="{{ url_for('en.blog') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.blog' else '' }}">Blog</a>
+                    <a href="{{ url_for('en.about') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.about' else '' }}">About</a>
+                    <a href="{{ url_for('en.contact') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.contact' else '' }}">Contact</a>
+                {% elif nav_header %}
                     {# منوی داینامیک — از پنل مدیریت (منوها) #}
                     {% for item in nav_header %}
                         {% if item.children %}
@@ -113,10 +120,19 @@
 
             <!-- Actions CTA & Mobile Hamburger -->
             <div class="d-flex align-items-center gap-3">
-                <a href="/#quote-section"
+                {# سوییچر زبان (فارسی/English) #}
+                {% set lang = g.get('lang', 'fa') %}
+                <a href="{{ (fa_url or '/') if lang == 'en' else (en_url or '/en/') }}"
+                   class="lang-switch-rahsa" hreflang="{{ 'fa' if lang == 'en' else 'en' }}"
+                   aria-label="{{ 'نسخهٔ فارسی' if lang == 'en' else 'English version' }}"
+                   title="{{ 'نسخهٔ فارسی' if lang == 'en' else 'English version' }}">
+                    {{ 'فا' if lang == 'en' else 'EN' }}
+                </a>
+
+                <a href="{{ '/#quote-section' if lang != 'en' else url_for('en.contact') }}"
                    class="btn-rahsa-cta d-none d-md-inline-flex"
-                   aria-label="دریافت مشاوره رایگان">
-                    <span>مشاوره رایگان</span>
+                   aria-label="{{ 'Get a free consultation' if lang == 'en' else 'دریافت مشاوره رایگان' }}">
+                    <span>{{ 'Get a Quote' if g.get('lang','fa') == 'en' else 'مشاوره رایگان' }}</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>

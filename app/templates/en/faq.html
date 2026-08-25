@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}FAQ — Rahsa Dev{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:3rem;">
+    <div class="container" style="max-width:900px;">
+        <div class="section-divider">
+            <h2>Frequently Asked <span class="gold-gradient-text">Questions</span></h2>
+            <p>Answers are shown in the original Persian where no English version exists.</p>
+        </div>
+
+        <div class="faq-list">
+            {% if faqs %}
+                {% for faq in faqs %}
+                <details class="accordion-item-rahsa" {% if loop.first %}open{% endif %}>
+                    <summary dir="rtl" style="text-align:right;">{{ faq.question }}</summary>
+                    <div class="text-muted" dir="rtl" style="line-height:2; text-align:right; white-space:pre-wrap;">{{ faq.answer }}</div>
+                </details>
+                {% endfor %}
+            {% else %}
+            <div class="glass-card" style="padding:3rem; text-align:center;">
+                <p class="text-muted" style="margin:0;">No FAQs published yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="glass-card" style="padding:1.6rem; margin-top:2rem; text-align:center;">
+            <p class="text-muted" style="margin:0 0 1rem;">Didn't find your answer?</p>
+            <a href="{{ url_for('en.contact') }}" class="btn-rahsa-cta" style="text-decoration:none;"><span>Contact Us</span></a>
+        </div>
+    </div>
+</section>
+{% endblock %}

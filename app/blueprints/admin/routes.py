@@ -741,6 +741,11 @@ def post_edit(post_id=None):
                 db.session.add(tag)
             post.tags.append(tag)
 
+        # نسخهٔ انگلیسی مقاله (چندزبانه — /en/blog/<slug>)
+        post.title_en = (request.form.get('title_en') or '').strip()[:500] or None
+        post.excerpt_en = (request.form.get('excerpt_en') or '').strip()[:1000] or None
+        post.content_en = (request.form.get('content_en') or '').strip() or None
+
         db.session.add(post)
         db.session.commit()
 

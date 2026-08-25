@@ -118,6 +118,12 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     slug = db.Column(db.String(500), unique=True, nullable=False, index=True)
     excerpt = db.Column(db.String(1000), nullable=True)
     content = db.Column(Text, nullable=True)
+
+    # نسخهٔ انگلیسی (چندزبانهٔ محتوا — /en/blog/<slug>)
+    # اگر خالی باشد، نسخهٔ انگلیسی مقاله محتوای فارسی را با یادداشت نمایش می‌دهد
+    title_en = db.Column(db.String(500), nullable=True)
+    excerpt_en = db.Column(db.String(1000), nullable=True)
+    content_en = db.Column(Text, nullable=True)
     
     # Featured image
     featured_image = db.Column(db.String(500), nullable=True)

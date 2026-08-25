@@ -108,6 +108,7 @@ def register_blueprints(app: Flask) -> None:
     from app.blueprints.admin import admin_bp
     from app.blueprints.api import api_bp
     from app.blueprints.blog import blog_bp
+    from app.blueprints.en import en_bp
     
     # Public routes
     app.register_blueprint(public_bp, url_prefix='/')
@@ -117,6 +118,9 @@ def register_blueprints(app: Flask) -> None:
     
     # Admin panel
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    # English mirror (چندزبانه — /en/)
+    app.register_blueprint(en_bp)
     
     # REST API
     app.register_blueprint(api_bp, url_prefix='/api/v1')

@@ -150,6 +150,7 @@ def home():
         team_members=team_members,
         pricing_plans=pricing_plans,
         home_sections=home_sections,
+        en_url='/en/',
         seo=seo
     )
 
@@ -195,7 +196,7 @@ def categories_list():
         is_deleted=False
     ).order_by(Category.sort_order).all()
     
-    return render_template('public/categories.html',
+    return render_template('public/categories.html', en_url='/en/products',
         parent_categories=parent_categories,
         all_categories=all_categories
     )
@@ -370,7 +371,7 @@ def blog(page=1):
         is_deleted=False
     ).order_by(Post.views.desc()).limit(5).all()
     
-    return render_template('public/blog.html',
+    return render_template('public/blog.html', en_url='/en/blog',
         posts=posts,
         categories=categories,
         popular_posts=popular_posts
@@ -807,7 +808,7 @@ def about():
     team_members = TeamMember.query.filter_by(
         is_active=True, is_deleted=False
     ).order_by(TeamMember.sort_order).all()
-    return render_template('public/about.html', page=page_obj, team_members=team_members)
+    return render_template('public/about.html', en_url='/en/about', page=page_obj, team_members=team_members)
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
@@ -830,7 +831,7 @@ def contact():
         if phone and not re.match(PHONE_PATTERN_IR, phone) and not re.match(PHONE_LANDLINE_IR, phone):
             flash('شماره تلفن وارد شده نامعتبر است.', 'error')
             page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
-            return render_template('public/contact.html', form=form, page=page, success=False)
+            return render_template('public/contact.html', en_url='/en/contact', form=form, page=page, success=False)
 
         try:
             contact_obj = Contact(
@@ -857,7 +858,7 @@ def contact():
             except Exception as e:
                 current_app.logger.warning(f'Telegram notify failed: {e}')
 
-            return render_template('public/contact.html',
+            return render_template('public/contact.html', en_url='/en/contact',
                 form=ContactForm(),
                 success=True)
         except Exception as e:
@@ -866,7 +867,7 @@ def contact():
 
     page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
 
-    return render_template('public/contact.html',
+    return render_template('public/contact.html', en_url='/en/contact',
         form=form,
         page=page,
         success=False)
@@ -890,7 +891,7 @@ def faq():
             faq_categories[cat] = []
         faq_categories[cat].append(faq)
     
-    return render_template('public/faq.html', faqs=faqs, faq_categories=faq_categories)
+    return render_template('public/faq.html', faqs=faqs, faq_categories=faq_categories, en_url='/en/faq')
 
 
 @public_bp.route('/terms')
