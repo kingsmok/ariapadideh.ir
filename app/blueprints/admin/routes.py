@@ -24,7 +24,9 @@ from app.models import (
     Page, PageComponent, Post, Comment,
     Menu, Slider, SliderItem, Banner, Media, Setting,
     Contact, FAQ, Resume, Log, Notification,
-    ServiceCatalog, PortfolioCaseStudies, ConsultationLeads
+    ServiceCatalog, PortfolioCaseStudies, ConsultationLeads,
+    TeamMember, PricingPlan, Story, Subscriber,
+    Ticket, TicketMessage, ProductVideo,
 )
 from app.services.media_service import MediaService
 from app.services.notification_service import NotificationService
@@ -324,12 +326,23 @@ def product_edit(product_id=None):
         # file-upload fields — those are assigned from real model objects / saved
         # files below to avoid assigning raw ints/None to relationships or wiping
         # stored file paths.
-        _skip = {'categories', 'tags', 'images', 'featured_image', 'csrf_token', 'submit'}
+        _skip = {'categories', 'tags', 'images', 'featured_image', 'csrf_token', 'submit',
+                 'variations', 'videos'}
         for field in form:
             if field.name in _skip:
                 continue
             if hasattr(product, field.name):
                 setattr(product, field.name, field.data)
+
+        # Variation Swatches — JSON list of {name, type, value, price, stock}
+        import json as _json
+        try:
+            variations = _json.loads(form.variations.data or '[]')
+            product.variations = variations if isinstance(variations, list) else []
+        except (ValueError, TypeError):
+            flash('فرمت JSON متغیرها نامعتبر بود — متغیرها ذخیره نشد.', 'warning')
+        except Exception:
+            product.variations = []
 
         # Ensure a slug exists (Product.slug is NOT NULL & unique)
         if not getattr(product, 'slug', None):
@@ -362,7 +375,33 @@ def product_edit(product_id=None):
                     )
                     db.session.add(image)
             db.session.commit()
-        
+
+        # Video gallery — هر خط: «عنوان | لینک» (یا فقط لینک)
+        ProductVideo.query.filter_by(product_id=product.id).update({'is_deleted': True})
+        for line in (form.videos.data or '').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if '|' in line:
+                title, url = [part.strip() for part in line.split('|', 1)]
+                title = title or None
+            else:
+                title, url = None, line
+            url_lower = url.lower()
+            if 'aparat.com' in url_lower:
+                provider = 'aparat'
+            elif 'youtube.com' in url_lower or 'youtu.be' in url_lower:
+                provider = 'youtube'
+            else:
+                provider = 'file'
+            db.session.add(ProductVideo(
+                product_id=product.id,
+                title=title or None,
+                provider=provider,
+                url=url,
+            ))
+        db.session.commit()
+
         # Log
         Log.log_action(
             'product_updated' if product_id else 'product_created',
@@ -380,7 +419,21 @@ def product_edit(product_id=None):
     categories = Category.query.filter_by(is_deleted=False).all()
     brands = Brand.query.filter_by(is_deleted=False).all()
     tags = Tag.query.filter_by(is_deleted=False).all()
-    
+
+    # Prefill swatches/videos fields from the product
+    import json as _json
+    if product:
+        form.variations.data = _json.dumps(product.variations or [], ensure_ascii=False, indent=1)
+        active_videos = ProductVideo.query.filter_by(
+            product_id=product.id, is_deleted=False
+        ).order_by(ProductVideo.sort_order).all()
+        form.videos.data = '\n'.join(
+            f'{v.title} | {v.url}' if v.title else v.url for v in active_videos
+        )
+    else:
+        form.variations.data = '[]'
+        form.videos.data = ''
+
     return render_template('admin/products/edit.html',
         form=form,
         product=product,
@@ -598,6 +651,132 @@ def page_delete(page_id):
     return redirect(url_for('admin.pages'))
 
 
+# ==================== POSTS (BLOG) MANAGEMENT ====================
+
+@admin_bp.route('/posts')
+@admin_bp.route('/posts/<int:page>')
+@login_required
+@admin_required
+def posts(page=1):
+    """مدیریت مقالات وبلاگ"""
+    q = (request.args.get('q') or '').strip()
+    status = (request.args.get('status') or '').strip()
+
+    query = Post.query.filter(Post.is_deleted == False)
+    if q:
+        query = query.filter(Post.title.like(f'%{q}%'))
+    if status in ('draft', 'published', 'scheduled', 'archived'):
+        query = query.filter(Post.status == status)
+
+    pagination = query.order_by(Post.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False)
+
+    return render_template('admin/posts/list.html',
+        posts=pagination.items, pagination=pagination, q=q, status=status)
+
+
+@admin_bp.route('/posts/create', methods=['GET', 'POST'])
+@admin_bp.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def post_edit(post_id=None):
+    """ایجاد/ویرایش مقاله"""
+    post = Post.query.get_or_404(post_id) if post_id else None
+
+    # نکته: published_at خالی نباید خطای اعتبارسنجی بدهد — مقدار خالی حذف می‌شود
+    if request.method == 'POST':
+        from werkzeug.datastructures import MultiDict
+        raw = request.form.to_dict(flat=False)
+        if not (raw.get('published_at', [''])[0] or '').strip():
+            raw.pop('published_at', None)
+        form = PostForm(form=MultiDict(raw), obj=post)
+    else:
+        form = PostForm(obj=post)
+
+    # گزینه‌های دسته‌بندی (نوع post یا دسته‌های عمومی)
+    cats = Category.query.filter_by(is_deleted=False).order_by(Category.sort_order).all()
+    form.category_id.choices = [(0, '— بدون دسته‌بندی —')] + [(c.id, c.title) for c in cats]
+
+    if form.validate_on_submit():
+        post = post or Post()
+        was_new = post.id is None
+
+        # فایل تصویر شاخص (اختیاری)
+        featured = None
+        if 'featured_image' in request.files and request.files['featured_image'].filename:
+            featured = save_file(request.files['featured_image'], 'posts')
+
+        # پرکردن دستی — tags (relationship) و featured_image (فایل) جداگانه مدیریت می‌شوند
+        for name, field in form._fields.items():
+            if name in ('tags', 'featured_image', 'csrf_token', 'submit'):
+                continue
+            setattr(post, name, field.data)
+        if featured:
+            post.featured_image = featured
+
+        if not post.slug:
+            post.slug = unique_slug(Post, post.title or 'post', exclude_id=post.id)
+
+        # دسته‌بندی: 0 → None
+        if not post.category_id:
+            post.category_id = None
+
+        # نویسنده و تاریخ انتشار
+        if was_new:
+            post.author_id = current_user.id
+        if post.status == 'published' and not post.published_at:
+            from datetime import datetime
+            post.published_at = datetime.utcnow()
+
+        # برچسب‌ها (با کاما فارسی/انگلیسی)
+        post.tags = []
+        tags_raw = (request.form.get('tags') or '').replace('،', ',')
+        for name in tags_raw.split(','):
+            name = name.strip()
+            if not name:
+                continue
+            tag = Tag.query.filter_by(name=name).first()
+            if not tag:
+                tag = Tag(name=name, slug=slugify(name) or f'tag-{Tag.query.count() + 1}')
+                db.session.add(tag)
+            post.tags.append(tag)
+
+        # نسخهٔ انگلیسی مقاله (چندزبانه — /en/blog/<slug>)
+        post.title_en = (request.form.get('title_en') or '').strip()[:500] or None
+        post.excerpt_en = (request.form.get('excerpt_en') or '').strip()[:1000] or None
+        post.content_en = (request.form.get('content_en') or '').strip() or None
+
+        db.session.add(post)
+        db.session.commit()
+
+        Log.log_action('post_save', user_id=current_user.id,
+                       entity_type='post', entity_id=post.id,
+                       description=f'مقاله ذخیره شد: {post.title}')
+
+        flash('مقاله با موفقیت ذخیره شد.', 'success')
+        return redirect(url_for('admin.posts'))
+
+    # پیش‌پرکردن برچسب‌ها برای ویرایش
+    if post and request.method == 'GET':
+        form.tags.data = '، '.join(t.name for t in post.tags)
+
+    return render_template('admin/posts/edit.html', form=form, post=post)
+
+
+@admin_bp.route('/posts/<int:post_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def post_delete(post_id):
+    """حذف نرم مقاله"""
+    post = Post.query.get_or_404(post_id)
+    post.delete()
+    Log.log_action('post_delete', user_id=current_user.id,
+                   entity_type='post', entity_id=post_id,
+                   description=f'مقاله حذف شد: {post.title}')
+    flash('مقاله حذف شد.', 'success')
+    return redirect(url_for('admin.posts'))
+
+
 # ==================== MENUS MANAGEMENT ====================
 
 @admin_bp.route('/menus')
@@ -610,13 +789,42 @@ def menus():
     positions = ['header', 'footer', 'mobile', 'sidebar']
     
     for position in positions:
-        menus_dict[position] = Menu.query.filter_by(
+        tops = Menu.query.filter_by(
             position=position,
             is_deleted=False,
             parent_id=None
         ).order_by(Menu.sort_order).all()
+        # فرزندان هر آیتم برای نمایش درختی
+        menus_dict[position] = [
+            (m, m.get_children_ordered()) for m in tops
+        ]
     
     return render_template('admin/menus/list.html', menus=menus_dict)
+
+
+@admin_bp.route('/menus/reorder', methods=['POST'])
+@login_required
+@admin_required
+def menu_reorder():
+    """تغییر ترتیب منوها با درگ‌انددراپ — آرایهٔ JSON از id ها"""
+    from app.services.menu_service import clear_cache as clear_menu_cache
+    
+    data = request.get_json(silent=True) or {}
+    order = data.get('order', [])
+    if not isinstance(order, list):
+        return jsonify(ok=False, error='ساختار نامعتبر'), 400
+    
+    for idx, mid in enumerate(order):
+        try:
+            item = Menu.query.get(int(mid))
+        except (TypeError, ValueError):
+            continue
+        if item:
+            item.sort_order = idx
+    db.session.commit()
+    
+    clear_menu_cache()
+    return jsonify(ok=True, count=len(order))
 
 
 @admin_bp.route('/menus/create', methods=['GET', 'POST'])
@@ -638,12 +846,29 @@ def menu_edit(menu_id=None):
         # Menu model requires a unique slug; auto-generate one if missing.
         if not getattr(menu, 'slug', None):
             menu.slug = unique_slug(Menu, menu.title or 'menu', exclude_id=menu.id)
+        # فیلدهای خام (والد/ترتیب/بولی‌ها) — چک‌باکس ارسال‌نشده = خاموش
+        parent_raw = request.form.get('parent_id', '')
+        if parent_raw and parent_raw.isdigit():
+            parent = Menu.query.get(int(parent_raw))
+            menu.parent_id = parent.id if parent else None
+        else:
+            menu.parent_id = None
+        sort_raw = request.form.get('sort_order', '0').strip()
+        menu.sort_order = int(sort_raw) if sort_raw.isdigit() else 0
+        menu.no_follow = bool(request.form.get('no_follow'))
+        menu.is_mega_menu = bool(request.form.get('is_mega_menu'))
+        menu.is_active = bool(request.form.get('is_active'))
+        menu.show_logged_in = bool(request.form.get('show_logged_in'))
+        menu.show_guest = bool(request.form.get('show_guest'))
+        # جلوگیری از والد‌شدن خود item
+        if menu.parent_id == menu.id:
+            menu.parent_id = None
         menu.save()
-        
+
         # Clear cache
-        cache.delete('menu_header')
-        cache.delete('menu_footer')
-        
+        from app.services.menu_service import clear_cache as clear_menu_cache
+        clear_menu_cache()
+
         flash('منو با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.menus'))
     
@@ -663,11 +888,14 @@ def menu_delete(menu_id):
     """Delete menu item"""
     
     menu = Menu.query.get_or_404(menu_id)
+    # فرزندان هم حذف شوند (نرم)
+    for child in menu.children.all():
+        child.delete()
     menu.delete()
-    
-    cache.delete('menu_header')
-    cache.delete('menu_footer')
-    
+
+    from app.services.menu_service import clear_cache as clear_menu_cache
+    clear_menu_cache()
+
     flash('منو با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.menus'))
 
@@ -874,6 +1102,11 @@ def settings():
             'title': 'پرداخت',
             'icon': 'fa-credit-card',
             'settings': Setting.query.filter_by(group='payment').order_by(Setting.sort_order).all()
+        },
+        'features': {
+            'title': 'قابلیت‌ها (استوری/خبرنامه/OTP)',
+            'icon': 'fa-magic',
+            'settings': Setting.query.filter_by(group='features').order_by(Setting.sort_order).all()
         }
     }
     
@@ -1473,4 +1706,444 @@ def agency_lead_update_status(lead_id):
         lead.save()
         flash('وضعیت لید با موفقیت بروزرسانی شد.', 'success')
     return redirect(url_for('admin.agency_leads'))
+
+
+# ==================== THEME RESEARCH (RTL-Theme Market Analysis) ====================
+
+@admin_bp.route('/theme/home-builder', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def home_builder():
+    """صفحه‌ساز خانه — ترتیب/نمایش/عنوان بخش‌های صفحهٔ اول (درگ‌انددراپ)"""
+    from app.services.home_builder_service import get_sections, save_sections, SECTION_LABELS
+
+    if request.method == 'POST':
+        sections = []
+        for key in request.form.getlist('section_key[]'):
+            if not key:
+                continue
+            sections.append({
+                'key': key,
+                'title': request.form.get(f'title_{key}', '').strip()[:120],
+                'enabled': key in request.form.getlist('enabled[]'),
+            })
+        save_sections(sections or get_sections())
+        flash('چیدمان صفحهٔ اول ذخیره شد.', 'success')
+        return redirect(url_for('admin.home_builder'))
+
+    sections = get_sections()
+    return render_template('admin/theme/home_builder.html',
+                           sections=sections,
+                           section_labels=SECTION_LABELS)
+
+
+@admin_bp.route('/theme-research')
+@login_required
+@admin_required
+def theme_research():
+    """Market research: RTL-Theme business WordPress themes analysis.
+
+    Data is a static reference dataset (app/data/theme_research.py) collected
+    from https://www.rtl-theme.com/category/wp-themes/business-wordpress/
+    """
+    from app.data.theme_research import (
+        RESEARCH_META, THEMES, DESIGN_TRENDS, FEATURE_MATRIX,
+        MARKETPLACE_NOTES, SELECTION_CRITERIA, CORPORATE_PAGE_BLUEPRINT,
+        theme_research_summary,
+    )
+
+    themes_sorted = sorted(THEMES, key=lambda t: t['sales'], reverse=True)
+    categories = [
+        ('all', 'همه'),
+        ('corporate', 'شرکتی'),
+        ('multipurpose', 'چندمنظوره'),
+        ('specialized', 'تخصصی'),
+    ]
+
+    return render_template(
+        'admin/theme_research.html',
+        meta=RESEARCH_META,
+        themes=themes_sorted,
+        categories=categories,
+        trends=DESIGN_TRENDS,
+        feature_matrix=FEATURE_MATRIX,
+        marketplace_notes=MARKETPLACE_NOTES,
+        selection_criteria=SELECTION_CRITERIA,
+        page_blueprint=CORPORATE_PAGE_BLUEPRINT,
+        summary=theme_research_summary(),
+    )
+
+
+# ==================== TICKETS (سیستم تیکت پشتیبانی) ====================
+
+@admin_bp.route('/tickets')
+@login_required
+@admin_required
+def tickets(page=1):
+    """Support tickets list"""
+    status = request.args.get('status', '')
+    q = Ticket.query.filter_by(is_deleted=False)
+    if status:
+        q = q.filter_by(status=status)
+    tickets_list = q.order_by(Ticket.last_reply_at.desc()).paginate(
+        page=page, per_page=30, error_out=False
+    )
+    return render_template('admin/tickets/list.html', tickets=tickets_list, current_status=status)
+
+
+@admin_bp.route('/tickets/<int:ticket_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def ticket_detail(ticket_id):
+    """View ticket + reply / change status"""
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    if request.method == 'POST':
+        action = request.form.get('action', 'reply')
+
+        if action == 'reply':
+            message = request.form.get('message', '').strip()
+            attachment = None
+            error = None
+            if 'attachment' in request.files:
+                from app.services.ticket_file_service import save_ticket_attachment
+                attachment, error = save_ticket_attachment(request.files['attachment'])
+            if error:
+                flash(f'پیوست نشد: {error}', 'error')
+            if message or attachment:
+                ticket.add_message(
+                    message or '(پیوست)', user_id=current_user.id, is_admin=True,
+                    attachment=attachment,
+                )
+                Notification.send_to_user(
+                    user_id=ticket.user_id,
+                    title='پاسخ تیکت شما',
+                    message=f'تیکت «{ticket.subject}» پاسخ داده شد.',
+                    type='message',
+                    data={'ticket_id': ticket.id},
+                )
+                flash('پاسخ ثبت و به کاربر اطلاع‌رسانی شد.', 'success')
+            return redirect(url_for('admin.ticket_detail', ticket_id=ticket.id))
+
+        if action == 'close':
+            ticket.close(by_user_id=current_user.id)
+            flash('تیکت بسته شد.', 'success')
+        elif action == 'reopen':
+            ticket.reopen()
+            flash('تیکت بازگشایی شد.', 'success')
+        elif action == 'priority':
+            ticket.priority = request.form.get('priority', ticket.priority)
+            ticket.save()
+            flash('اولویت بروزرسانی شد.', 'success')
+        return redirect(url_for('admin.ticket_detail', ticket_id=ticket.id))
+
+    return render_template('admin/tickets/detail.html', ticket=ticket)
+
+
+# ==================== TEAM MEMBERS (تیم ما + مهارت‌ها) ====================
+
+def _parse_lines(raw: str):
+    return [line.strip() for line in (raw or '').splitlines() if line.strip()]
+
+
+def _parse_skills(raw: str):
+    """«Python:92» هر خط → [{name, level}]"""
+    skills = []
+    for line in _parse_lines(raw):
+        if ':' in line:
+            name, level = line.rsplit(':', 1)
+            try:
+                skills.append({'name': name.strip(), 'level': max(0, min(100, int(level.strip())))})
+            except ValueError:
+                continue
+    return skills
+
+
+@admin_bp.route('/team')
+@login_required
+@admin_required
+def team():
+    members = TeamMember.query.filter_by(is_deleted=False).order_by(
+        TeamMember.sort_order
+    ).all()
+    return render_template('admin/team/list.html', members=members)
+
+
+@admin_bp.route('/team/create', methods=['GET', 'POST'])
+@admin_bp.route('/team/<int:member_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def team_edit(member_id=None):
+    member = TeamMember.query.get_or_404(member_id) if member_id else None
+
+    if request.method == 'POST':
+        member = member or TeamMember()
+        member.full_name = request.form.get('full_name', '').strip()
+        member.role_title = request.form.get('role_title', '').strip() or None
+        member.bio = request.form.get('bio', '').strip() or None
+        member.avatar = request.form.get('avatar', '').strip() or None
+        member.skills = _parse_skills(request.form.get('skills', ''))
+        member.socials = {
+            key: val.strip()
+            for key in ('instagram', 'linkedin', 'telegram', 'email', 'website')
+            if (val := request.form.get(f'social_{key}', '')).strip()
+        }
+        member.sort_order = request.form.get('sort_order', 0, type=int)
+        member.is_active = request.form.get('is_active') == '1'
+        member.save()
+
+        Log.log_action('team.save', user_id=current_user.id,
+                       entity_type='TeamMember', entity_id=member.id)
+        flash('عضو تیم ذخیره شد.', 'success')
+        return redirect(url_for('admin.team'))
+
+    return render_template('admin/team/edit.html', member=member)
+
+
+@admin_bp.route('/team/<int:member_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def team_delete(member_id):
+    member = TeamMember.query.get_or_404(member_id)
+    member.delete()
+    flash('عضو تیم حذف شد.', 'success')
+    return redirect(url_for('admin.team'))
+
+
+# ==================== PRICING PLANS (جداول تعرفه) ====================
+
+@admin_bp.route('/pricing')
+@login_required
+@admin_required
+def pricing():
+    plans = PricingPlan.query.filter_by(is_deleted=False).order_by(
+        PricingPlan.sort_order
+    ).all()
+    return render_template('admin/pricing/list.html', plans=plans)
+
+
+@admin_bp.route('/pricing/create', methods=['GET', 'POST'])
+@admin_bp.route('/pricing/<int:plan_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def pricing_edit(plan_id=None):
+    plan = PricingPlan.query.get_or_404(plan_id) if plan_id else None
+
+    if request.method == 'POST':
+        plan = plan or PricingPlan()
+        plan.title = request.form.get('title', '').strip()
+        plan.subtitle = request.form.get('subtitle', '').strip() or None
+        plan.price_toman = request.form.get('price_toman', type=int)
+        plan.old_price_toman = request.form.get('old_price_toman', type=int)
+        plan.period = request.form.get('period', 'پروژه').strip()
+        plan.features = _parse_lines(request.form.get('features', ''))
+        plan.features_off = _parse_lines(request.form.get('features_off', ''))
+        plan.badge_text = request.form.get('badge_text', '').strip() or None
+        plan.is_featured = request.form.get('is_featured') == '1'
+        plan.button_text = request.form.get('button_text', 'سفارش').strip()
+        plan.button_url = request.form.get('button_url', '').strip() or None
+        plan.sort_order = request.form.get('sort_order', 0, type=int)
+        plan.is_active = request.form.get('is_active') == '1'
+        plan.save()
+        flash('پلن قیمتی ذخیره شد.', 'success')
+        return redirect(url_for('admin.pricing'))
+
+    return render_template('admin/pricing/edit.html', plan=plan)
+
+
+@admin_bp.route('/pricing/<int:plan_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def pricing_delete(plan_id):
+    plan = PricingPlan.query.get_or_404(plan_id)
+    plan.delete()
+    flash('پلن حذف شد.', 'success')
+    return redirect(url_for('admin.pricing'))
+
+
+# ==================== STORIES (استوری‌ساز) ====================
+
+@admin_bp.route('/stories')
+@login_required
+@admin_required
+def stories():
+    items = Story.query.filter_by(is_deleted=False).order_by(
+        Story.group_name, Story.sort_order
+    ).all()
+    return render_template('admin/stories/list.html', stories=items)
+
+
+@admin_bp.route('/stories/create', methods=['GET', 'POST'])
+@admin_bp.route('/stories/<int:story_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def story_edit(story_id=None):
+    story = Story.query.get_or_404(story_id) if story_id else None
+
+    if request.method == 'POST':
+        story = story or Story()
+        story.title = request.form.get('title', '').strip()
+        story.group_name = request.form.get('group_name', 'عمومی').strip() or 'عمومی'
+        story.media_type = request.form.get('media_type', 'image')
+        story.image = request.form.get('image', '').strip() or None
+        story.video_url = request.form.get('video_url', '').strip() or None
+        story.link = request.form.get('link', '').strip() or None
+        story.link_text = request.form.get('link_text', 'مشاهده').strip()
+        story.duration = request.form.get('duration', 5, type=int)
+        story.sort_order = request.form.get('sort_order', 0, type=int)
+        story.is_active = request.form.get('is_active') == '1'
+        story.save()
+        flash('استوری ذخیره شد.', 'success')
+        return redirect(url_for('admin.stories'))
+
+    return render_template('admin/stories/edit.html', story=story)
+
+
+@admin_bp.route('/stories/<int:story_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def story_delete(story_id):
+    story = Story.query.get_or_404(story_id)
+    story.delete()
+    flash('استوری حذف شد.', 'success')
+    return redirect(url_for('admin.stories'))
+
+
+# ==================== SUBSCRIBERS (خبرنامه) ====================
+
+@admin_bp.route('/subscribers')
+@login_required
+@admin_required
+def subscribers(page=1):
+    subs = Subscriber.query.order_by(Subscriber.created_at.desc()).paginate(
+        page=page, per_page=50, error_out=False
+    )
+    return render_template('admin/subscribers/list.html', subs=subs)
+
+
+@admin_bp.route('/subscribers/send', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def subscribers_send():
+    """ارسال گروهی ایمیل خبرنامه (الگوی قالب‌های راست‌چین)
+
+    بدون SMTP، ایمیل‌ها در لاگ ثبت می‌شوند (console fallback) و گزارش
+    «در لاگ ثبت شد» برمی‌گردد — خطا نمی‌دهد.
+    """
+    from app.services.email_service import EmailService
+
+    if request.method == 'POST':
+        subject = (request.form.get('subject') or '').strip()
+        body_html = (request.form.get('body') or '').strip()
+
+        if len(subject) < 3 or len(body_html) < 10:
+            flash('موضوع حداقل ۳ و متن حداقل ۱۰ کاراکتر باشد.', 'error')
+            return redirect(url_for('admin.subscribers_send'))
+
+        recipients = Subscriber.query.filter(Subscriber.unsubscribed_at.is_(None)).all()
+        sent = logged = 0
+        for sub in recipients:
+            ok = EmailService.send(
+                to=sub.email,
+                subject=subject,
+                html_body=body_html,
+            )
+            if ok:
+                sent += 1
+            else:
+                # بدون SMTP، سرویس در لاگ ثبت کرده و False برمی‌گرداند
+                logged += 1
+
+        Log.log_action('newsletter_send', user_id=current_user.id,
+                       description=f'خبرنامه ارسال شد: «{subject}» به {len(recipients)} مشترک '
+                                   f'(ارسال {sent}، ثبت‌درلاگ {logged})')
+
+        if sent:
+            flash(f'✓ خبرنامه به {sent} مشترک ایمیل شد.', 'success')
+        else:
+            flash(f'ارسال واقعی نشد — SMTP در دسترس نیست ({logged} ایمیل؛ جزئیات در لاگ سرور). '
+                  f'برای فعال‌سازی، MAIL_SERVER را در .env تنظیم کنید.', 'info')
+        if len(recipients) - sent - logged:
+            flash('برخی مشترکین رد شدند.', 'warning')
+        return redirect(url_for('admin.subscribers'))
+
+    active_count = Subscriber.query.filter(Subscriber.unsubscribed_at.is_(None)).count()
+    return render_template('admin/subscribers/send.html', active_count=active_count)
+
+
+@admin_bp.route('/subscribers/export')
+@login_required
+@admin_required
+def subscribers_export():
+    import csv
+    import io
+    from flask import Response
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(['email', 'source', 'created_at', 'active'])
+    for s in Subscriber.query.order_by(Subscriber.created_at.desc()).all():
+        writer.writerow([s.email, s.source, s.created_at, s.is_active_subscriber])
+
+    return Response(
+        '\ufeff' + out.getvalue(),  # BOM برای اکسل فارسی
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=subscribers.csv'},
+    )
+
+
+@admin_bp.route('/subscribers/<int:sub_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def subscriber_delete(sub_id):
+    sub = Subscriber.query.get_or_404(sub_id)
+    db.session.delete(sub)
+    db.session.commit()
+    flash('مشترک حذف شد.', 'success')
+    return redirect(url_for('admin.subscribers'))
+
+
+# ==================== ORDER INVOICE & LABEL (فاکتور و لیبل چاپی) ====================
+
+@admin_bp.route('/orders/<int:order_id>/invoice')
+@login_required
+@admin_required
+def order_invoice(order_id):
+    """فاکتور قابل چاپ / ذخیره PDF (Ctrl+P)"""
+    order = Order.query.get_or_404(order_id)
+    return render_template('admin/orders/invoice.html', order=order)
+
+
+@admin_bp.route('/orders/<int:order_id>/label')
+@login_required
+@admin_required
+def order_label(order_id):
+    """لیبل پستی قابل چاپ"""
+    order = Order.query.get_or_404(order_id)
+    return render_template('admin/orders/label.html', order=order)
+
+
+# ==================== AI CONTENT (پیش‌نویس با هوش مصنوعی) ====================
+
+@admin_bp.route('/ai/generate', methods=['POST'])
+@login_required
+@admin_required
+def ai_generate():
+    """AJAX: تولید پیش‌نویس محتوا — {preset, topic, extra} → {text}"""
+    from app.services.ai_service import AiService
+
+    data = request.get_json(silent=True) or {}
+    preset = data.get('preset', 'product_desc')
+    topic = (data.get('topic') or '').strip()
+
+    if not topic:
+        return jsonify({'success': False, 'message': 'موضوع را وارد کنید'}), 400
+
+    try:
+        text = AiService.generate(preset, topic, data.get('extra', ''))
+        return jsonify({'success': True, 'text': text})
+    except (RuntimeError, ValueError) as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 503
+
+
 

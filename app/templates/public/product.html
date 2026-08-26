@@ -124,7 +124,7 @@
                                     {% if product.old_price and product.old_price > product.current_price %}
                                     <span class="product-card-price-old" data-persian-num>{{ product.old_price|format_price }}</span>
                                     {% endif %}
-                                    <strong class="text-yellow" style="font-size:1.6rem; font-weight:900;" data-persian-num>
+                                    <strong class="text-yellow" id="product-price-display" data-base-price="{{ product.current_price or 0 }}" style="font-size:1.6rem; font-weight:900;" data-persian-num>
                                         {{ product.current_price|format_price if product.current_price else 'استعلام قیمت' }}
                                     </strong>
                                 </div>
@@ -139,7 +139,57 @@
                                 </button>
                             </form>
                         </div>
+
+                        {# Variation Swatches — سواچ رنگ/تصویر/دکمه (الگوی قالب نادر) #}
+                        {% if product.variations %}
+                        <div class="product-swatches-rahsa" id="product-swatches" data-swatches='{{ product.variations|tojson }}'>
+                            <span class="text-muted" style="font-size:0.8rem; margin-bottom:0.5rem;">انتخاب نسخه:</span>
+                            <div class="swatch-group-rahsa" role="radiogroup" aria-label="انتخاب نسخه محصول">
+                                {% for v in product.variations %}
+                                <button type="button" class="swatch-rahsa swatch-{{ v.type or 'label' }} {{ 'selected' if loop.first else '' }}"
+                                        data-price="{{ v.price if v.price is defined and v.price else 0 }}"
+                                        data-name="{{ v.name }}"
+                                        title="{{ v.name }}"
+                                        role="radio" aria-checked="{{ 'true' if loop.first else 'false' }}"
+                                        {{ 'disabled' if v.stock is defined and v.stock == 0 }}>
+                                    {% if v.type == 'color' %}
+                                    <span class="swatch-color-dot" style="background: {{ v.value or '#888' }};"></span>
+                                    {% elif v.type == 'image' and v.value %}
+                                    <img src="{{ v.value }}" alt="{{ v.name }}" loading="lazy">
+                                    {% else %}
+                                    <span class="swatch-label-text">{{ v.name }}</span>
+                                    {% endif %}
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <p class="swatch-selected-name text-muted" id="swatch-selected-name" style="font-size:0.78rem; margin:0.5rem 0 0;">
+                                نسخه انتخاب‌شده: {{ product.variations[0].name if product.variations else '' }}
+                            </p>
+                        </div>
+                        {% endif %}
                     </div>
+
+                    {# گالری ویدئو محصول + آپارات (الگوی قالب نادر) #}
+                    {% if product_videos %}
+                    <div class="product-videos-rahsa" style="margin-bottom:1.25rem;">
+                        <h2 class="text-white" style="font-size:1rem; font-weight:800; margin-bottom:0.75rem;">🎬 گالری ویدئو</h2>
+                        <div class="videos-grid-rahsa">
+                            {% for vid in product_videos %}
+                            <button type="button" class="video-thumb-rahsa" data-embed="{{ vid.embed_url() }}" data-title="{{ vid.title or 'ویدئو ' + loop.index|string }}">
+                                <span class="video-play-rahsa" aria-hidden="true">▶</span>
+                                <span>{{ vid.title or ('ویدئو ' ~ loop.index) }}</span>
+                                {% if vid.provider == 'aparat' %}<span class="video-provider-badge">آپارات</span>{% endif %}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="video-modal-rahsa" id="product-video-modal" hidden role="dialog" aria-modal="true" aria-label="پخش ویدئو">
+                        <div class="video-modal-inner">
+                            <button type="button" class="video-modal-close" aria-label="بستن">×</button>
+                            <div id="product-video-frame"></div>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <a href="{{ url_for('public.contact') }}" class="btn-rahsa-outline w-100 " style="font-size:0.875rem; display:block; padding:0.7rem;" aria-label="درخواست تغییرات سفارشی">
                         🧮 درخواست تغییرات یا توسعه سفارشی روی این پکیج

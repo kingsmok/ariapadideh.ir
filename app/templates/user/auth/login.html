@@ -43,6 +43,12 @@
                     حساب کاربری ندارید؟
                     <a href="{{ url_for('user.register') }}" class="text-yellow font-bold">ثبت‌نام کنید</a>
                 </p>
+                {% if site_settings.features_otp_login_enabled != false %}
+                <p class="text-muted" style="font-size:0.85rem; margin:0.6rem 0 0;">
+                    یا
+                    <a href="{{ url_for('user.otp_login') }}" class="text-yellow font-bold">📱 ورود سریع با موبایل (کد پیامکی)</a>
+                </p>
+                {% endif %}
             </div>
 
         </div>

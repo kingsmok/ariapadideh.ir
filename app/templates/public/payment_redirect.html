@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}در حال انتقال به درگاه پرداخت… — {{ site_name|default('فروشگاه') }}{% endblock %}
+
+{% block content %}
+<section class="section" style="padding:5rem 0;">
+    <div class="container" style="max-width:560px;">
+        <div class="glass-card text-center" style="padding:3rem 2rem;">
+            <div class="preloader-spinner" style="width:48px; height:48px; margin:0 auto 1.25rem; border:3px solid rgba(251,176,59,0.2); border-top-color:var(--accent-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+            <h1 class="text-white" style="font-size:1.25rem; font-weight:800;">در حال انتقال به درگاه پرداخت بانکی…</h1>
+            <p class="text-muted" style="font-size:0.9rem; margin-top:0.75rem;">
+                سفارش <strong class="text-yellow">{{ order.order_number }}</strong> ثبت شد.
+                لطفاً منتظر بمانید؛ در صورت انتقال نشدن، روی دکمهٔ زیر کلیک کنید.
+            </p>
+
+            {# فرم خودکار — الگوی استاندارد شاپرک (POST فرم) #}
+            <form id="gateway-form" method="POST" action="{{ form_url }}">
+                {% for key, value in form_fields.items() %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+                <button type="submit" class="btn-rahsa-cta" style="padding:0.7rem 1.8rem; margin-top:1rem;">
+                    <span>ورود به درگاه پرداخت</span>
+                    <span aria-hidden="true">🔒</span>
+                </button>
+            </form>
+
+            <p class="text-muted" style="font-size:0.75rem; margin-top:1.25rem; direction:ltr;">{{ form_url }}</p>
+        </div>
+    </div>
+</section>
+
+<style>@keyframes spin { to { transform:rotate(360deg); } }</style>
+<script>
+    window.addEventListener('load', function() {
+        setTimeout(function() { document.getElementById('gateway-form').submit(); }, 1200);
+    });
+</script>
+{% endblock %}

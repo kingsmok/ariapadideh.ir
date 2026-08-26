@@ -50,6 +50,12 @@
                         <a href="{{ url_for('admin.order_detail', order_id=o.id) }}" class="btn-rahsa-outline" style="padding:0.3rem 0.75rem; font-size:0.8rem;" aria-label="مشاهده سفارش">
                             👁️ مشاهده
                         </a>
+                        <a href="{{ url_for('admin.order_invoice', order_id=o.id) }}" target="_blank" rel="noopener" class="btn-rahsa-outline" style="padding:0.3rem 0.75rem; font-size:0.8rem;" title="فاکتور چاپی" aria-label="فاکتور">
+                            🧾
+                        </a>
+                        <a href="{{ url_for('admin.order_label', order_id=o.id) }}" target="_blank" rel="noopener" class="btn-rahsa-outline" style="padding:0.3rem 0.75rem; font-size:0.8rem;" title="لیبل پستی" aria-label="لیبل پستی">
+                            🏷️
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

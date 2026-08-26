@@ -3,29 +3,92 @@
 {% block page_title %}{{ 'ویرایش آیتم منو' if menu else 'ایجاد آیتم منو جدید' }}{% endblock %}
 
 {% block admin_content %}
-<div style="padding:2rem; max-width:700px; margin:0 auto;" class="glass-card">
+<div style="padding:2rem; max-width:760px; margin:0 auto;" class="glass-card">
     <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
-        {{ 'ویرایش متن منو ' ~ menu.title if menu else 'ایجاد آیتم منو جدید' }}
+        {{ ('ویرایش: ' ~ menu.title) if menu else 'ایجاد آیتم منو جدید' }}
     </h2>
 
     <form action="{{ url_for('admin.menu_edit', menu_id=menu.id) if menu else url_for('admin.menu_edit') }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-        
-        <div class="mb-3">
-            <label class="form-label-rahsa">عنوان منو *</label>
-            {{ form.title(class="form-control-rahsa") }}
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label-rahsa">عنوان منو *</label>
+                {{ form.title(class="form-control-rahsa") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-rahsa">آدرس لینک (URL)</label>
+                {{ form.url(class="form-control-rahsa", placeholder='/about یا https://…') }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">موقعیت منو</label>
+                {{ form.position(class="form-select-rahsa") }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">منوی والد (زیرمنو)</label>
+                <select name="parent_id" class="form-select-rahsa">
+                    <option value="">— بدون والد (سطح اصلی) —</option>
+                    {% for m in menus %}
+                        {% if not menu or m.id != menu.id %}
+                        <option value="{{ m.id }}" {{ 'selected' if menu and menu.parent_id == m.id else '' }}>{{ m.title }} ({{ m.position }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">ترتیب (عدد — با درگ هم عوض می‌شود)</label>
+                <input type="number" name="sort_order" min="0" class="form-control-rahsa"
+                       value="{{ menu.sort_order if menu else 0 }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">آیکون (ایموجی یا کلاس FA)</label>
+                {{ form.icon(class="form-control-rahsa", placeholder='🤖 یا fa fa-home') }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">باز شدن لینک</label>
+                {{ form.target(class="form-select-rahsa") }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-rahsa">متن بج (اختیاری)</label>
+                {{ form.badge_text(class="form-control-rahsa", placeholder='مثلاً جدید') }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-rahsa">رنگ بج (hex)</label>
+                {{ form.badge_color(class="form-control-rahsa", type='color', placeholder='#fbb03b') }}
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label-rahsa">آدرس لینک (URL)</label>
-            {{ form.url(class="form-control-rahsa") }}
+
+        <div class="mt-4" style="display:flex; flex-direction:column; gap:0.6rem;">
+            <label style="display:flex; align-items:center; gap:0.6rem; color:var(--text-gray-300); font-size:0.9rem; cursor:pointer;">
+                <input type="checkbox" name="is_mega_menu" value="y" {{ 'checked' if menu and menu.is_mega_menu else '' }}>
+                🧩 مگامنو — زیرمنوها در پنل عریض دوستونه نمایش داده شوند (فقط موقعیت هدر)
+            </label>
+            <label style="display:flex; align-items:center; gap:0.6rem; color:var(--text-gray-300); font-size:0.9rem; cursor:pointer;">
+                <input type="checkbox" name="no_follow" value="y" {{ 'checked' if menu and menu.no_follow else '' }}>
+                nofollow (برای موتورهای جستجو)
+            </label>
+            <label style="display:flex; align-items:center; gap:0.6rem; color:var(--text-gray-300); font-size:0.9rem; cursor:pointer;">
+                <input type="checkbox" name="is_active" value="y" {{ 'checked' if (menu and menu.is_active) or not menu else '' }}>
+                فعال
+            </label>
+            <div class="row g-2">
+                <div class="col-6">
+                    <label style="display:flex; align-items:center; gap:0.6rem; color:var(--text-gray-300); font-size:0.9rem; cursor:pointer;">
+                        <input type="checkbox" name="show_logged_in" value="y" {{ 'checked' if (menu and menu.show_logged_in) or not menu else '' }}>
+                        نمایش برای کاربران واردشده
+                    </label>
+                </div>
+                <div class="col-6">
+                    <label style="display:flex; align-items:center; gap:0.6rem; color:var(--text-gray-300); font-size:0.9rem; cursor:pointer;">
+                        <input type="checkbox" name="show_guest" value="y" {{ 'checked' if (menu and menu.show_guest) or not menu else '' }}>
+                        نمایش برای مهمان‌ها
+                    </label>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label-rahsa">موقعیت منو</label>
-            {{ form.position(class="form-select-rahsa") }}
-        </div>
-        
-        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
-            💾 ذخیره تغییرات منو
+
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-4">
+            💾 ذخیره منو
         </button>
     </form>
 </div>

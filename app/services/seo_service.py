@@ -189,7 +189,8 @@ class SEOService:
         xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         # Note: image namespace enables Google Image sitemap ingestion
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
-        xml += '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        xml += '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n'
+        xml += '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
 
         # Static pages
         static_pages = [
@@ -201,6 +202,13 @@ class SEOService:
             {'loc': f'{site_url}/categories', 'priority': '0.7', 'changefreq': 'weekly'},
             {'loc': f'{site_url}/terms', 'priority': '0.5', 'changefreq': 'yearly'},
             {'loc': f'{site_url}/privacy', 'priority': '0.5', 'changefreq': 'yearly'},
+            # نسخهٔ انگلیسی (چندزبانه — /en/)
+            {'loc': f'{site_url}/en/', 'priority': '0.9', 'changefreq': 'daily'},
+            {'loc': f'{site_url}/en/about', 'priority': '0.6', 'changefreq': 'monthly'},
+            {'loc': f'{site_url}/en/contact', 'priority': '0.6', 'changefreq': 'monthly'},
+            {'loc': f'{site_url}/en/faq', 'priority': '0.5', 'changefreq': 'monthly'},
+            {'loc': f'{site_url}/en/blog', 'priority': '0.7', 'changefreq': 'daily'},
+            {'loc': f'{site_url}/en/products', 'priority': '0.7', 'changefreq': 'weekly'},
         ]
 
         for page in static_pages:
@@ -245,6 +253,9 @@ class SEOService:
             xml += f'  <loc>{site_url}/blog/{post.slug}</loc>\n'
             xml += '  <changefreq>weekly</changefreq>\n'
             xml += '  <priority>0.6</priority>\n'
+            # نسخهٔ انگلیسی مقاله (فقط اگر ترجمه داشته باشد)
+            if getattr(post, 'title_en', None) and getattr(post, 'content_en', None):
+                xml += f'  <xhtml:link rel="alternate" hreflang="en" href="{site_url}/en/blog/{post.slug}"/>\n'
             lastmod = post.updated_at or post.published_at
             if lastmod:
                 xml += f'  <lastmod>{lastmod.strftime("%Y-%m-%d")}</lastmod>\n'

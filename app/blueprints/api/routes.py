@@ -26,6 +26,87 @@ def require_auth(f):
 
 # ==================== PRODUCTS API ====================
 
+@api_bp.route('/products/filter', methods=['GET'])
+def filter_products():
+    """فیلتر ایجکسی محصولات — سئو-محور (الگوی قالب نادر)
+
+    پارامترها: category (slug), brand (id, چندتایی), min_price, max_price,
+    in_stock, on_sale, sort (newest|cheapest|expensive|popular|discount),
+    page, per_page, q (جستجو)
+    """
+    from flask import request as _req
+
+    per_page = min(_req.args.get('per_page', 12, type=int), 48)
+    page = max(_req.args.get('page', 1, type=int), 1)
+
+    query = Product.query.filter(Product.is_active.is_(True), Product.is_deleted.is_(False))
+
+    category_slug = _req.args.get('category', '')
+    if category_slug:
+        cat = Category.query.filter_by(slug=category_slug, is_deleted=False).first()
+        if not cat:
+            return jsonify({'success': True, 'items': [], 'total': 0, 'pages': 0, 'page': page})
+        query = query.filter(Product.categories.any(id=cat.id))
+
+    brands = _req.args.getlist('brand', type=int)
+    if brands:
+        query = query.filter(Product.brand_id.in_(brands))
+
+    min_price = _req.args.get('min_price', type=float)
+    max_price = _req.args.get('max_price', type=float)
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
+
+    if _req.args.get('in_stock') in ('1', 'true'):
+        query = query.filter(Product.stock_quantity > 0, Product.stock_status != 'out_of_stock')
+
+    if _req.args.get('on_sale') in ('1', 'true'):
+        query = query.filter(Product.discount_percent.isnot(None))
+
+    q = (_req.args.get('q') or '').strip()
+    if q:
+        like = f'%{q}%'
+        query = query.filter(or_(Product.title.ilike(like), Product.short_description.ilike(like)))
+
+    sort = _req.args.get('sort', 'newest')
+    sort_map = {
+        'cheapest': Product.price.asc(),
+        'expensive': Product.price.desc(),
+        'popular': Product.sale_count.desc(),
+        'discount': Product.discount_percent.desc().nullslast(),
+        'newest': Product.created_at.desc(),
+    }
+    query = query.order_by(sort_map.get(sort, Product.created_at.desc()))
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    items = []
+    for p in pagination.items:
+        item = {
+            'id': p.id,
+            'title': p.title,
+            'slug': p.slug,
+            'price': p.current_price,
+            'old_price': p.old_price if p.is_discount_active else None,
+            'discount_percent': p.discount_percent if p.is_discount_active else None,
+            'image': p.main_image_url,
+            'in_stock': p.is_in_stock,
+            'url': f'/product/{p.slug}',
+            'variations': (p.variations or [])[:6],
+        }
+        items.append(item)
+
+    return jsonify({
+        'success': True,
+        'items': items,
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'page': pagination.page,
+    })
+
+
 @api_bp.route('/products', methods=['GET'])
 def get_products():
     """Get products list"""
@@ -305,33 +386,37 @@ def get_cart():
 @require_auth
 def add_to_cart():
     """Add item to cart"""
-    
+
     data = request.get_json()
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
-    
+    variations = data.get('variations')  # متغیر انتخاب‌شده (سواچ)
+
     product = Product.query.get(product_id)
-    
+
     if not product:
         return jsonify({'success': False, 'message': 'محصول یافت نشد'}), 404
-    
+
     if not product.is_in_stock:
         return jsonify({'success': False, 'message': 'محصول موجود نیست'}), 400
-    
+
     # Check existing
     existing = CartItem.query.filter_by(
         user_id=current_user.id,
         product_id=product_id
     ).first()
-    
+
     if existing:
         existing.quantity += quantity
+        if variations:
+            existing.variations = variations
         existing.save()
     else:
         item = CartItem(
             user_id=current_user.id,
             product_id=product_id,
-            quantity=quantity
+            quantity=quantity,
+            variations=variations,
         )
         db.session.add(item)
         db.session.commit()

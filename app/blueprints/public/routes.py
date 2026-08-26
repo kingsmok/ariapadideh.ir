@@ -2,7 +2,7 @@
 Public Routes - Main Site Pages
 """
 from datetime import datetime
-from flask import render_template, request, abort, jsonify, current_app, redirect, url_for, flash
+from flask import render_template, request, abort, jsonify, current_app, redirect, url_for, flash, session
 from flask_login import current_user
 from sqlalchemy import or_, func
 from app.blueprints.public import public_bp
@@ -24,6 +24,10 @@ from app.utils.decorators import rate_limit
 def home():
     """Home page with dynamic components"""
     from app.models.agency import ServiceCatalog, PortfolioCaseStudies
+    from app.services.home_builder_service import get_sections
+
+    # ترتیب بخش‌های صفحهٔ اول — از صفحه‌ساز پنل مدیریت
+    home_sections = get_sections()
     
     # Get home page data
     home_page = Page.query.filter_by(page_type='home', is_active=True, is_deleted=False).first()
@@ -110,6 +114,22 @@ def home():
         session_cart = CartService.get_session_cart_count(CartService.get_session_id())
         cart_items_count = session_cart
     
+    # Stories (استوری‌ساز — الگوی قالب نادر)
+    from app.models import Story, TeamMember, PricingPlan
+    stories = Story.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(Story.sort_order).limit(12).all()
+    stories = [s for s in stories if s.is_live]
+
+    # Team + pricing (الگوی قالب‌های شرکتی: آرنیکا/ستیا)
+    team_members = TeamMember.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(TeamMember.sort_order).limit(8).all()
+
+    pricing_plans = PricingPlan.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(PricingPlan.sort_order).limit(4).all()
+    
     seo = SEOService.get_seo_data('home')
     
     return render_template('public/home.html',
@@ -126,6 +146,11 @@ def home():
         latest_posts=latest_posts,
         faqs=faqs,
         cart_items_count=cart_items_count,
+        stories=stories,
+        team_members=team_members,
+        pricing_plans=pricing_plans,
+        home_sections=home_sections,
+        en_url='/en/',
         seo=seo
     )
 
@@ -171,7 +196,7 @@ def categories_list():
         is_deleted=False
     ).order_by(Category.sort_order).all()
     
-    return render_template('public/categories.html',
+    return render_template('public/categories.html', en_url='/en/products',
         parent_categories=parent_categories,
         all_categories=all_categories
     )
@@ -294,6 +319,12 @@ def product(slug):
 
     seo = SEOService.get_product_seo(product_obj)
 
+    # Video gallery (گالری ویدئو — الگوی قالب نادر)
+    from app.models import ProductVideo
+    product_videos = ProductVideo.query.filter_by(
+        product_id=product_obj.id, is_active=True, is_deleted=False
+    ).order_by(ProductVideo.sort_order).all()
+
     return render_template('public/product.html',
         product=product_obj,
         images=images,
@@ -303,6 +334,7 @@ def product(slug):
         comments=comments,
         in_wishlist=in_wishlist,
         breadcrumb_categories=breadcrumb_categories,
+        product_videos=product_videos,
         seo=seo
     )
 
@@ -339,7 +371,7 @@ def blog(page=1):
         is_deleted=False
     ).order_by(Post.views.desc()).limit(5).all()
     
-    return render_template('public/blog.html',
+    return render_template('public/blog.html', en_url='/en/blog',
         posts=posts,
         categories=categories,
         popular_posts=popular_posts
@@ -486,20 +518,39 @@ def search():
 
 # ==================== CART & CHECKOUT ====================
 
-@public_bp.route('/cart')
+@public_bp.route('/cart', methods=['GET', 'POST'])
 def cart():
-    """Shopping cart page"""
-    
+    """Shopping cart page — POST = add product to cart (فرم دکمهٔ خرید صفحه محصول)"""
+
+    if request.method == 'POST':
+        product_id = request.form.get('product_id', type=int)
+        quantity = request.form.get('quantity', 1, type=int) or 1
+        quantity = max(1, min(quantity, 99))
+
+        if not product_id:
+            flash('محصول مشخص نیست.', 'error')
+            return redirect(url_for('public.cart'))
+
+        added = CartService.add_to_cart(
+            product_id, quantity,
+            current_user.id if current_user.is_authenticated else None,
+        )
+        if added:
+            flash('محصول به سبد خرید اضافه شد.', 'success')
+        else:
+            flash('این محصول در دسترس نیست یا موجود نیست.', 'error')
+        return redirect(url_for('public.cart'))
+
     cart_items = []
     cart_total = 0
-    
+
     if current_user.is_authenticated:
         cart_items = CartService.get_user_cart(current_user.id)
         cart_total = CartService.get_user_cart_total(current_user.id)
     else:
         cart_items = CartService.get_session_cart(CartService.get_session_id())
         cart_total = CartService.get_session_cart_total(CartService.get_session_id())
-    
+
     return render_template('public/cart.html',
         cart_items=cart_items,
         cart_total=cart_total
@@ -545,7 +596,14 @@ def checkout():
         flash('سبد خرید شما خالی است.', 'warning')
         return redirect(url_for('public.cart'))
 
-    cart_total = sum(item.total for item in cart_items)
+    def _item_total(item) -> float:
+        # CartItem (کاربر) یا dict سبد مهمان {product, quantity}
+        if hasattr(item, 'total'):
+            return item.total
+        product = item.get('product')
+        return float(product.current_price or 0) * item.get('quantity', 1) if product else 0.0
+
+    cart_total = sum(_item_total(item) for item in cart_items)
 
     # ---- 2. Get default address for logged-in users ----
     default_address = None
@@ -586,7 +644,7 @@ def checkout():
                 cart_items=cart_items,
                 cart_total=cart_total,
                 default_address=default_address,
-                payment_methods=list_available_gateways(),
+                payment_gateways=list_available_gateways(),
                 form_data=shipping_address,
             )
 
@@ -603,9 +661,19 @@ def checkout():
             flash(f'سفارش {order.order_number} ثبت شد. لطفاً طبق راهنما پرداخت کنید.', 'info')
             return redirect(url_for('public.order_card_payment', order_number=order.order_number))
 
-        # Online payment: redirect to gateway
+        # Online payment: redirect to the selected gateway
         from app.services.payment_gateway import get_gateway
-        gateway = get_gateway(payment_method)
+        available = list_available_gateways()
+        gateway_name = (request.form.get('gateway') or '').strip()
+        if gateway_name:
+            # انتخاب صریح کاربر — اگر در دسترس نبود، به درگاه دیگری سقوط نکن
+            if gateway_name not in [g['id'] for g in available]:
+                flash('درگاه پرداخت انتخابی در دسترس نیست. سفارش ثبت شد؛ از صفحه سفارش دوباره تلاش کنید.', 'error')
+                return redirect(url_for('public.order_success', order_number=order.order_number))
+        else:
+            gateway_name = available[0]['id'] if available else 'mock'
+
+        gateway = get_gateway(gateway_name)
         callback_url = url_for('public.payment_callback', order_number=order.order_number, _external=True)
         result = gateway.create_payment(order, callback_url)
 
@@ -622,7 +690,17 @@ def checkout():
         if transaction:
             transaction.reference_id = result.transaction_id
             transaction.gateway = gateway.gateway_name
+            transaction.status = TransactionStatus.PENDING.value
+            transaction.gateway_response = result.raw_response or None
             transaction.save()
+
+        # درگاه‌های شاپرک (سپه) کاربر را با POST فرم می‌گیرند نه ریدایرکت ساده
+        if result.redirect_method == 'form' and result.form_url:
+            session[f'pay_form_{order.order_number}'] = {
+                'url': result.form_url,
+                'fields': result.form_fields or {},
+            }
+            return redirect(url_for('public.payment_redirect', order_number=order.order_number))
 
         return redirect(result.redirect_url)
 
@@ -632,7 +710,7 @@ def checkout():
         cart_items=cart_items,
         cart_total=cart_total,
         default_address=default_address,
-        payment_methods=list_available_gateways(),
+        payment_gateways=list_available_gateways(),
     )
 
 
@@ -662,9 +740,9 @@ def order_card_payment(order_number):
 
     # Get bank card info from settings
     from app.models import Setting
-    card_number = Setting.get('BANK_CARD_NUMBER', 'شماره کارت را از تنظیمات وارد کنید')
-    card_holder = Setting.get('BANK_CARD_HOLDER', '')
-    site_name = Setting.get('SITE_NAME', 'فروشگاه')
+    card_number = Setting.get_value('payment', 'bank_card_number', '') or 'شماره کارت را از تنظیمات پنل وارد کنید'
+    card_holder = Setting.get_value('payment', 'bank_card_holder', '') or ''
+    site_name = Setting.get_value('general', 'site_name', 'فروشگاه')
 
     return render_template(
         'public/order_card_payment.html',
@@ -734,13 +812,161 @@ def payment_mock(order_number):
     )
 
 
-@public_bp.route('/payment/callback/<order_number>')
+@public_bp.route('/payment/callback/<order_number>', methods=['GET', 'POST'])
 def payment_callback(order_number):
-    """Generic callback for real gateways. Currently only mock uses this path."""
-    # For mock gateway, success/cancel buttons post directly to /payment/mock
-    # For real gateways, this is where the gateway redirects to with status
-    flash('بازگشت از درگاه پرداخت. در حال تأیید...', 'info')
+    """
+    کال‌بک رسمی درگاه‌های پرداخت.
+
+    هر درگاه به‌شکل خودش برمی‌گردد:
+    - زرین‌پال: GET ?Authority=...&Status=OK|NOK
+    - آی‌دی‌پی: POST/GET با id / order_id / status
+    - دیجی‌پی: POST {result, trackingCode, providerId, amount, type}
+    - اسنپ‌پی: POST {status, paymentToken}
+    - بانک سپه (شاپرک): POST {State, ResNum, RefNum, TraceNo}
+    تشخیص درگاه از روی تراکنشِ ثبت‌شده انجام می‌شود (نه ورودی کاربر).
+    """
+    from app.models import Order, PaymentTransaction
+    from app.services.checkout_service import CheckoutService
+    from app.services.payment_gateway import get_gateway, _callback_payload
+    from app.constants import TransactionStatus, PaymentStatus, OrderStatus
+
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    transaction = order.transactions.order_by(PaymentTransaction.id.desc()).first()
+    if not transaction:
+        abort(404)
+
+    # اگر قبلاً تأیید شده، دوباره پردازش نکن (idempotent)
+    if transaction.status == TransactionStatus.SUCCESS.value:
+        return redirect(url_for('public.order_success', order_number=order_number))
+
+    callback_data = _callback_payload()
+    gateway = get_gateway(transaction.gateway or 'mock')
+    current_app.logger.info(
+        f'Payment callback [{gateway.gateway_name}] order={order_number} data={callback_data}'
+    )
+    result = gateway.verify_payment(transaction, callback_data)
+
+    if result.success:
+        transaction.status = TransactionStatus.SUCCESS.value
+        transaction.paid_at = datetime.utcnow()
+        transaction.gateway_response = result.raw_response or transaction.gateway_response
+        # شناسه پیگیری: هر درگاه در raw_response خودش برمی‌گرداند
+        tracking = (
+            result.raw_response.get('ref_id')      # زرین‌پال
+            or result.raw_response.get('track_id')  # آی‌دی‌پی
+            or result.raw_response.get('trackingCode')  # دیجی‌پی
+            or result.raw_response.get('RefNum')    # سپه
+            or result.transaction_id
+        )
+        transaction.tracking_code = str(tracking or '')[:255] or None
+        transaction.save()
+
+        order.mark_paid(reference=str(tracking or transaction.reference_id or ''))
+        order.status = OrderStatus.CONFIRMED.value
+        order.confirmed_at = datetime.utcnow()
+        order.save()
+
+        CheckoutService.clear_user_cart(current_user if current_user.is_authenticated else None)
+
+        try:
+            from app.services.notification_service import NotificationService
+            NotificationService.send_order_confirmation(order)
+        except Exception as e:
+            current_app.logger.warning(f'Order confirmation email failed: {e}')
+
+        flash(f'پرداخت سفارش {order.order_number} با موفقیت تأیید شد.', 'success')
+    else:
+        cancelled = result.error_code in ('cancelled', 'cancelled_by_user')
+        transaction.status = (
+            TransactionStatus.CANCELLED.value if cancelled else TransactionStatus.FAILED.value
+        )
+        transaction.gateway_response = {'callback': callback_data, 'error': result.to_dict()}
+        transaction.save()
+
+        order.payment_status = PaymentStatus.FAILED.value
+        order.save()
+
+        current_app.logger.warning(
+            f'Payment failed [{gateway.gateway_name}] order={order_number}: '
+            f'{result.error_code} — {result.error_message}'
+        )
+        flash(result.error_message or 'پرداخت ناموفق بود. در صورت کسر مبلغ، طی ۷۲ ساعت بازگشت داده می‌شود.', 'error')
+
     return redirect(url_for('public.order_success', order_number=order_number))
+
+
+@public_bp.route('/payment/redirect/<order_number>')
+def payment_redirect(order_number):
+    """
+    صفحهٔ واسط برای درگاه‌هایی که کاربر باید با POST فرم به آن‌ها هدایت شود
+    (الگوی استاندارد شاپرک — بانک سپه). فرم خودکار submit می‌شود.
+    """
+    from app.models import Order
+
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    form_data = session.get(f'pay_form_{order_number}')
+    if not form_data or not form_data.get('url'):
+        flash('نشست پرداخت منقضی شده است. لطفاً دوباره تلاش کنید.', 'warning')
+        return redirect(url_for('public.order_pay', order_number=order_number))
+
+    session.pop(f'pay_form_{order_number}', None)
+    return render_template(
+        'public/payment_redirect.html',
+        order=order,
+        form_url=form_data['url'],
+        form_fields=form_data.get('fields', {}),
+    )
+
+
+@public_bp.route('/order/<order_number>/pay', methods=['GET', 'POST'])
+@rate_limit(limit=5, period=3600, key_func=lambda: f'repay:{request.remote_addr}')
+def order_pay(order_number):
+    """پرداخت مجدد سفارش پرداخت‌نشده (در صورت خطا/لغو قبلی)."""
+    from app.models import Order, PaymentTransaction
+    from app.services.payment_gateway import get_gateway, list_available_gateways
+    from app.constants import TransactionStatus
+
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    if order.user_id and current_user.is_authenticated and order.user_id != current_user.id and not current_user.is_admin():
+        abort(404)
+    if order.payment_status in ('paid',) or order.status in ('delivered', 'cancelled', 'refunded'):
+        flash('این سفارش نیاز به پرداخت ندارد.', 'info')
+        return redirect(url_for('public.order_success', order_number=order_number))
+
+    available = list_available_gateways()
+    gateway_name = request.form.get('gateway') or request.args.get('gateway') or ''
+    if gateway_name not in [g['id'] for g in available]:
+        # پیش‌فرض: درگاه قبلی همین سفارش (اگر هنوز فعال است)، وگرنه اولین درگاه
+        last_txn = order.transactions.order_by(PaymentTransaction.id.desc()).first()
+        prev = last_txn.gateway if last_txn else ''
+        gateway_name = prev if prev in [g['id'] for g in available] else (
+            available[0]['id'] if available else 'mock'
+        )
+
+    gateway = get_gateway(gateway_name)
+    callback_url = url_for('public.payment_callback', order_number=order.order_number, _external=True)
+    result = gateway.create_payment(order, callback_url)
+
+    if not result.success:
+        flash(f'خطا در اتصال به درگاه پرداخت: {result.error_message}', 'error')
+        return redirect(url_for('public.order_success', order_number=order_number))
+
+    transaction = order.transactions.order_by(PaymentTransaction.id.desc()).first()
+    if transaction:
+        transaction.status = TransactionStatus.PENDING.value
+        transaction.gateway = gateway.gateway_name
+        transaction.reference_id = result.transaction_id
+        transaction.gateway_response = result.raw_response or None
+        transaction.save()
+
+    if result.redirect_method == 'form' and result.form_url:
+        session[f'pay_form_{order.order_number}'] = {
+            'url': result.form_url,
+            'fields': result.form_fields or {},
+        }
+        return redirect(url_for('public.payment_redirect', order_number=order.order_number))
+
+    return redirect(result.redirect_url)
 
 
 @public_bp.route('/order/<order_number>/cancel', methods=['POST'])
@@ -771,8 +997,12 @@ def cancel_order(order_number):
 @public_bp.route('/about')
 def about():
     """About us page"""
+    from app.models import TeamMember
     page_obj = Page.query.filter_by(page_type='about', is_active=True, is_deleted=False).first()
-    return render_template('public/about.html', page=page_obj)
+    team_members = TeamMember.query.filter_by(
+        is_active=True, is_deleted=False
+    ).order_by(TeamMember.sort_order).all()
+    return render_template('public/about.html', en_url='/en/about', page=page_obj, team_members=team_members)
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
@@ -795,7 +1025,7 @@ def contact():
         if phone and not re.match(PHONE_PATTERN_IR, phone) and not re.match(PHONE_LANDLINE_IR, phone):
             flash('شماره تلفن وارد شده نامعتبر است.', 'error')
             page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
-            return render_template('public/contact.html', form=form, page=page, success=False)
+            return render_template('public/contact.html', en_url='/en/contact', form=form, page=page, success=False)
 
         try:
             contact_obj = Contact(
@@ -822,7 +1052,7 @@ def contact():
             except Exception as e:
                 current_app.logger.warning(f'Telegram notify failed: {e}')
 
-            return render_template('public/contact.html',
+            return render_template('public/contact.html', en_url='/en/contact',
                 form=ContactForm(),
                 success=True)
         except Exception as e:
@@ -831,7 +1061,7 @@ def contact():
 
     page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
 
-    return render_template('public/contact.html',
+    return render_template('public/contact.html', en_url='/en/contact',
         form=form,
         page=page,
         success=False)
@@ -855,7 +1085,7 @@ def faq():
             faq_categories[cat] = []
         faq_categories[cat].append(faq)
     
-    return render_template('public/faq.html', faqs=faqs, faq_categories=faq_categories)
+    return render_template('public/faq.html', faqs=faqs, faq_categories=faq_categories, en_url='/en/faq')
 
 
 @public_bp.route('/terms')
@@ -1015,3 +1245,50 @@ def feed_products():
     json_data = ExportService.generate_json_feed()
     
     return jsonify(json_data)
+
+
+# ==================== NEWSLETTER (خبرنامه) ====================
+
+@public_bp.route('/newsletter/subscribe', methods=['POST'])
+@rate_limit(limit=5, period=600, key_func=lambda: f'newsletter:{request.remote_addr}')
+def newsletter_subscribe():
+    """Subscribe email to newsletter (AJAX/form)"""
+    from app.models import Subscriber
+    import re
+
+    email = (request.form.get('email') or (request.get_json(silent=True) or {}).get('email') or '').strip().lower()
+
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'message': 'ایمیل معتبر وارد کنید'}), 400
+        flash('ایمیل معتبر وارد کنید.', 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
+    existing = Subscriber.query.filter_by(email=email).first()
+    if existing:
+        existing.unsubscribed_at = None  # resubscribe
+        existing.save()
+        message = 'ایمیل شما قبلاً ثبت شده بود — دوباره فعال شد. سپاس!'
+    else:
+        Subscriber(email=email, source=request.form.get('source', 'footer'),
+                   ip_address=request.remote_addr).save()
+        message = 'عضویت شما در خبرنامه ثبت شد. سپاس از همراهی!'
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'message': message})
+
+    flash(message, 'success')
+    return redirect(request.referrer or url_for('public.home'))
+
+
+# ==================== STORIES (استوری‌ساز) ====================
+
+@public_bp.route('/stories/<int:story_id>/view', methods=['POST'])
+def story_view(story_id):
+    """Increment story views (AJAX)"""
+    from app.models import Story
+
+    story = Story.query.get_or_404(story_id)
+    story.views = (story.views or 0) + 1
+    db.session.commit()
+    return jsonify({'success': True, 'views': story.views})

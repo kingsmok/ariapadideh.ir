@@ -1,0 +1,89 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش پلن' if plan else 'پلن جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="max-width:720px; margin:0 auto;" class="glass-card">
+    <div style="padding:1.5rem 2rem;">
+        <h2 style="font-size:1.25rem; font-weight:800; color:var(--text-white); margin:0 0 1.5rem;">
+            {{ '✏️ ویرایش: ' + plan.title if plan else '➕ پلن قیمتی جدید' }}
+        </h2>
+
+        <form action="{{ url_for('admin.pricing_edit', plan_id=plan.id if plan else None) }}" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">عنوان پلن *</label>
+                <input type="text" name="title" class="form-control" required value="{{ plan.title if plan else '' }}" placeholder="مثلاً: وب‌سایت شرکتی حرفه‌ای">
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">زیرعنوان</label>
+                <input type="text" name="subtitle" class="form-control" value="{{ plan.subtitle or '' if plan else '' }}">
+            </div>
+
+            <div class="row g-2" style="margin-bottom:1rem;">
+                <div class="col-4">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">قیمت (تومان)</label>
+                    <input type="number" name="price_toman" class="form-control" min="0" value="{{ plan.price_toman or '' if plan else '' }}" placeholder="خالی = استعلام قیمت">
+                </div>
+                <div class="col-4">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">قیمت قبلی</label>
+                    <input type="number" name="old_price_toman" class="form-control" min="0" value="{{ plan.old_price_toman or '' if plan else '' }}">
+                </div>
+                <div class="col-4">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">دوره</label>
+                    <input type="text" name="period" class="form-control" value="{{ plan.period or 'پروژه' if plan else 'پروژه' }}">
+                </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">امکانات (هر خط یک مورد — با ✓ نمایش داده می‌شود)</label>
+                <textarea name="features" class="form-control" rows="5">{% if plan %}{% for f in plan.feature_list() %}{{ f }}
+{% endfor %}{% endif %}</textarea>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">امکانات غیرفعال (هر خط — با ✕ نمایش داده می‌شود)</label>
+                <textarea name="features_off" class="form-control" rows="2">{% if plan %}{% for f in plan.feature_off_list() %}{{ f }}
+{% endfor %}{% endif %}</textarea>
+            </div>
+
+            <div class="row g-2" style="margin-bottom:1rem;">
+                <div class="col-6">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">متن دکمه</label>
+                    <input type="text" name="button_text" class="form-control" value="{{ plan.button_text or 'سفارش' if plan else 'سفارش' }}">
+                </div>
+                <div class="col-6">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">لینک دکمه</label>
+                    <input type="text" name="button_url" class="form-control" dir="ltr" value="{{ plan.button_url or '' if plan else '' }}" placeholder="/contact">
+                </div>
+            </div>
+
+            <div class="row g-2 align-items-end" style="margin-bottom:1.5rem;">
+                <div class="col-4">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">برچسب (Badge)</label>
+                    <input type="text" name="badge_text" class="form-control" value="{{ plan.badge_text or '' if plan else '' }}" placeholder="محبوب‌ترین">
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">ترتیب</label>
+                    <input type="number" name="sort_order" class="form-control" value="{{ plan.sort_order if plan else 0 }}">
+                </div>
+                <div class="col-3">
+                    <label style="color:var(--text-white); font-size:.85rem; display:flex; gap:.4rem; align-items:center;">
+                        <input type="checkbox" name="is_featured" value="1" {{ 'checked' if plan and plan.is_featured else '' }}> پلن ویژه
+                    </label>
+                </div>
+                <div class="col-3">
+                    <label style="color:var(--text-white); font-size:.85rem; display:flex; gap:.4rem; align-items:center;">
+                        <input type="checkbox" name="is_active" value="1" {{ 'checked' if (plan and plan.is_active) or not plan else '' }}> فعال
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-rahsa-cta" style="padding:.65rem 1.6rem;">ذخیره</button>
+            <a href="{{ url_for('admin.pricing') }}" class="btn-rahsa-outline" style="padding:.65rem 1.2rem;">انصراف</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -75,8 +75,12 @@ class CheckoutService:
         # ---- 2. Validate products and stock ----
         validated_items = []
         for item in cart_items:
-            product = item.product if hasattr(item, 'product') else Product.query.get(item['product_id'])
-            quantity = item.quantity if hasattr(item, 'quantity') else item['quantity']
+            # CartItem (کاربر لاگین‌کرده) یا dict سبد مهمان
+            if hasattr(item, 'product'):
+                product, quantity = item.product, item.quantity
+            else:
+                product = item.get('product') or Product.query.get(item.get('product_id'))
+                quantity = item.get('quantity', 1)
 
             if not product or product.is_deleted or not product.is_active:
                 raise CheckoutError(

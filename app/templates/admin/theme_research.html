@@ -1,0 +1,355 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}تحلیل بازار قالب‌های شرکتی | پنل مدیریت{% endblock %}
+{% block page_title %}تحلیل بازار قالب‌ها{% endblock %}
+
+{% block admin_content %}
+<div class="theme-research">
+
+    <!-- Header -->
+    <div class="tr-hero">
+        <div>
+            <h1 class="tr-hero-title">🎨 {{ meta.title }}</h1>
+            <p class="tr-hero-sub">
+                بررسی {{ summary.total_themes }} قالب دستهٔ «قالب شرکتی وردپرس» مارکت
+                <a href="{{ meta.source_url }}" target="_blank" rel="noopener">{{ meta.source_name }}</a>
+                — برداشت {{ meta.collected_at_fa }}
+            </p>
+            <p class="tr-hero-note">{{ meta.note }}</p>
+        </div>
+        <a href="{{ meta.source_url }}" target="_blank" rel="noopener" class="btn-rahsa-outline" style="white-space:nowrap;">
+            مشاهدهٔ منبع ↗
+        </a>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="tr-stats">
+        <div class="stat-card">
+            <span class="stat-value">{{ summary.total_themes }}</span>
+            <span class="stat-label">قالب بررسی‌شده ({{ summary.iranian_count }} ایرانی / {{ summary.international_count }} خارجی)</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ summary.best_seller.title.replace('قالب ', '') }}</span>
+            <span class="stat-label">پرفروش‌ترین — {{ '{:,}'.format(summary.best_seller.sales) }} فروش</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ summary.avg_satisfaction }}٪</span>
+            <span class="stat-label">میانگین رضایت (بالاترین: {{ summary.top_satisfaction.en_title }} با {{ summary.top_satisfaction.satisfaction }}٪)</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ '{:,}'.format(summary.avg_price) }}</span>
+            <span class="stat-label">میانگین قیمت (تومان) — از {{ '{:,}'.format(summary.min_price) }} تا {{ '{:,}'.format(summary.max_price) }}</span>
+        </div>
+    </div>
+
+    <!-- Feature coverage vs our CMS -->
+    <div class="tr-coverage">
+        <div class="tr-coverage-item have">
+            <strong>{{ summary.feature_status.have }}</strong>
+            <span>قابلیت در CMS ما موجود است ✅</span>
+        </div>
+        <div class="tr-coverage-item partial">
+            <strong>{{ summary.feature_status.partial }}</strong>
+            <span>ناقص / قابل ارتقا ⚠️</span>
+        </div>
+        <div class="tr-coverage-item missing">
+            <strong>{{ summary.feature_status.missing }}</strong>
+            <span>در رقبا هست، ما نداریم ❌</span>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="tr-toolbar">
+        <div class="tr-tabs" role="tablist" aria-label="فیلتر دستهٔ قالب">
+            {% for key, label in categories %}
+            <button type="button" class="tr-tab {{ 'active' if key == 'all' else '' }}" data-cat="{{ key }}" role="tab"
+                    aria-selected="{{ 'true' if key == 'all' else 'false' }}">{{ label }}</button>
+            {% endfor %}
+        </div>
+        <input type="search" id="tr-search" class="form-control" placeholder="جستجو در نام یا ویژگی قالب‌ها…" aria-label="جستجوی قالب">
+    </div>
+
+    <!-- Theme cards -->
+    <div class="tr-grid" id="tr-grid">
+        {% for t in themes %}
+        <article class="tr-card" data-cat="{{ t.category }}" data-search="{{ t.title }} {{ t.en_title }} {{ t.design_style }} {{ t.highlights|join(' ') }}">
+            <div class="tr-thumb">
+                {% if t.thumbnail %}
+                <img src="{{ t.thumbnail }}" alt="پیش‌نمایش {{ t.title }}" loading="lazy"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                {% endif %}
+                <div class="tr-thumb-fallback" {{ '' if not t.thumbnail else 'style="display:flex;"' }}>
+                    <span>{{ t.en_title[:1] }}</span>
+                </div>
+                <span class="tr-origin-badge {{ 'iranian' if t.origin == 'iranian' else 'international' }}">
+                    {{ '🇮🇷 ایرانی' if t.origin == 'iranian' else '🌍 خارجی' }}
+                </span>
+            </div>
+            <div class="tr-card-body">
+                <h2 class="tr-card-title">{{ t.title }}</h2>
+                <p class="tr-card-style">{{ t.design_style }}</p>
+
+                <div class="tr-badges">
+                    <span class="tr-badge" title="تعداد فروش">🛒 {{ '{:,}'.format(t.sales) }} فروش</span>
+                    <span class="tr-badge" title="درصد رضایت کاربران">👍 {{ t.satisfaction }}٪ رضایت</span>
+                    {% if t.support %}<span class="tr-badge" title="درجهٔ پشتیبانی">🎧 {{ t.support }}</span>{% endif %}
+                    <span class="tr-badge price">
+                        {% if t.discount_percent %}<s>{{ '{:,}'.format(t.price_toman * 100 // (100 - t.discount_percent)) }}</s>{% endif %}
+                        {{ '{:,}'.format(t.price_toman) }} تومان
+                    </span>
+                </div>
+
+                <dl class="tr-meta">
+                    <div><dt>دمو</dt><dd>{{ t.demos }}</dd></div>
+                    <div><dt>صفحه‌ساز</dt><dd>{{ t.builder }}</dd></div>
+                </dl>
+
+                <ul class="tr-highlights">
+                    {% for h in t.highlights %}
+                    <li>{{ h }}</li>
+                    {% endfor %}
+                </ul>
+
+                {% if t.specs %}
+                <details class="tr-specs">
+                    <summary>مشخصات فنی</summary>
+                    <dl>
+                        {% for k, v in t.specs.items() %}
+                        <div><dt>{{ k }}</dt><dd>{{ v }}</dd></div>
+                        {% endfor %}
+                    </dl>
+                </details>
+                {% endif %}
+
+                <a href="{{ t.url }}" target="_blank" rel="noopener" class="btn-rahsa-outline tr-card-link">صفحهٔ قالب در راست‌چین ↗</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <p class="tr-empty" id="tr-empty" hidden>قالبی مطابق جستجوی شما پیدا نشد.</p>
+
+    <!-- Design trends -->
+    <section class="tr-section">
+        <h2>📌 روندها و الگوهای طراحی (تحلیل تجمیعی ۱۸ قالب)</h2>
+        <div class="tr-trends">
+            {% for trend in trends %}
+            <div class="tr-trend">
+                <h3><span aria-hidden="true">{{ trend.icon }}</span> {{ trend.title }}</h3>
+                <p>{{ trend.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Corporate homepage blueprint -->
+    <section class="tr-section">
+        <h2>🧭 ساختار ثابت صفحهٔ اصلی قالب‌های شرکتی</h2>
+        <p class="tr-section-desc">الگوی بخش‌بندی که تقریباً همهٔ دموهای شرکتی از آن پیروی می‌کنند (ترتیب پیشنهادی برای صفحهٔ اصلی ما):</p>
+        <ol class="tr-blueprint">
+            {% for item in page_blueprint %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <!-- Feature matrix / gap analysis -->
+    <section class="tr-section">
+        <h2>⚖️ تحلیل شکاف: قابلیت‌های قالب‌ها در برابر CMS ما</h2>
+        <p class="tr-section-desc">جدول زیر مشخص می‌کند چه قابلیتی در قالب‌های راست‌چین رایج است و وضعیت همین نرم‌افزار چیست.</p>
+        <div class="table-responsive">
+            <table class="table-rahsa tr-table">
+                <thead>
+                    <tr>
+                        <th>قابلیت</th>
+                        <th>در قالب‌های راست‌چین</th>
+                        <th>وضعیت CMS ما</th>
+                        <th>توضیح / پیشنهاد</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set ns = namespace(current_group='') %}
+                    {% for f in feature_matrix %}
+                    {% if f.group != ns.current_group %}
+                    {% set ns.current_group = f.group %}
+                    <tr class="tr-group-row"><td colspan="4">{{ f.group }}</td></tr>
+                    {% endif %}
+                    <tr>
+                        <td>{{ f.feature }}</td>
+                        <td>{{ f.in_themes }}</td>
+                        <td>
+                            <span class="tr-status {{ f.status }}">{{ f.status_label }}</span>
+                        </td>
+                        <td>
+                            {{ f.note }}{% if f.suggestion and f.suggestion != '—' %} → <strong>پیشنهاد:</strong> {{ f.suggestion }}{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Selection criteria + marketplace -->
+    <section class="tr-section tr-two-col">
+        <div>
+            <h2>✅ معیارهای انتخاب قالب شرکتی (از صفحهٔ منبع)</h2>
+            <ul class="tr-criteria">
+                {% for c in selection_criteria %}
+                <li><strong>{{ c.title }}:</strong> {{ c.description }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <h2>🛡️ خدمات و ضمانت‌های مارکت راست‌چین (الگوی فروش)</h2>
+            <ul class="tr-marketplace">
+                {% for note in marketplace_notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+    <p class="tr-footer">
+        منبع: <a href="{{ meta.source_url }}" target="_blank" rel="noopener">{{ meta.source_url }}</a> ·
+        برداشت: {{ meta.collected_at }} · تحلیل عمیق: {{ meta.deep_dived|join('، ') }} ·
+        دادهٔ قابل به‌روزرسانی از <code>app/data/theme_research.py</code>
+    </p>
+</div>
+
+<style>
+/* Theme Research page — scoped */
+.theme-research { display: flex; flex-direction: column; gap: 1.5rem; }
+.tr-hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.tr-hero-title { margin: 0 0 .4rem; font-size: 1.5rem; }
+.tr-hero-sub { margin: 0; color: var(--text-muted, #94a3b8); }
+.tr-hero-sub a { color: var(--accent-gold, #FBB03B); }
+.tr-hero-note { margin: .35rem 0 0; font-size: .8rem; color: var(--text-muted, #64748b); }
+
+.tr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.stat-card { display: flex; flex-direction: column; gap: .25rem; }
+.stat-value { font-size: 1.3rem; font-weight: 700; color: var(--accent-gold, #FBB03B); }
+.stat-label { font-size: .78rem; color: var(--text-muted, #94a3b8); }
+
+.tr-coverage { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.tr-coverage-item { border: 1px solid rgba(148,163,184,.18); border-radius: 12px; padding: .8rem 1rem; display: flex; align-items: center; gap: .8rem; background: rgba(148,163,184,.05); }
+.tr-coverage-item strong { font-size: 1.4rem; }
+.tr-coverage-item span { font-size: .8rem; color: var(--text-muted, #94a3b8); }
+.tr-coverage-item.have strong { color: #34d399; }
+.tr-coverage-item.partial strong { color: #fbbf24; }
+.tr-coverage-item.missing strong { color: #f87171; }
+
+.tr-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.tr-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+.tr-tab { border: 1px solid rgba(148,163,184,.25); background: transparent; color: inherit; padding: .45rem 1rem; border-radius: 999px; cursor: pointer; font: inherit; font-size: .85rem; transition: all .18s ease; }
+.tr-tab:hover { border-color: var(--accent-gold, #FBB03B); }
+.tr-tab.active { background: var(--accent-gold, #FBB03B); border-color: var(--accent-gold, #FBB03B); color: #10192e; font-weight: 700; }
+#tr-search { max-width: 280px; }
+
+.tr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
+.tr-card { border: 1px solid rgba(148,163,184,.18); border-radius: 16px; overflow: hidden; background: rgba(148,163,184,.04); display: flex; flex-direction: column; transition: transform .18s ease, border-color .18s ease; }
+.tr-card:hover { transform: translateY(-3px); border-color: rgba(251,176,59,.45); }
+.tr-card[hidden] { display: none; }
+.tr-thumb { position: relative; aspect-ratio: 590/300; background: linear-gradient(135deg, rgba(251,176,59,.16), rgba(59,130,246,.12)); overflow: hidden; }
+.tr-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tr-thumb-fallback { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: 2.6rem; font-weight: 800; color: rgba(251,176,59,.6); }
+.tr-origin-badge { position: absolute; top: .6rem; inset-inline-start: .6rem; font-size: .72rem; padding: .25rem .6rem; border-radius: 999px; background: rgba(16,25,46,.82); border: 1px solid rgba(148,163,184,.3); }
+.tr-origin-badge.iranian { color: #34d399; }
+.tr-origin-badge.international { color: #93c5fd; }
+
+.tr-card-body { padding: 1rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .7rem; flex: 1; }
+.tr-card-title { margin: 0; font-size: 1.02rem; }
+.tr-card-style { margin: 0; font-size: .8rem; color: var(--text-muted, #94a3b8); line-height: 1.7; }
+
+.tr-badges { display: flex; flex-wrap: wrap; gap: .4rem; }
+.tr-badge { font-size: .72rem; padding: .22rem .55rem; border-radius: 999px; background: rgba(148,163,184,.12); border: 1px solid rgba(148,163,184,.2); white-space: nowrap; }
+.tr-badge.price { color: var(--accent-gold, #FBB03B); border-color: rgba(251,176,59,.4); font-weight: 700; }
+.tr-badge.price s { opacity: .55; font-weight: 400; margin-inline-end: .3rem; }
+
+.tr-meta { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: 0; font-size: .78rem; }
+.tr-meta div { display: flex; flex-direction: column; gap: .15rem; }
+.tr-meta dt { color: var(--text-muted, #64748b); }
+.tr-meta dd { margin: 0; }
+
+.tr-highlights { margin: 0; padding-inline-start: 1.1rem; display: flex; flex-direction: column; gap: .35rem; font-size: .78rem; line-height: 1.8; color: var(--text-muted, #cbd5e1); }
+.tr-highlights li::marker { color: var(--accent-gold, #FBB03B); }
+
+.tr-specs summary { cursor: pointer; font-size: .8rem; color: var(--accent-gold, #FBB03B); }
+.tr-specs dl { display: grid; grid-template-columns: auto 1fr; gap: .3rem .8rem; margin: .6rem 0 0; font-size: .75rem; }
+.tr-specs dt { color: var(--text-muted, #64748b); }
+.tr-specs dd { margin: 0; }
+
+.tr-card-link { margin-top: auto; text-align: center; font-size: .8rem; }
+
+.tr-empty { text-align: center; color: var(--text-muted, #94a3b8); padding: 2rem; }
+
+.tr-section { border: 1px solid rgba(148,163,184,.18); border-radius: 16px; padding: 1.2rem 1.4rem; background: rgba(148,163,184,.04); }
+.tr-section h2 { margin: 0 0 .9rem; font-size: 1.1rem; }
+.tr-section-desc { margin: -.4rem 0 .9rem; font-size: .82rem; color: var(--text-muted, #94a3b8); }
+
+.tr-trends { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.tr-trend { border: 1px solid rgba(148,163,184,.15); border-radius: 12px; padding: .9rem 1rem; background: rgba(16,25,46,.35); }
+.tr-trend h3 { margin: 0 0 .45rem; font-size: .92rem; }
+.tr-trend p { margin: 0; font-size: .78rem; line-height: 1.9; color: var(--text-muted, #cbd5e1); }
+
+.tr-blueprint { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .5rem 1.5rem; margin: 0; padding-inline-start: 1.4rem; font-size: .83rem; }
+.tr-blueprint li { padding: .3rem 0; border-bottom: 1px dashed rgba(148,163,184,.15); }
+.tr-blueprint li::marker { color: var(--accent-gold, #FBB03B); font-weight: 700; }
+
+.tr-table { width: 100%; font-size: .8rem; }
+.tr-table td { line-height: 1.9; }
+.tr-group-row td { background: rgba(251,176,59,.08); color: var(--accent-gold, #FBB03B); font-weight: 700; font-size: .85rem; }
+.tr-status { display: inline-block; padding: .18rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.tr-status.have { background: rgba(52,211,153,.14); color: #34d399; border: 1px solid rgba(52,211,153,.35); }
+.tr-status.partial { background: rgba(251,191,36,.14); color: #fbbf24; border: 1px solid rgba(251,191,36,.35); }
+.tr-status.missing { background: rgba(248,113,113,.14); color: #f87171; border: 1px solid rgba(248,113,113,.35); }
+
+.tr-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.tr-criteria, .tr-marketplace { margin: 0; padding-inline-start: 1.2rem; font-size: .82rem; line-height: 2; color: var(--text-muted, #cbd5e1); }
+.tr-criteria li::marker, .tr-marketplace li::marker { color: var(--accent-gold, #FBB03B); }
+
+.tr-footer { font-size: .75rem; color: var(--text-muted, #64748b); text-align: center; margin: 0; }
+.tr-footer a { color: var(--accent-gold, #FBB03B); }
+
+@media (max-width: 768px) {
+    .tr-two-col { grid-template-columns: 1fr; }
+    #tr-search { max-width: 100%; }
+}
+</style>
+
+<script>
+(function () {
+    'use strict';
+
+    var tabs = document.querySelectorAll('.tr-tab');
+    var cards = document.querySelectorAll('.tr-card');
+    var searchInput = document.getElementById('tr-search');
+    var emptyMsg = document.getElementById('tr-empty');
+    var activeCat = 'all';
+
+    function applyFilters() {
+        var q = (searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
+        var visible = 0;
+        cards.forEach(function (card) {
+            var okCat = activeCat === 'all' || card.dataset.cat === activeCat;
+            var okText = !q || card.dataset.search.indexOf(q) !== -1;
+            var show = okCat && okText;
+            card.hidden = !show;
+            if (show) { visible++; }
+        });
+        if (emptyMsg) { emptyMsg.hidden = visible !== 0; }
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            tabs.forEach(function (t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            activeCat = tab.dataset.cat;
+            applyFilters();
+        });
+    });
+
+    if (searchInput) { searchInput.addEventListener('input', applyFilters); }
+})();
+</script>
+{% endblock %}

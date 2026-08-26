@@ -67,6 +67,7 @@
                             {% for p in products %}
                             <td style="padding:0.85rem; text-align:center;">
                                 <form method="POST" action="{{ url_for('user.api_cart_add') }}" class="add-to-cart-form" data-product="{{ p.id }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn-rahsa-cta" style="padding:0.3rem 0.7rem; font-size:0.78rem;">🛒 سبد</button>
                                 </form>
                             </td>

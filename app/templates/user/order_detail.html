@@ -95,7 +95,10 @@
                 <a href="{{ url_for('user.order_cancel', order_id=order.id) }}" class="btn-rahsa-outline" style="color:var(--accent-danger);">❌ لغو سفارش</a>
                 {% endif %}
                 {% if order.status == 'pending' and order.payment_status != 'paid' %}
-                <a href="{{ url_for('public.order_card_payment', order_number=order.order_number) }}" class="btn-rahsa-cta">💳 پرداخت آنلاین</a>
+                <a href="{{ url_for('public.order_pay', order_number=order.order_number) }}" class="btn-rahsa-cta">💳 پرداخت آنلاین / تکمیل پرداخت</a>
+                {% if order.payment_method == 'card' %}
+                <a href="{{ url_for('public.order_card_payment', order_number=order.order_number) }}" class="btn-rahsa-outline">🏦 راهنمای کارت به کارت</a>
+                {% endif %}
                 {% endif %}
                 <a href="{{ url_for('user.orders') }}" class="btn-rahsa-outline">↩ بازگشت</a>
             </div>

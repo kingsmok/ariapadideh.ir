@@ -113,6 +113,18 @@ class SettingService:
             'mobile': ('021-88991234', 'string', True, 'موبایل', ''),
             'address': ('شیراز، بلوار دلاوران / تهران، ناحیه نوآوری شریف', 'text', True, 'آدرس', ''),
             'working_hours': ('شنبه تا پنجشنبه: ۹ صبح تا ۱۸ عصر', 'string', True, 'ساعات کاری', ''),
+            # نقشهٔ OpenStreetMap در صفحهٔ تماس (الگوی قالب آرنیکا — بدون تحریم و API)
+            # مقدار: bbox یا iframe کامل از openstreetmap.org/export/embed.html
+            'osm_map_embed': (
+                'https://www.openstreetmap.org/export/embed.html?bbox=51.30%2C35.62%2C51.48%2C35.76&layer=mapnik',
+                'text', True, 'نقشهٔ OSM (embed)', 'لینک embed نقشهٔ openstreetmap برای صفحهٔ تماس'
+            ),
+            'osm_map_enabled': ('true', 'boolean', True, 'نمایش نقشه در تماس', ''),
+            # نقشهٔ تعاملی Leaflet با پین قابل کلیک (اولویت بالاتر از embed)
+            # اگر lat/lng تنظیم شود نقشهٔ تعاملی با مارکر نمایش داده می‌شود؛ خالی = iframe
+            'map_lat': ('35.7056', 'string', True, 'عرض جغرافیایی (نقشهٔ تعاملی)', 'مثلاً 35.7056 — خالی=y iframe'),
+            'map_lng': ('51.3850', 'string', True, 'طول جغرافیایی (نقشهٔ تعاملی)', 'مثلاً 51.3850'),
+            'map_zoom': ('15', 'string', True, 'زوم نقشهٔ تعاملی', 'عدد بین 3 تا 19'),
         }
         
         # Social settings
@@ -140,14 +152,74 @@ class SettingService:
             'logo': ('', 'string', True, 'لوگو', ''),
             'favicon': ('', 'string', True, 'فاویکون', ''),
             'dark_mode': ('false', 'boolean', True, 'حالت تاریک', ''),
+            # --- قابلیت‌های جدید (تحلیل بازار قالب‌های شرکتی راست‌چین) ---
+            'accent_color': ('#fbb03b', 'color', True, 'رنگ تأکید (طلایی برند)',
+                             'رنگ دکمه‌ها و تأکیدها — از پنل قابل تغییر مثل قالب‌های راست‌چین'),
+            'allow_theme_switch': ('true', 'boolean', True, 'دکمهٔ تم تیره/روشن',
+                                   'کاربر بتواند بین تم تیره و روشن سوییچ کند (الگوی قالب نادر/کرافتو)'),
+            'body_font': ('Vazirmatn', 'string', True, 'فونت متن',
+                          'Vazirmatn / IRANSans / Shabnam / YekanBakh — مثل انتخاب فونت در قالب‌ها'),
+            'heading_font': ('Vazirmatn', 'string', True, 'فونت تیترها', ''),
+            'preloader_enabled': ('false', 'boolean', True, 'پیش‌بارگر (Preloader)',
+                                  'نمایش صفحهٔ بارگذاری اولیه'),
+            'preloader_style': ('spinner', 'string', True, 'طرح پیش‌بارگر', 'spinner / pulse / bar'),
         }
-        
+
+        # Features settings (خبرنامه / استوری / OTP)
+        default_features = {
+            'stories_enabled': ('true', 'boolean', True, 'نوار استوری صفحهٔ اصلی',
+                                'استوری‌ساز اینستاگرامی (الگوی قالب نادر)'),
+            'newsletter_enabled': ('true', 'boolean', True, 'فرم خبرنامه در فوتر', ''),
+            'otp_login_enabled': ('true', 'boolean', True, 'ورود با موبایل (OTP)',
+                                  'ورود/عضویت پیامکی — نیازمند تنظیم SMS_DRIVER در .env'),
+        }
+
+        # Payment settings — درگاه‌های پرداخت (محرمانه؛ is_public=False)
+        default_payment = {
+            # زرین‌پال (PG v4)
+            'zarinpal_merchant_id': ('', 'string', False, 'زرین‌پال — مرچنت آیدی (UUID ۳۶ کاراکتری)',
+                                     'از پنل merchant.zarinpal.com'),
+            'zarinpal_sandbox': ('false', 'boolean', False, 'زرین‌پال — حالت Sandbox',
+                                 'برای تست؛ نیازمند مرچنت تست sandbox.zarinpal.com'),
+            # آی‌دی‌پی (v1.1)
+            'idpay_api_key': ('', 'string', False, 'آی‌دی‌پی — کلید API',
+                              'از پنل idpay.ir بخش وب‌سرویس'),
+            'idpay_sandbox': ('false', 'boolean', False, 'آی‌دی‌پی — حالت Sandbox', ''),
+            # دیجی‌پی (UPG)
+            'digipay_client_id': ('', 'string', False, 'دیجی‌پی — Client ID', 'از پشتیبانی دیجی‌پی'),
+            'digipay_client_secret': ('', 'string', False, 'دیجی‌پی — Client Secret', ''),
+            'digipay_username': ('', 'string', False, 'دیجی‌پی — نام کاربری', ''),
+            'digipay_password': ('', 'string', False, 'دیجی‌پی — رمز عبور', ''),
+            'digipay_sandbox': ('false', 'boolean', False, 'دیجی‌پی — حالت تست (uat)', ''),
+            # اسنپ‌پی (اقساطی)
+            'snapppay_client_id': ('', 'string', False, 'اسنپ‌پی — Client ID',
+                                   'از پشتیبانی اسنپ‌پی (مستندات محرمانه ارسال می‌شود)'),
+            'snapppay_client_secret': ('', 'string', False, 'اسنپ‌پی — Client Secret', ''),
+            'snapppay_username': ('', 'string', False, 'اسنپ‌پی — نام کاربری', ''),
+            'snapppay_password': ('', 'string', False, 'اسنپ‌پی — رمز عبور', ''),
+            'snapppay_sandbox': ('false', 'boolean', False, 'اسنپ‌پی — حالت Sandbox', ''),
+            # بانک سپه (الگوی استاندارد شاپرک)
+            'sepah_terminal_id': ('', 'string', False, 'بانک سپه — شماره پایانه (Terminal ID)',
+                                  'پذیرندگی سپه از طریق PSP همکار صادر می‌شود'),
+            'sepah_api_base': ('https://sepehr.shaparak.ir:8081', 'string', False,
+                               'بانک سپه — آدرس API (GetToken/Verify)',
+                               'برای PSP غیر از سپهر این آدرس را مطابق قراردادتان تغییر دهید'),
+            'sepah_pay_base': ('https://sepehr.shaparak.ir:8080', 'string', False,
+                               'بانک سپه — آدرس صفحه پرداخت', ''),
+            # کارت به کارت
+            'bank_card_number': ('', 'string', False, 'شماره کارت پرداخت دستی',
+                                 'برای سفارش‌های «کارت به کارت»'),
+            'bank_card_holder': ('', 'string', False, 'نام صاحب کارت', ''),
+        }
+
         all_defaults = {
             'general': default_general,
             'contact': default_contact,
             'social': default_social,
             'seo': default_seo,
             'appearance': default_appearance,
+            'features': default_features,
+            'payment': default_payment,
         }
         
         for group, settings in all_defaults.items():
@@ -165,11 +237,55 @@ class SettingService:
                     )
                     db.session.add(setting)
                 else:
-                    setting.value = value
+                    # مقدار گروه payment (کلیدهای درگاه) هرگز با پیش‌فرض بازنویسی
+                    # نمی‌شود تا پیکربندی ادمین از بین نرود.
+                    if group != 'payment':
+                        setting.value = value
                     setting.is_public = is_public
         
         db.session.commit()
     
+    @staticmethod
+    def ensure_payment_settings() -> None:
+        """
+        ردیف‌های تنظیمات درگاه پرداخت را فقط در صورت نبود ایجاد می‌کند
+        (idempotent) — مقدار ذخیره‌شدهٔ ادمین هرگز بازنویسی نمی‌شود.
+        """
+        from app.models import Setting
+
+        defaults = {
+            'zarinpal_merchant_id': ('', 'string', False, 'زرین‌پال — مرچنت آیدی (UUID ۳۶ کاراکتری)', 'از پنل merchant.zarinpal.com'),
+            'zarinpal_sandbox': ('false', 'boolean', False, 'زرین‌پال — حالت Sandbox', 'برای تست؛ نیازمند مرچنت تست sandbox.zarinpal.com'),
+            'idpay_api_key': ('', 'string', False, 'آی‌دی‌پی — کلید API', 'از پنل idpay.ir بخش وب‌سرویس'),
+            'idpay_sandbox': ('false', 'boolean', False, 'آی‌دی‌پی — حالت Sandbox', ''),
+            'digipay_client_id': ('', 'string', False, 'دیجی‌پی — Client ID', 'از پشتیبانی دیجی‌پی'),
+            'digipay_client_secret': ('', 'string', False, 'دیجی‌پی — Client Secret', ''),
+            'digipay_username': ('', 'string', False, 'دیجی‌پی — نام کاربری', ''),
+            'digipay_password': ('', 'string', False, 'دیجی‌پی — رمز عبور', ''),
+            'digipay_sandbox': ('false', 'boolean', False, 'دیجی‌پی — حالت تست (uat)', ''),
+            'snapppay_client_id': ('', 'string', False, 'اسنپ‌پی — Client ID', 'از پشتیبانی اسنپ‌پی (مستندات محرمانه ارسال می‌شود)'),
+            'snapppay_client_secret': ('', 'string', False, 'اسنپ‌پی — Client Secret', ''),
+            'snapppay_username': ('', 'string', False, 'اسنپ‌پی — نام کاربری', ''),
+            'snapppay_password': ('', 'string', False, 'اسنپ‌پی — رمز عبور', ''),
+            'snapppay_sandbox': ('false', 'boolean', False, 'اسنپ‌پی — حالت Sandbox', ''),
+            'sepah_terminal_id': ('', 'string', False, 'بانک سپه — شماره پایانه (Terminal ID)', 'پذیرندگی سپه از طریق PSP همکار صادر می‌شود'),
+            'sepah_api_base': ('https://sepehr.shaparak.ir:8081', 'string', False, 'بانک سپه — آدرس API (GetToken/Verify)', 'برای PSP غیر از سپهر این آدرس را مطابق قراردادتان تغییر دهید'),
+            'sepah_pay_base': ('https://sepehr.shaparak.ir:8080', 'string', False, 'بانک سپه — آدرس صفحه پرداخت', ''),
+            'bank_card_number': ('', 'string', False, 'شماره کارت پرداخت دستی', 'برای سفارش‌های «کارت به کارت»'),
+            'bank_card_holder': ('', 'string', False, 'نام صاحب کارت', ''),
+        }
+        added = 0
+        for key, (value, stype, is_public, label, desc) in defaults.items():
+            exists = Setting.query.filter_by(group='payment', key=key).first()
+            if not exists:
+                db.session.add(Setting(
+                    group='payment', key=key, value=value, type=stype,
+                    is_public=is_public, label=label, description=desc,
+                ))
+                added += 1
+        if added:
+            db.session.commit()
+
     @staticmethod
     def clear_cache() -> None:
         """Clear settings cache"""

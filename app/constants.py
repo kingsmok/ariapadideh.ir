@@ -55,10 +55,54 @@ class PaymentMethod(str, Enum):
 
 # ==================== Payment Gateways ====================
 class PaymentGateway(str, Enum):
-    ZARINPAL = 'zarinpal'
-    IDPAY = 'idpay'
-    NEXTPAY = 'nextpay'
+    MOCK = 'mock'             # درگاه آزمایشی داخلی (توسعه)
+    ZARINPAL = 'zarinpal'     # زرین‌پال (PG v4)
+    IDPAY = 'idpay'           # آی‌دی‌پی (v1.1)
+    DIGIPAY = 'digipay'       # دیجی‌پی (UPG — کیف پول/اعتباری/IPG)
+    SNAPPPAY = 'snapppay'     # اسنپ‌پی (خرید اقساطی)
+    SEPASH = 'sepah'          # بانک سپه (الگوی استاندارد شاپرک — سپهر)
+    NEXTPAY = 'nextpay'       # (قدیمی — نگه‌داشته برای سازگاری)
     MANUAL = 'manual'         # پرداخت دستی/کارت به کارت
+
+
+# متادیتای درگاه‌ها برای نمایش در صفحه پرداخت
+GATEWAY_CATALOG = {
+    PaymentGateway.MOCK.value: {
+        'label': 'درگاه آزمایشی',
+        'description': 'پرداخت شبیه‌سازی‌شده برای تست فروشگاه',
+        'badge': 'تست',
+    },
+    PaymentGateway.ZARINPAL.value: {
+        'label': 'زرین‌پال',
+        'description': 'پرداخت اینترنتی امن زرین‌پال — همه کارت‌های عضو شتاب',
+        'badge': 'ZarinPal',
+    },
+    PaymentGateway.IDPAY.value: {
+        'label': 'آی‌دی‌پی',
+        'description': 'درگاه پرداخت multibank آی‌دی‌پی — همه کارت‌های عضو شتاب',
+        'badge': 'IDPay',
+    },
+    PaymentGateway.DIGIPAY.value: {
+        'label': 'دیجی‌پی',
+        'description': 'پرداخت با کیف پول، اعتبار و درگاه دیجی‌پی',
+        'badge': 'DigiPay',
+    },
+    PaymentGateway.SNAPPPAY.value: {
+        'label': 'اسنپ‌پی (اقساطی)',
+        'description': 'خرید اقساطی اسنپ‌پی — خرید کن، بعداً پرداخت کن',
+        'badge': 'SnappPay',
+    },
+    PaymentGateway.SEPASH.value: {
+        'label': 'بانک سپه',
+        'description': 'درگاه پرداخت اینترنتی بانک سپه (شاپرک)',
+        'badge': 'سپه',
+    },
+    PaymentGateway.MANUAL.value: {
+        'label': 'کارت به کارت',
+        'description': 'پرداخت Manual با کارت‌خوان/کارت به کارت',
+        'badge': 'Manual',
+    },
+}
 
 
 # ==================== Transaction Status ====================
