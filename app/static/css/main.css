@@ -2272,3 +2272,142 @@ html[dir="ltr"] .mega-menu-panel {
 @keyframes rahsa-spin {
     to { transform: rotate(360deg); }
 }
+
+/* ============================================================
+   Bootstrap-compatible form/button/table components
+   (پنل مدیریت و فرم‌های کاربر — صفحات leads/portfolio/services و …)
+   ============================================================ */
+
+/* --- متن/پس‌زمینه --- */
+.text-light { color: #f8f9fa !important; }
+.text-dark { color: #1a2332 !important; }
+.bg-dark { background-color: #1a2332 !important; }
+.bg-warning { background-color: var(--accent-warning, #f59e0b) !important; }
+.text-gray-200 { color: var(--text-gray-200, #cbd5e1) !important; }
+.cursor-pointer { cursor: pointer; }
+
+/* --- دکمه‌های پایه و رنگ‌ها --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    line-height: 1.5;
+}
+.btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-sm); }
+.btn-lg { padding: 0.85rem 1.6rem; font-size: 1.05rem; border-radius: var(--radius-lg); }
+.btn-warning {
+    background: var(--accent-warning, #f59e0b);
+    color: #1a2332 !important;
+    border-color: var(--accent-warning, #f59e0b);
+}
+.btn-warning:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-danger {
+    background: var(--accent-danger, #ef4444);
+    color: #fff !important;
+    border-color: var(--accent-danger, #ef4444);
+}
+.btn-danger:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-secondary {
+    background: var(--glass-bg);
+    color: var(--text-gray-300, #cbd5e1) !important;
+    border-color: var(--glass-border);
+}
+.btn-secondary:hover { background: var(--glass-hover-bg, rgba(255,255,255,0.06)); color: var(--text-white, #fff) !important; }
+.btn-outline-warning {
+    background: transparent;
+    color: var(--accent-warning, #f59e0b) !important;
+    border-color: var(--accent-warning, #f59e0b);
+}
+.btn-outline-warning:hover { background: rgba(245, 158, 11, 0.12); }
+
+/* --- کارت --- */
+.card {
+    background: var(--bg-navy-card, #152238);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- جدول‌ها (dark) --- */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--text-white, #fff);
+}
+.table th, .table td {
+    padding: 0.7rem 0.9rem;
+    text-align: start;
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+}
+.table th { color: var(--text-gray-400, #94a3b8); font-weight: 800; font-size: 0.8rem; }
+.table-dark { background: var(--bg-navy-card, #152238); }
+.table-dark th, .table-dark td { color: var(--text-white, #fff); }
+.table-hover tbody tr { transition: background 0.15s ease; }
+.table-hover tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* --- فرم‌ها --- */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.92rem;
+    font-family: inherit;
+    color: var(--text-white, #fff);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-gold, #fbb034);
+    box-shadow: 0 0 0 3px rgba(251, 176, 59, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+}
+.form-control::placeholder { color: var(--text-gray-500, #64748b); }
+.form-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-white, #fff);
+}
+.form-check { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.form-check-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent-gold, #fbb034);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.form-check-label { color: var(--text-gray-300, #cbd5e1); cursor: pointer; font-size: 0.9rem; }
+.form-select-sm { padding: 0.3rem 0.6rem; font-size: 0.82rem; border-radius: var(--radius-sm); }
+
+/* --- متفرقه --- */
+.col-2 { flex: 0 0 16.6667%; max-width: 16.6667%; }
+.col-4 { flex: 0 0 33.3333%; max-width: 33.3333%; }
+.flex-fill { flex: 1 1 auto !important; }
+.mr-auto { margin-inline-end: auto; }
+.mt-1 { margin-top: 0.25rem; }
+.flash-text { flex: 1 1 auto; min-width: 0; }
+
+/* --- متغیرهای ارجاع‌شده در قالب‌ها ولی تعریف‌نشده ---
+   (border کارت انتخاب‌شدهٔ پرداخت و رنگ اسپینر به‌خاطر نبود --accent-primary
+   اصلاً رندر نمی‌شدند؛ هم‌ارز لهجهٔ طلایی تم تعریف می‌شوند) */
+:root {
+    --accent-primary: var(--accent-gold);
+    --text-yellow: var(--accent-gold);
+}
