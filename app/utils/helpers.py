@@ -6,7 +6,10 @@ from functools import wraps
 import hashlib
 import re
 import json
-from typing import List
+from typing import List, Optional, Any, Tuple
+import jdatetime
+from sqlalchemy import select
+
 
 
 def format_price(price: float, currency: str = 'IRR') -> str:
@@ -484,7 +487,7 @@ def inject_heading_ids(html_content: str, min_level: int = 2, max_level: int = 3
 
 
 
-def unique_slug(model, text, slug_field='slug', exclude_id=None, max_attempts=1000):
+def unique_slug(model, text: str, slug_field: str = 'slug', exclude_id: Optional[int] = None, max_attempts: int = 1000) -> str:
     """Generate a guaranteed-unique slug for a SQLAlchemy model.
 
     Falls back to a short random token when ``text`` produces an empty slug
@@ -492,6 +495,7 @@ def unique_slug(model, text, slug_field='slug', exclude_id=None, max_attempts=10
     never raise an IntegrityError on create.
     """
     import secrets
+    from app.extensions import db
     base = slugify(text)
     if not base:
         table = getattr(model, '__tablename__', 'item') or 'item'
@@ -501,12 +505,93 @@ def unique_slug(model, text, slug_field='slug', exclude_id=None, max_attempts=10
     n = 1
     field = getattr(model, slug_field)
     for _ in range(max_attempts):
-        q = model.query.filter(field == slug)
+        stmt = select(model).where(field == slug)
         if exclude_id is not None:
-            q = q.filter(model.id != exclude_id)
-        if not q.first():
+            stmt = stmt.where(model.id != exclude_id)
+        exists = db.session.execute(stmt).scalars().first()
+        if not exists:
             return slug
         slug = f"{base}-{n}"
         n += 1
     # Extremely unlikely fallback
     return f"{base}-{secrets.token_hex(3)}"
+
+
+# ==================== Jalali (Shamsi) Date Helpers ====================
+
+PERSIAN_MONTHS = [
+    'فروردین', 'اردیبهشت', 'خرداد',
+    'تیر', 'مرداد', 'شهریور',
+    'مهر', 'آبان', 'آذر',
+    'دی', 'بهمن', 'اسفند'
+]
+
+
+def to_jalali(dt: Optional[datetime]) -> Optional[jdatetime.datetime]:
+    """Convert a Gregorian datetime object into a Jalali datetime object."""
+    if not dt:
+        return None
+    try:
+        return jdatetime.datetime.fromgregorian(datetime=dt)
+    except Exception:
+        return None
+
+
+def format_jalali(
+    dt: Optional[datetime],
+    fmt: str = "%Y/%m/%d - %H:%M",
+    persian_digits: bool = True
+) -> str:
+    """
+    Format a datetime object into a Jalali string.
+
+    Args:
+        dt: The Gregorian datetime instance.
+        fmt: strftime-compatible format string.
+        persian_digits: If True, convert Arabic/Latin digits into Persian numerals.
+    """
+    if not dt:
+        return ""
+    try:
+        jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+        formatted = jdt.strftime(fmt)
+        return to_persian_digits(formatted) if persian_digits else formatted
+    except Exception:
+        return ""
+
+
+def format_jalali_date(
+    dt: Optional[datetime],
+    persian_digits: bool = True
+) -> str:
+    """Format datetime into standard Jalali calendar date (YYYY/MM/DD)."""
+    return format_jalali(dt, fmt="%Y/%m/%d", persian_digits=persian_digits)
+
+
+def format_jalali_human(
+    dt: Optional[datetime],
+    include_time: bool = False,
+    persian_digits: bool = True
+) -> str:
+    """
+    Format datetime into a friendly Persian textual date.
+    Example: '۱۴ مرداد ۱۴۰۳' or '۱۴ مرداد ۱۴۰۳ - ساعت ۱۴:۳۰'.
+    """
+    if not dt:
+        return ""
+    try:
+        jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+        month_str = PERSIAN_MONTHS[jdt.month - 1]
+        base_text = f"{jdt.day} {month_str} {jdt.year}"
+        if include_time:
+            time_str = jdt.strftime("%H:%M")
+            base_text += f" - ساعت {time_str}"
+        return to_persian_digits(base_text) if persian_digits else base_text
+    except Exception:
+        return ""
+
+
+def jalali_now() -> jdatetime.datetime:
+    """Return the current time in Jalali datetime."""
+    return jdatetime.datetime.now()
+

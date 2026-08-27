@@ -153,7 +153,8 @@ def register_context_processors(app: Flask) -> None:
         get_website_schema,
     )
     from app.utils.helpers import (
-        format_price, time_ago, truncate_text, get_cdn_url
+        format_price, time_ago, truncate_text, get_cdn_url,
+        format_jalali, format_jalali_date, format_jalali_human, to_persian_digits
     )
 
     # Register Jinja Filters
@@ -161,6 +162,10 @@ def register_context_processors(app: Flask) -> None:
     app.jinja_env.filters['toman_format'] = format_price
     app.jinja_env.filters['time_ago'] = time_ago
     app.jinja_env.filters['truncate_text'] = truncate_text
+    app.jinja_env.filters['jalali'] = format_jalali
+    app.jinja_env.filters['jalali_date'] = format_jalali_date
+    app.jinja_env.filters['jalali_human'] = format_jalali_human
+    app.jinja_env.filters['fa_digits'] = to_persian_digits
 
     @app.context_processor
     def inject_globals():
@@ -201,7 +206,10 @@ def register_context_processors(app: Flask) -> None:
             'time_ago': time_ago,
             'truncate_text': truncate_text,
             'get_cdn_url': get_cdn_url,
-            'to_persian_digits': lambda s: s,
+            'to_persian_digits': to_persian_digits,
+            'format_jalali': format_jalali,
+            'format_jalali_date': format_jalali_date,
+            'format_jalali_human': format_jalali_human,
             'extract_toc': extract_toc,
             'inject_heading_ids': inject_heading_ids,
             # Schema helpers for templates
