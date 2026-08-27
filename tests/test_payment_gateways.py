@@ -464,7 +464,7 @@ class TestFullFlow:
                               query_string={'Authority': 'AFLOW', 'Status': 'OK'})
             assert resp.status_code == 302
 
-            order = Order.query.get(order.id)
+            order = db.session.get(Order, order.id)
             txn = order.transactions.first()
             assert txn.status == TransactionStatus.SUCCESS.value
             assert txn.tracking_code == '777001'
@@ -526,7 +526,7 @@ class TestFullFlow:
             }, follow_redirects=True)
             assert resp.status_code == 200
 
-            order = Order.query.get(order.id)
+            order = db.session.get(Order, order.id)
             txn = order.transactions.first()
             assert txn.status == TransactionStatus.SUCCESS.value
             assert txn.tracking_code == 'RF-9'
