@@ -1,23 +1,38 @@
 """
-API Routes - REST API Endpoints
+API Routes - Production-grade REST API Endpoints
+Adheres strictly to SQLAlchemy 2.0 select() constructs and layered service calls.
 """
-from flask import request, jsonify, current_app
+from __future__ import annotations
+
+import logging
+import time
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
+
+from flask import Response, current_app, jsonify, request
 from flask_login import current_user
-from sqlalchemy import or_, func
+from sqlalchemy import func, or_, select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
+
 from app.blueprints.api import api_bp
 from app.extensions import db
-from app.models import Product, Category, Post, Order, CartItem, Wishlist, Comparison
-from app.utils.decorators import rate_limit
-import time
+from app.models.content import Post
+from app.models.order import CartItem, Comparison, Order, Wishlist
+from app.models.product import Brand, Category, Product, Tag
+from app.services.cart_service import CartService
+from app.services.product_service import ProductService
+from app.services.user_service import UserService
+
+logger = logging.getLogger(__name__)
 
 
 # ==================== AUTH MIDDLEWARE ====================
 
-def require_auth(f):
-    """Decorator to require authentication"""
-    from functools import wraps
+def require_auth(f: Callable) -> Callable:
+    """Decorator to require user authentication on protected API routes."""
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Response:
         if not current_user.is_authenticated:
             return jsonify({'error': 'Authentication required'}), 401
         return f(*args, **kwargs)
@@ -27,76 +42,82 @@ def require_auth(f):
 # ==================== PRODUCTS API ====================
 
 @api_bp.route('/products/filter', methods=['GET'])
-def filter_products():
-    """فیلتر ایجکسی محصولات — سئو-محور (الگوی قالب نادر)
-
-    پارامترها: category (slug), brand (id, چندتایی), min_price, max_price,
-    in_stock, on_sale, sort (newest|cheapest|expensive|popular|discount),
-    page, per_page, q (جستجو)
+def filter_products() -> Response:
     """
-    from flask import request as _req
+    AJAX filtered product listing with sorting and pagination.
+    """
+    per_page = min(request.args.get('per_page', 12, type=int), 48)
+    page = max(request.args.get('page', 1, type=int), 1)
 
-    per_page = min(_req.args.get('per_page', 12, type=int), 48)
-    page = max(_req.args.get('page', 1, type=int), 1)
+    stmt = select(Product).where(Product.is_active.is_(True), Product.is_deleted.is_(False))
 
-    query = Product.query.filter(Product.is_active.is_(True), Product.is_deleted.is_(False))
-
-    category_slug = _req.args.get('category', '')
+    category_slug = (request.args.get('category') or '').strip()
     if category_slug:
-        cat = Category.query.filter_by(slug=category_slug, is_deleted=False).first()
+        cat_stmt = select(Category).where(Category.slug == category_slug, Category.is_deleted.is_(False))
+        cat = db.session.execute(cat_stmt).scalars().first()
         if not cat:
             return jsonify({'success': True, 'items': [], 'total': 0, 'pages': 0, 'page': page})
-        query = query.filter(Product.categories.any(id=cat.id))
+        stmt = stmt.where(Product.categories.any(Category.id == cat.id))
 
-    brands = _req.args.getlist('brand', type=int)
+    brands = request.args.getlist('brand', type=int)
     if brands:
-        query = query.filter(Product.brand_id.in_(brands))
+        stmt = stmt.where(Product.brand_id.in_(brands))
 
-    min_price = _req.args.get('min_price', type=float)
-    max_price = _req.args.get('max_price', type=float)
-    if min_price is not None:
-        query = query.filter(Product.price >= min_price)
-    if max_price is not None:
-        query = query.filter(Product.price <= max_price)
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    if min_price is not None and min_price >= 0:
+        stmt = stmt.where(Product.price >= min_price)
+    if max_price is not None and max_price > 0:
+        stmt = stmt.where(Product.price <= max_price)
 
-    if _req.args.get('in_stock') in ('1', 'true'):
-        query = query.filter(Product.stock_quantity > 0, Product.stock_status != 'out_of_stock')
+    in_stock = request.args.get('in_stock', type=int)
+    if in_stock:
+        stmt = stmt.where(Product.stock_quantity > 0)
 
-    if _req.args.get('on_sale') in ('1', 'true'):
-        query = query.filter(Product.discount_percent.isnot(None))
+    on_sale = request.args.get('on_sale', type=int)
+    if on_sale:
+        stmt = stmt.where(Product.old_price.isnot(None), Product.old_price > Product.price)
 
-    q = (_req.args.get('q') or '').strip()
+    q = (request.args.get('q') or '').strip()
     if q:
-        like = f'%{q}%'
-        query = query.filter(or_(Product.title.ilike(like), Product.short_description.ilike(like)))
+        term = f'%{q}%'
+        stmt = stmt.where(
+            or_(
+                Product.title.ilike(term),
+                Product.short_description.ilike(term),
+                Product.sku.ilike(term),
+            )
+        )
 
-    sort = _req.args.get('sort', 'newest')
-    sort_map = {
-        'cheapest': Product.price.asc(),
-        'expensive': Product.price.desc(),
-        'popular': Product.sale_count.desc(),
-        'discount': Product.discount_percent.desc().nullslast(),
-        'newest': Product.created_at.desc(),
-    }
-    query = query.order_by(sort_map.get(sort, Product.created_at.desc()))
+    # Sorting
+    sort = request.args.get('sort', 'newest')
+    if sort == 'cheapest':
+        stmt = stmt.order_by(Product.price.asc())
+    elif sort == 'expensive':
+        stmt = stmt.order_by(Product.price.desc())
+    elif sort == 'popular':
+        stmt = stmt.order_by(Product.view_count.desc())
+    elif sort == 'discount':
+        stmt = stmt.order_by((Product.old_price - Product.price).desc().nullslast())
+    else:
+        stmt = stmt.order_by(Product.created_at.desc())
 
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = db.paginate(stmt, page=page, per_page=per_page, error_out=False)
 
     items = []
     for p in pagination.items:
-        item = {
+        items.append({
             'id': p.id,
             'title': p.title,
             'slug': p.slug,
-            'price': p.current_price,
-            'old_price': p.old_price if p.is_discount_active else None,
-            'discount_percent': p.discount_percent if p.is_discount_active else None,
-            'image': p.main_image_url,
-            'in_stock': p.is_in_stock,
+            'price': p.price,
+            'current_price': p.current_price,
+            'old_price': p.old_price,
+            'is_in_stock': p.is_in_stock,
+            'main_image_url': p.main_image_url,
+            'short_description': p.short_description,
             'url': f'/product/{p.slug}',
-            'variations': (p.variations or [])[:6],
-        }
-        items.append(item)
+        })
 
     return jsonify({
         'success': True,
@@ -108,61 +129,56 @@ def filter_products():
 
 
 @api_bp.route('/products', methods=['GET'])
-def get_products():
-    """Get products list"""
-    
+def get_products() -> Response:
+    """Get paginated products list with filters."""
     page = request.args.get('page', 1, type=int)
     per_page = min(request.args.get('per_page', 20, type=int), 100)
-    
-    # Filters
+
+    stmt = select(Product).where(Product.is_active.is_(True), Product.is_deleted.is_(False))
+
     category_id = request.args.get('category', type=int)
-    brand_id = request.args.get('brand', type=int)
-    min_price = request.args.get('min_price', type=float)
-    max_price = request.args.get('max_price', type=float)
-    in_stock = request.args.get('in_stock', type=bool)
-    featured = request.args.get('featured', type=bool)
-    search = request.args.get('search', '')
-    sort = request.args.get('sort', 'newest')
-    
-    query = Product.query.filter_by(is_active=True, is_deleted=False)
-    
     if category_id:
-        query = query.filter(Product.categories.any(id=category_id))
-    
+        stmt = stmt.where(Product.categories.any(Category.id == category_id))
+
+    brand_id = request.args.get('brand', type=int)
     if brand_id:
-        query = query.filter_by(brand_id=brand_id)
-    
-    if min_price:
-        query = query.filter(Product.price >= min_price)
-    
-    if max_price:
-        query = query.filter(Product.price <= max_price)
-    
+        stmt = stmt.where(Product.brand_id == brand_id)
+
+    min_price = request.args.get('min_price', type=float)
+    if min_price is not None:
+        stmt = stmt.where(Product.price >= min_price)
+
+    max_price = request.args.get('max_price', type=float)
+    if max_price is not None:
+        stmt = stmt.where(Product.price <= max_price)
+
+    in_stock = request.args.get('in_stock', type=bool)
     if in_stock:
-        query = query.filter(Product.stock_quantity > 0)
-    
+        stmt = stmt.where(Product.stock_quantity > 0)
+
+    featured = request.args.get('featured', type=bool)
     if featured:
-        query = query.filter_by(is_featured=True)
-    
+        stmt = stmt.where(Product.is_featured.is_(True))
+
+    search = (request.args.get('search') or '').strip()
     if search:
-        query = query.filter(or_(
+        stmt = stmt.where(or_(
             Product.title.ilike(f'%{search}%'),
             Product.short_description.ilike(f'%{search}%')
         ))
-    
-    # Sorting
+
+    sort = request.args.get('sort', 'newest')
     sort_options = {
         'newest': Product.created_at.desc(),
         'oldest': Product.created_at.asc(),
         'price_asc': Product.price.asc(),
         'price_desc': Product.price.desc(),
         'popular': Product.view_count.desc(),
-        'rating': Product.rating_avg.desc()
     }
-    query = query.order_by(sort_options.get(sort, Product.created_at.desc()))
-    
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    
+    stmt = stmt.order_by(sort_options.get(sort, Product.created_at.desc()))
+
+    pagination = db.paginate(stmt, page=page, per_page=per_page, error_out=False)
+
     return jsonify({
         'data': [p.to_dict() for p in pagination.items],
         'pagination': {
@@ -177,44 +193,38 @@ def get_products():
 
 
 @api_bp.route('/products/<int:product_id>', methods=['GET'])
-def get_product(product_id):
-    """Get single product"""
-    
-    product = Product.query.get_or_404(product_id)
-    
-    # Increment views
+def get_product(product_id: int) -> Response:
+    """Retrieve full details for a single product."""
+    product = ProductService.get_by_id(product_id)
+    if not product or product.is_deleted:
+        return jsonify({'error': 'Product not found'}), 404
+
     product.increment_views()
-    
+
     data = product.to_dict()
     data['specifications'] = product.get_specifications_dict()
     data['images'] = product.all_images
     data['related_products'] = [
         p.to_dict() for p in product.get_related_products(4)
     ]
-    
+
     return jsonify(data)
 
 
 # ==================== CATEGORIES API ====================
 
 @api_bp.route('/categories', methods=['GET'])
-def get_categories():
-    """Get categories list"""
-    
+def get_categories() -> Response:
+    """Get category list."""
     parent_only = request.args.get('parent_only', False, type=bool)
-    
+
+    stmt = select(Category).where(Category.is_active.is_(True), Category.is_deleted.is_(False))
     if parent_only:
-        categories = Category.query.filter_by(
-            parent_id=None,
-            is_active=True,
-            is_deleted=False
-        ).all()
-    else:
-        categories = Category.query.filter_by(
-            is_active=True,
-            is_deleted=False
-        ).all()
-    
+        stmt = stmt.where(Category.parent_id.is_(None))
+
+    stmt = stmt.order_by(Category.sort_order.asc())
+    categories = list(db.session.execute(stmt).scalars().all())
+
     return jsonify({
         'data': [
             {
@@ -230,21 +240,24 @@ def get_categories():
 
 
 @api_bp.route('/categories/<slug>/products', methods=['GET'])
-def get_category_products(slug):
-    """Get products by category slug"""
-    
-    category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
-    
+def get_category_products(slug: str) -> Response:
+    """Get products by category slug."""
+    cat_stmt = select(Category).where(Category.slug == slug, Category.is_active.is_(True), Category.is_deleted.is_(False))
+    category = db.session.execute(cat_stmt).scalars().first()
+    if not category:
+        return jsonify({'error': 'Category not found'}), 404
+
     page = request.args.get('page', 1, type=int)
     per_page = min(request.args.get('per_page', 20, type=int), 100)
-    
-    query = category.products.filter(
-        Product.is_active == True,
-        Product.is_deleted == False
-    )
-    
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    
+
+    stmt = select(Product).where(
+        Product.categories.any(Category.id == category.id),
+        Product.is_active.is_(True),
+        Product.is_deleted.is_(False)
+    ).order_by(Product.created_at.desc())
+
+    pagination = db.paginate(stmt, page=page, per_page=per_page, error_out=False)
+
     return jsonify({
         'category': {
             'id': category.id,
@@ -265,26 +278,24 @@ def get_category_products(slug):
 # ==================== POSTS API ====================
 
 @api_bp.route('/posts', methods=['GET'])
-def get_posts():
-    """Get posts list"""
-    
+def get_posts() -> Response:
+    """Get published blog posts list."""
     page = request.args.get('page', 1, type=int)
     per_page = min(request.args.get('per_page', 10, type=int), 50)
     category_id = request.args.get('category', type=int)
-    
-    query = Post.query.filter_by(
-        status='published',
-        is_active=True,
-        is_deleted=False
+
+    stmt = select(Post).where(
+        Post.status == 'published',
+        Post.is_active.is_(True),
+        Post.is_deleted.is_(False)
     )
-    
+
     if category_id:
-        query = query.filter_by(category_id=category_id)
-    
-    pagination = query.order_by(Post.published_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    
+        stmt = stmt.where(Post.category_id == category_id)
+
+    stmt = stmt.order_by(Post.published_at.desc())
+    pagination = db.paginate(stmt, page=page, per_page=per_page, error_out=False)
+
     return jsonify({
         'data': [
             {
@@ -307,13 +318,15 @@ def get_posts():
 
 
 @api_bp.route('/posts/<slug>', methods=['GET'])
-def get_post(slug):
-    """Get single post"""
-    
-    post = Post.query.filter_by(slug=slug, status='published', is_active=True).first_or_404()
-    
+def get_post(slug: str) -> Response:
+    """Get single post details."""
+    stmt = select(Post).where(Post.slug == slug, Post.status == 'published', Post.is_active.is_(True), Post.is_deleted.is_(False))
+    post = db.session.execute(stmt).scalars().first()
+    if not post:
+        return jsonify({'error': 'Post not found'}), 404
+
     post.increment_views()
-    
+
     return jsonify({
         'id': post.id,
         'title': post.title,
@@ -347,21 +360,16 @@ def get_post(slug):
 
 @api_bp.route('/cart', methods=['GET'])
 @require_auth
-def get_cart():
-    """Get user cart"""
-    
-    items = CartItem.query.filter_by(
-        user_id=current_user.id,
-        is_deleted=False
-    ).all()
-    
+def get_cart() -> Response:
+    """Get current user's shopping cart."""
+    items = CartService.get_user_cart(current_user.id)
     cart_items = []
-    total = 0
-    
+    total: float = 0.0
+
     for item in items:
         product = item.product
-        if product:
-            item_total = product.current_price * item.quantity
+        if product and not product.is_deleted and product.is_active:
+            item_total = float(product.current_price) * item.quantity
             total += item_total
             cart_items.append({
                 'id': item.id,
@@ -374,7 +382,7 @@ def get_cart():
                 'total': item_total,
                 'in_stock': product.is_in_stock
             })
-    
+
     return jsonify({
         'items': cart_items,
         'total': total,
@@ -384,48 +392,28 @@ def get_cart():
 
 @api_bp.route('/cart/add', methods=['POST'])
 @require_auth
-def add_to_cart():
-    """Add item to cart"""
-
-    data = request.get_json()
+def add_to_cart() -> Response:
+    """Add item to authenticated user's cart."""
+    data = request.get_json() or {}
     product_id = data.get('product_id')
-    quantity = data.get('quantity', 1)
-    variations = data.get('variations')  # متغیر انتخاب‌شده (سواچ)
+    quantity = int(data.get('quantity', 1))
 
-    product = Product.query.get(product_id)
+    if not product_id:
+        return jsonify({'success': False, 'message': 'شناسه کالا نامعتبر است'}), 400
 
-    if not product:
+    product = ProductService.get_by_id(int(product_id))
+    if not product or product.is_deleted:
         return jsonify({'success': False, 'message': 'محصول یافت نشد'}), 404
 
     if not product.is_in_stock:
         return jsonify({'success': False, 'message': 'محصول موجود نیست'}), 400
 
-    # Check existing
-    existing = CartItem.query.filter_by(
-        user_id=current_user.id,
-        product_id=product_id
-    ).first()
+    success = CartService.add_to_user_cart(current_user.id, product.id, quantity)
+    count = CartService.get_user_cart_count(current_user.id)
 
-    if existing:
-        existing.quantity += quantity
-        if variations:
-            existing.variations = variations
-        existing.save()
-    else:
-        item = CartItem(
-            user_id=current_user.id,
-            product_id=product_id,
-            quantity=quantity,
-            variations=variations,
-        )
-        db.session.add(item)
-        db.session.commit()
-    
-    count = sum(i.quantity for i in CartItem.query.filter_by(user_id=current_user.id).all())
-    
     return jsonify({
-        'success': True,
-        'message': 'محصول به سبد اضافه شد',
+        'success': success,
+        'message': 'محصول به سبد اضافه شد' if success else 'خطا در افزودن به سبد',
         'cart_count': count
     })
 
@@ -434,13 +422,15 @@ def add_to_cart():
 
 @api_bp.route('/wishlist', methods=['GET'])
 @require_auth
-def get_wishlist():
-    """Get user wishlist"""
-    
-    items = Wishlist.query.filter_by(
-        user_id=current_user.id
-    ).all()
-    
+def get_wishlist() -> Response:
+    """Get authenticated user's wishlist."""
+    stmt = (
+        select(Wishlist)
+        .where(Wishlist.user_id == current_user.id)
+        .options(selectinload(Wishlist.product))
+    )
+    items = list(db.session.execute(stmt).scalars().all())
+
     return jsonify({
         'items': [
             {
@@ -448,7 +438,7 @@ def get_wishlist():
                 'product_id': item.product_id,
                 'product': item.product.to_dict() if item.product else None,
                 'created_at': item.created_at.isoformat()
-            } for item in items
+            } for item in items if item.product and not item.product.is_deleted
         ],
         'count': len(items)
     })
@@ -456,32 +446,20 @@ def get_wishlist():
 
 @api_bp.route('/wishlist/toggle', methods=['POST'])
 @require_auth
-def toggle_wishlist():
-    """Toggle wishlist item"""
-    
-    data = request.get_json()
+def toggle_wishlist() -> Response:
+    """Toggle wishlist item."""
+    data = request.get_json() or {}
     product_id = data.get('product_id')
-    
-    existing = Wishlist.query.filter_by(
-        user_id=current_user.id,
-        product_id=product_id
-    ).first()
-    
-    if existing:
-        existing.delete()
-        in_wishlist = False
-        message = 'از علاقه‌مندی‌ها حذف شد'
-    else:
-        item = Wishlist(user_id=current_user.id, product_id=product_id)
-        db.session.add(item)
-        db.session.commit()
-        in_wishlist = True
-        message = 'به علاقه‌مندی‌ها اضافه شد'
-    
-    count = Wishlist.query.filter_by(user_id=current_user.id).count()
-    
+    if not product_id:
+        return jsonify({'success': False, 'message': 'شناسه کالا الزامی است'}), 400
+
+    success, message, in_wishlist = UserService.toggle_wishlist(current_user.id, int(product_id))
+
+    count_stmt = select(func.count(Wishlist.id)).where(Wishlist.user_id == current_user.id)
+    count = db.session.execute(count_stmt).scalar() or 0
+
     return jsonify({
-        'success': True,
+        'success': success,
         'message': message,
         'in_wishlist': in_wishlist,
         'count': count
@@ -491,37 +469,42 @@ def toggle_wishlist():
 # ==================== SEARCH API ====================
 
 @api_bp.route('/search', methods=['GET'])
-def api_search():
-    """Search API"""
-    
-    query = request.args.get('q', '').strip()
-    type_filter = request.args.get('type', 'all')  # all, products, posts
-    page = request.args.get('page', 1, type=int)
+def api_search() -> Response:
+    """Multi-entity search endpoint."""
+    query = (request.args.get('q') or '').strip()
+    type_filter = request.args.get('type', 'all')
     per_page = min(request.args.get('per_page', 20, type=int), 50)
-    
+
     if len(query) < 2:
         return jsonify({'error': 'Query too short'}), 400
-    
+
     search_pattern = f'%{query}%'
-    results = {'products': [], 'posts': []}
-    
+    results: Dict[str, List[Any]] = {'products': [], 'posts': []}
+
     if type_filter in ['all', 'products']:
-        products = Product.query.filter(
-            Product.is_active == True,
-            Product.is_deleted == False,
-            Product.title.ilike(search_pattern)
-        ).limit(per_page).all()
-        
+        prod_stmt = select(Product).where(
+            Product.is_active.is_(True),
+            Product.is_deleted.is_(False),
+            or_(
+                Product.title.ilike(search_pattern),
+                Product.short_description.ilike(search_pattern),
+                Product.sku.ilike(search_pattern),
+            )
+        ).limit(per_page)
+        products = list(db.session.execute(prod_stmt).scalars().all())
         results['products'] = [p.to_dict() for p in products]
-    
+
     if type_filter in ['all', 'posts']:
-        posts = Post.query.filter(
+        post_stmt = select(Post).where(
             Post.status == 'published',
-            Post.is_active == True,
-            Post.is_deleted == False,
-            Post.title.ilike(search_pattern)
-        ).limit(per_page).all()
-        
+            Post.is_active.is_(True),
+            Post.is_deleted.is_(False),
+            or_(
+                Post.title.ilike(search_pattern),
+                Post.excerpt.ilike(search_pattern),
+            )
+        ).limit(per_page)
+        posts = list(db.session.execute(post_stmt).scalars().all())
         results['posts'] = [
             {
                 'id': p.id,
@@ -531,7 +514,7 @@ def api_search():
                 'featured_image': p.featured_image
             } for p in posts
         ]
-    
+
     return jsonify({
         'query': query,
         'results': results
@@ -541,14 +524,14 @@ def api_search():
 # ==================== FEEDS API ====================
 
 @api_bp.route('/feeds/products.json', methods=['GET'])
-def products_feed():
-    """Products JSON feed"""
-    
-    products = Product.query.filter_by(
-        is_active=True,
-        is_deleted=False
-    ).limit(1000).all()
-    
+def products_feed() -> Response:
+    """Products JSON feed."""
+    stmt = select(Product).where(
+        Product.is_active.is_(True),
+        Product.is_deleted.is_(False)
+    ).limit(1000)
+    products = list(db.session.execute(stmt).scalars().all())
+
     return jsonify({
         'generated_at': time.time(),
         'products': [p.to_dict() for p in products]
@@ -558,9 +541,8 @@ def products_feed():
 # ==================== HEALTH CHECK ====================
 
 @api_bp.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    
+def health_check() -> Response:
+    """Health check endpoint."""
     return jsonify({
         'status': 'healthy',
         'timestamp': time.time()

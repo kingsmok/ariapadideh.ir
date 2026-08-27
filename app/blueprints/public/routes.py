@@ -4,7 +4,7 @@ Public Routes - Main Site Pages
 from datetime import datetime
 from flask import render_template, request, abort, jsonify, current_app, redirect, url_for, flash, session
 from flask_login import current_user
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, select, desc
 from app.blueprints.public import public_bp
 from app.extensions import db, cache
 from app.models import (
@@ -21,117 +21,106 @@ from app.utils.decorators import rate_limit
 
 @public_bp.route('/')
 @cache.cached(timeout=300, query_string=True)
-def home():
-    """Home page with dynamic components"""
+def home() -> str:
+    """Home page with dynamic components."""
     from app.models.agency import ServiceCatalog, PortfolioCaseStudies
     from app.services.home_builder_service import get_sections
+    from app.models import Story, TeamMember, PricingPlan
+    from app.services.product_service import ProductService
 
-    # ترتیب بخش‌های صفحهٔ اول — از صفحه‌ساز پنل مدیریت
     home_sections = get_sections()
-    
-    # Get home page data
-    home_page = Page.query.filter_by(page_type='home', is_active=True, is_deleted=False).first()
-    
-    # Get active sliders
-    sliders = Slider.query.filter_by(position='home', is_active=True, is_deleted=False).first()
+
+    # Home page
+    home_stmt = select(Page).where(Page.page_type == 'home', Page.is_active.is_(True), Page.is_deleted.is_(False))
+    home_page = db.session.execute(home_stmt).scalars().first()
+
+    # Active slider
+    slider_stmt = select(Slider).where(Slider.position == 'home', Slider.is_active.is_(True), Slider.is_deleted.is_(False))
+    sliders = db.session.execute(slider_stmt).scalars().first()
     slider_items = []
     if sliders:
-        slider_items = SliderItem.query.filter_by(
-            slider_id=sliders.id, 
-            is_active=True, 
-            is_deleted=False
-        ).order_by(SliderItem.sort_order).all()
-    
-    # Get B2B Services and Portfolio
-    active_services = ServiceCatalog.query.filter_by(
-        is_active=True, is_deleted=False
-    ).order_by(ServiceCatalog.sort_order).all()
-    
-    featured_portfolio = PortfolioCaseStudies.query.filter_by(
-        is_featured=True, is_active=True, is_deleted=False
-    ).order_by(PortfolioCaseStudies.sort_order).limit(6).all()
+        items_stmt = select(SliderItem).where(
+            SliderItem.slider_id == sliders.id,
+            SliderItem.is_active.is_(True),
+            SliderItem.is_deleted.is_(False)
+        ).order_by(SliderItem.sort_order.asc())
+        slider_items = list(db.session.execute(items_stmt).scalars().all())
 
-    # Get featured products
-    featured_products = Product.query.filter_by(
-        is_featured=True, 
-        is_active=True, 
-        is_deleted=False
-    ).order_by(Product.sort_order).limit(8).all()
-    
-    # Get new products
-    new_products = Product.query.filter_by(
-        is_new=True,
-        is_active=True, 
-        is_deleted=False
-    ).order_by(Product.created_at.desc()).limit(8).all()
-    
-    # Get categories for mega menu
-    categories = Category.query.filter_by(
-        parent_id=None,
-        is_active=True,
-        is_deleted=False
-    ).order_by(Category.sort_order).limit(12).all()
-    
-    # Get banners by position
-    banners_top = Banner.query.filter_by(
-        position='home_top',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Banner.sort_order).all()
-    
-    banners_middle = Banner.query.filter_by(
-        position='home_middle',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Banner.sort_order).all()
-    
-    banners_bottom = Banner.query.filter_by(
-        position='home_bottom',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Banner.sort_order).all()
-    
-    # Get latest posts
-    latest_posts = Post.query.filter_by(
-        status='published',
-        is_active=True,
-        is_deleted=False,
-        show_in_home=True
-    ).order_by(Post.published_at.desc()).limit(3).all()
-    
-    # Get FAQs
-    faqs = FAQ.query.filter_by(
-        is_active=True,
-        is_deleted=False,
-        is_featured=True
-    ).limit(5).all()
-    
-    # Get cart items count
-    cart_items_count = 0
-    if current_user.is_authenticated:
-        cart_items_count = CartService.get_user_cart_count(current_user.id)
-    else:
-        session_cart = CartService.get_session_cart_count(CartService.get_session_id())
-        cart_items_count = session_cart
-    
-    # Stories (استوری‌ساز — الگوی قالب نادر)
-    from app.models import Story, TeamMember, PricingPlan
-    stories = Story.query.filter_by(
-        is_active=True, is_deleted=False
-    ).order_by(Story.sort_order).limit(12).all()
-    stories = [s for s in stories if s.is_live]
+    # B2B Services and Portfolio
+    serv_stmt = select(ServiceCatalog).where(
+        ServiceCatalog.is_active.is_(True),
+        ServiceCatalog.is_deleted.is_(False)
+    ).order_by(ServiceCatalog.sort_order.asc())
+    active_services = list(db.session.execute(serv_stmt).scalars().all())
 
-    # Team + pricing (الگوی قالب‌های شرکتی: آرنیکا/ستیا)
-    team_members = TeamMember.query.filter_by(
-        is_active=True, is_deleted=False
-    ).order_by(TeamMember.sort_order).limit(8).all()
+    port_stmt = select(PortfolioCaseStudies).where(
+        PortfolioCaseStudies.is_featured.is_(True),
+        PortfolioCaseStudies.is_active.is_(True),
+        PortfolioCaseStudies.is_deleted.is_(False)
+    ).order_by(PortfolioCaseStudies.sort_order.asc()).limit(6)
+    featured_portfolio = list(db.session.execute(port_stmt).scalars().all())
 
-    pricing_plans = PricingPlan.query.filter_by(
-        is_active=True, is_deleted=False
-    ).order_by(PricingPlan.sort_order).limit(4).all()
-    
+    # Products from ProductService
+    featured_products = ProductService.get_featured(limit=8)
+    new_products = ProductService.get_new_arrivals(limit=8)
+    categories = ProductService.get_categories_tree()[:12]
+
+    # Banners by position
+    def get_banners_for_pos(position_name: str) -> list:
+        stmt = select(Banner).where(
+            Banner.position == position_name,
+            Banner.is_active.is_(True),
+            Banner.is_deleted.is_(False)
+        ).order_by(Banner.sort_order.asc())
+        return list(db.session.execute(stmt).scalars().all())
+
+    banners_top = get_banners_for_pos('home_top')
+    banners_middle = get_banners_for_pos('home_middle')
+    banners_bottom = get_banners_for_pos('home_bottom')
+
+    # Latest posts
+    post_stmt = select(Post).where(
+        Post.status == 'published',
+        Post.is_active.is_(True),
+        Post.is_deleted.is_(False),
+        Post.show_in_home.is_(True)
+    ).order_by(Post.published_at.desc()).limit(3)
+    latest_posts = list(db.session.execute(post_stmt).scalars().all())
+
+    # FAQs
+    faq_stmt = select(FAQ).where(
+        FAQ.is_active.is_(True),
+        FAQ.is_deleted.is_(False),
+        FAQ.is_featured.is_(True)
+    ).limit(5)
+    faqs = list(db.session.execute(faq_stmt).scalars().all())
+
+    # Cart items count
+    user_id = current_user.id if current_user.is_authenticated else None
+    cart_items_count = CartService.get_cart_count(user_id=user_id)
+
+    # Stories
+    story_stmt = select(Story).where(
+        Story.is_active.is_(True),
+        Story.is_deleted.is_(False)
+    ).order_by(Story.sort_order.asc()).limit(12)
+    stories = [s for s in db.session.execute(story_stmt).scalars().all() if s.is_live]
+
+    # Team + pricing
+    team_stmt = select(TeamMember).where(
+        TeamMember.is_active.is_(True),
+        TeamMember.is_deleted.is_(False)
+    ).order_by(TeamMember.sort_order.asc()).limit(8)
+    team_members = list(db.session.execute(team_stmt).scalars().all())
+
+    pricing_stmt = select(PricingPlan).where(
+        PricingPlan.is_active.is_(True),
+        PricingPlan.is_deleted.is_(False)
+    ).order_by(PricingPlan.sort_order.asc()).limit(4)
+    pricing_plans = list(db.session.execute(pricing_stmt).scalars().all())
+
     seo = SEOService.get_seo_data('home')
-    
+
     return render_template('public/home.html',
         page=home_page,
         sliders=slider_items,
@@ -159,19 +148,21 @@ def home():
 
 @public_bp.route('/<slug>')
 @cache.cached(timeout=300, query_string=True)
-def page(slug):
-    """Dynamic page by slug"""
-    
-    page_obj = Page.query.filter_by(slug=slug, is_active=True, is_deleted=False).first_or_404()
-    
+def page(slug: str) -> str:
+    """Dynamic page by slug."""
+    stmt = select(Page).where(Page.slug == slug, Page.is_active.is_(True), Page.is_deleted.is_(False))
+    page_obj = db.session.execute(stmt).scalars().first()
+    if not page_obj:
+        abort(404)
+
     # Get page components
     components = page_obj.components.filter_by(
-        is_active=True, 
+        is_active=True,
         is_deleted=False
     ).order_by(page_obj.components.property.mapper.class_.sort_order).all()
-    
+
     seo = SEOService.get_page_seo(page_obj)
-    
+
     return render_template(f'public/pages/{page_obj.template or "default"}.html',
         page=page_obj,
         components=components,
@@ -182,20 +173,21 @@ def page(slug):
 # ==================== CATEGORY ROUTES ====================
 
 @public_bp.route('/categories/')
-def categories_list():
-    """All categories listing"""
-    
-    parent_categories = Category.query.filter_by(
-        parent_id=None,
-        is_active=True,
-        is_deleted=False
-    ).order_by(Category.sort_order).all()
-    
-    all_categories = Category.query.filter_by(
-        is_active=True,
-        is_deleted=False
-    ).order_by(Category.sort_order).all()
-    
+def categories_list() -> str:
+    """All categories listing."""
+    parent_stmt = select(Category).where(
+        Category.parent_id.is_(None),
+        Category.is_active.is_(True),
+        Category.is_deleted.is_(False)
+    ).order_by(Category.sort_order.asc())
+    parent_categories = list(db.session.execute(parent_stmt).scalars().all())
+
+    all_stmt = select(Category).where(
+        Category.is_active.is_(True),
+        Category.is_deleted.is_(False)
+    ).order_by(Category.sort_order.asc())
+    all_categories = list(db.session.execute(all_stmt).scalars().all())
+
     return render_template('public/categories.html', en_url='/en/products',
         parent_categories=parent_categories,
         all_categories=all_categories
@@ -205,61 +197,69 @@ def categories_list():
 @public_bp.route('/category/<slug>')
 @public_bp.route('/category/<slug>/<int:page>')
 @cache.cached(timeout=300, query_string=True)
-def category(slug, page=1):
-    """Category page with products"""
-    
-    category_obj = Category.query.filter_by(slug=slug, is_active=True, is_deleted=False).first_or_404()
-    
+def category(slug: str, page: int = 1) -> str:
+    """Category page with products."""
+    cat_stmt = select(Category).where(Category.slug == slug, Category.is_active.is_(True), Category.is_deleted.is_(False))
+    category_obj = db.session.execute(cat_stmt).scalars().first()
+    if not category_obj:
+        abort(404)
+
     per_page = current_app.config.get('ITEMS_PER_PAGE', 20)
-    
-    # Build query
-    query = Product.query.filter(
-        Product.categories.any(id=category_obj.id),
-        Product.is_active == True,
-        Product.is_deleted == False
+
+    # Build query with SQLAlchemy 2.0 select()
+    stmt = (
+        select(Product)
+        .where(
+            Product.categories.any(Category.id == category_obj.id),
+            Product.is_active.is_(True),
+            Product.is_deleted.is_(False),
+        )
     )
-    
+
     # Filters
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     brand_ids = request.args.getlist('brand', type=int)
     in_stock = request.args.get('in_stock', type=int)
     sort = request.args.get('sort', 'newest')
-    
+
     if min_price:
-        query = query.filter(Product.price >= min_price)
+        stmt = stmt.where(Product.price >= min_price)
     if max_price:
-        query = query.filter(Product.price <= max_price)
+        stmt = stmt.where(Product.price <= max_price)
     if brand_ids:
-        query = query.filter(Product.brand_id.in_(brand_ids))
+        stmt = stmt.where(Product.brand_id.in_(brand_ids))
     if in_stock:
-        query = query.filter(Product.stock_quantity > 0)
-    
+        stmt = stmt.where(Product.stock_quantity > 0)
+
     # Sorting
     sort_options = {
         'newest': Product.created_at.desc(),
         'price_asc': Product.price.asc(),
         'price_desc': Product.price.desc(),
         'popular': Product.view_count.desc(),
-        'rating': Product.rating_avg.desc()
+        'rating': Product.created_at.desc()
     }
-    query = query.order_by(sort_options.get(sort, Product.created_at.desc()))
-    
-    # Paginate
-    products = query.paginate(page=page, per_page=per_page, error_out=False)
-    
+    stmt = stmt.order_by(sort_options.get(sort, Product.created_at.desc()))
+
+    # Paginate with modern db.paginate
+    products = db.paginate(stmt, page=page, per_page=per_page, error_out=False)
+
     # Get child categories
     child_categories = category_obj.children.filter_by(
         is_active=True,
         is_deleted=False
     ).order_by(Category.sort_order).all() if category_obj.show_children else []
-    
+
     # Get brands in this category
     brand_ids_in_category = [p.brand_id for p in category_obj.products if p.brand_id]
-    brands = Brand.query.filter(Brand.id.in_(brand_ids_in_category)).all() if brand_ids_in_category else []
-    
+    brands = []
+    if brand_ids_in_category:
+        b_stmt = select(Brand).where(Brand.id.in_(brand_ids_in_category), Brand.is_active.is_(True))
+        brands = list(db.session.execute(b_stmt).scalars().all())
+
     seo = SEOService.get_category_seo(category_obj)
-    
+
     return render_template('public/category.html',
         category=category_obj,
         products=products,
@@ -272,10 +272,12 @@ def category(slug, page=1):
 # ==================== PRODUCT ROUTES ====================
 
 @public_bp.route('/product/<slug>')
-def product(slug):
-    """Product detail page"""
-
-    product_obj = Product.query.filter_by(slug=slug, is_active=True, is_deleted=False).first_or_404()
+def product(slug: str) -> str:
+    """Product detail page."""
+    prod_stmt = select(Product).where(Product.slug == slug, Product.is_active.is_(True), Product.is_deleted.is_(False))
+    product_obj = db.session.execute(prod_stmt).scalars().first()
+    if not product_obj:
+        abort(404)
 
     # Increment views
     product_obj.increment_views()
@@ -298,32 +300,38 @@ def product(slug):
     # Check if in wishlist
     in_wishlist = False
     if current_user.is_authenticated:
-        in_wishlist = Wishlist.query.filter_by(
-            user_id=current_user.id,
-            product_id=product_obj.id
-        ).first() is not None
+        wish_stmt = select(Wishlist.id).where(
+            Wishlist.user_id == current_user.id,
+            Wishlist.product_id == product_obj.id
+        )
+        in_wishlist = db.session.execute(wish_stmt).scalar() is not None
 
     # Get breadcrumb categories
     breadcrumb_categories = product_obj.categories[0].breadcrumbs if product_obj.categories else []
 
-    # Get related posts (articles mentioning this product's category)
+    # Get related posts
     related_posts = []
     if product_obj.categories:
         cat_ids = [c.id for c in product_obj.categories]
-        related_posts = Post.query.filter(
-            Post.is_active == True,
-            Post.is_deleted == False,
-            Post.status == 'published',
-            Post.category_id.in_(cat_ids) if cat_ids else False,
-        ).order_by(Post.published_at.desc()).limit(3).all()
+        if cat_ids:
+            rp_stmt = select(Post).where(
+                Post.is_active.is_(True),
+                Post.is_deleted.is_(False),
+                Post.status == 'published',
+                Post.category_id.in_(cat_ids),
+            ).order_by(Post.published_at.desc()).limit(3)
+            related_posts = list(db.session.execute(rp_stmt).scalars().all())
 
     seo = SEOService.get_product_seo(product_obj)
 
-    # Video gallery (گالری ویدئو — الگوی قالب نادر)
-    from app.models import ProductVideo
-    product_videos = ProductVideo.query.filter_by(
-        product_id=product_obj.id, is_active=True, is_deleted=False
-    ).order_by(ProductVideo.sort_order).all()
+    # Video gallery
+    from app.models.features import ProductVideo
+    pv_stmt = select(ProductVideo).where(
+        ProductVideo.product_id == product_obj.id,
+        ProductVideo.is_active.is_(True),
+        ProductVideo.is_deleted.is_(False)
+    ).order_by(ProductVideo.sort_order.asc())
+    product_videos = list(db.session.execute(pv_stmt).scalars().all())
 
     return render_template('public/product.html',
         product=product_obj,
@@ -344,33 +352,30 @@ def product(slug):
 @public_bp.route('/blog/')
 @public_bp.route('/blog/<int:page>')
 @cache.cached(timeout=300, query_string=True)
-def blog(page=1):
-    """Blog listing page"""
-    
+def blog(page: int = 1) -> str:
+    """Blog listing page."""
     per_page = current_app.config.get('ITEMS_PER_PAGE', 12)
-    
-    # Get posts
-    posts = Post.query.filter_by(
-        status='published',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Post.published_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    
-    # Get categories
-    categories = Category.query.filter_by(
-        is_active=True,
-        is_deleted=False
-    ).order_by(Category.title).all()
-    
-    # Get popular posts
-    popular_posts = Post.query.filter_by(
-        status='published',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Post.views.desc()).limit(5).all()
-    
+
+    post_stmt = select(Post).where(
+        Post.status == 'published',
+        Post.is_active.is_(True),
+        Post.is_deleted.is_(False)
+    ).order_by(Post.published_at.desc())
+    posts = db.paginate(post_stmt, page=page, per_page=per_page, error_out=False)
+
+    cat_stmt = select(Category).where(
+        Category.is_active.is_(True),
+        Category.is_deleted.is_(False)
+    ).order_by(Category.title.asc())
+    categories = list(db.session.execute(cat_stmt).scalars().all())
+
+    pop_stmt = select(Post).where(
+        Post.status == 'published',
+        Post.is_active.is_(True),
+        Post.is_deleted.is_(False)
+    ).order_by(Post.views.desc()).limit(5)
+    popular_posts = list(db.session.execute(pop_stmt).scalars().all())
+
     return render_template('public/blog.html', en_url='/en/blog',
         posts=posts,
         categories=categories,
@@ -380,10 +385,12 @@ def blog(page=1):
 
 @public_bp.route('/blog/<slug>')
 @cache.cached(timeout=300, query_string=True)
-def post(slug):
-    """Blog post detail page"""
-
-    post_obj = Post.query.filter_by(slug=slug, status='published', is_active=True, is_deleted=False).first_or_404()
+def post(slug: str) -> str:
+    """Blog post detail page."""
+    post_stmt = select(Post).where(Post.slug == slug, Post.status == 'published', Post.is_active.is_(True), Post.is_deleted.is_(False))
+    post_obj = db.session.execute(post_stmt).scalars().first()
+    if not post_obj:
+        abort(404)
 
     # Increment views
     post_obj.increment_views()
@@ -391,17 +398,19 @@ def post(slug):
     # Get related posts
     related_posts = post_obj.get_related_posts(limit=3)
 
-    # Get related products (articles often mention products in the same category)
+    # Get related products
     related_products = []
     if post_obj.category_id:
-        from app.models import ProductCategory
-        product_ids = [pc.product_id for pc in ProductCategory.query.filter_by(category_id=post_obj.category_id).limit(4).all()]
+        from app.models.product import ProductCategory
+        pc_stmt = select(ProductCategory.product_id).where(ProductCategory.category_id == post_obj.category_id).limit(4)
+        product_ids = list(db.session.execute(pc_stmt).scalars().all())
         if product_ids:
-            related_products = Product.query.filter(
+            prod_stmt = select(Product).where(
                 Product.id.in_(product_ids),
-                Product.is_active == True,
-                Product.is_deleted == False,
-            ).limit(4).all()
+                Product.is_active.is_(True),
+                Product.is_deleted.is_(False),
+            ).limit(4)
+            related_products = list(db.session.execute(prod_stmt).scalars().all())
 
     # Get comments
     comments = post_obj.comments.filter_by(
@@ -410,17 +419,19 @@ def post(slug):
     ).order_by(db.desc('created_at')).all()
 
     # Previous and next posts
-    prev_post = Post.query.filter(
+    prev_stmt = select(Post).where(
         Post.id < post_obj.id,
         Post.status == 'published',
-        Post.is_deleted == False
-    ).order_by(Post.id.desc()).first()
+        Post.is_deleted.is_(False)
+    ).order_by(Post.id.desc()).limit(1)
+    prev_post = db.session.execute(prev_stmt).scalars().first()
 
-    next_post = Post.query.filter(
+    next_stmt = select(Post).where(
         Post.id > post_obj.id,
         Post.status == 'published',
-        Post.is_deleted == False
-    ).order_by(Post.id.asc()).first()
+        Post.is_deleted.is_(False)
+    ).order_by(Post.id.asc()).limit(1)
+    next_post = db.session.execute(next_stmt).scalars().first()
 
     seo = SEOService.get_post_seo(post_obj)
 
@@ -437,22 +448,23 @@ def post(slug):
 
 @public_bp.route('/blog/category/<slug>')
 @public_bp.route('/blog/category/<slug>/<int:page>')
-def blog_category(slug, page=1):
-    """Blog posts by category"""
-    
-    category_obj = Category.query.filter_by(slug=slug, is_active=True, is_deleted=False).first_or_404()
-    
+def blog_category(slug: str, page: int = 1) -> str:
+    """Blog posts by category."""
+    cat_stmt = select(Category).where(Category.slug == slug, Category.is_active.is_(True), Category.is_deleted.is_(False))
+    category_obj = db.session.execute(cat_stmt).scalars().first()
+    if not category_obj:
+        abort(404)
+
     per_page = current_app.config.get('ITEMS_PER_PAGE', 12)
-    
-    posts = Post.query.filter_by(
-        category_id=category_obj.id,
-        status='published',
-        is_active=True,
-        is_deleted=False
-    ).order_by(Post.published_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    
+    post_stmt = select(Post).where(
+        Post.category_id == category_obj.id,
+        Post.status == 'published',
+        Post.is_active.is_(True),
+        Post.is_deleted.is_(False)
+    ).order_by(Post.published_at.desc())
+
+    posts = db.paginate(post_stmt, page=page, per_page=per_page, error_out=False)
+
     return render_template('public/blog_category.html',
         category=category_obj,
         posts=posts
@@ -463,49 +475,54 @@ def blog_category(slug, page=1):
 
 @public_bp.route('/search')
 @cache.cached(timeout=60, query_string=True)
-def search():
-    """Search page"""
-    
+def search() -> str:
+    """Search page across products and articles."""
     query = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
-    search_type = request.args.get('type', 'all')  # all, products, posts
-    
+    search_type = request.args.get('type', 'all')
+
     per_page = current_app.config.get('ITEMS_PER_PAGE', 20)
-    
+
     products = None
     posts = None
     total_results = 0
-    
+
     if query and len(query) >= 2:
         search_pattern = f'%{query}%'
-        
+
         if search_type in ['all', 'products']:
-            products = Product.query.filter(
-                Product.is_active == True,
-                Product.is_deleted == False,
+            prod_stmt = select(Product).where(
+                Product.is_active.is_(True),
+                Product.is_deleted.is_(False),
                 or_(
                     Product.title.ilike(search_pattern),
                     Product.short_description.ilike(search_pattern),
                     Product.sku.ilike(search_pattern)
                 )
-            ).order_by(Product.view_count.desc()).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+            ).order_by(Product.view_count.desc())
+            products = db.paginate(prod_stmt, page=page, per_page=per_page, error_out=False)
             total_results += products.total
-        
+
         if search_type in ['all', 'posts']:
-            posts = Post.query.filter(
-                Post.is_active == True,
-                Post.is_deleted == False,
+            post_stmt = select(Post).where(
+                Post.is_active.is_(True),
+                Post.is_deleted.is_(False),
                 Post.status == 'published',
                 or_(
                     Post.title.ilike(search_pattern),
                     Post.excerpt.ilike(search_pattern)
                 )
-            ).order_by(Post.views.desc()).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+            ).order_by(Post.views.desc())
+            posts = db.paginate(post_stmt, page=page, per_page=per_page, error_out=False)
             total_results += posts.total
+
+    return render_template('public/search.html',
+        query=query,
+        products=products,
+        posts=posts,
+        total_results=total_results,
+        search_type=search_type
+    )
     
     return render_template('public/search.html',
         query=query,
@@ -558,14 +575,14 @@ def cart():
 
 
 @public_bp.route('/compare')
-def compare():
-    """Product comparison page"""
-
+def compare() -> str:
+    """Product comparison page."""
     if not current_user.is_authenticated:
         return render_template('public/compare.html', products=[])
 
-    comparisons = Comparison.query.filter_by(user_id=current_user.id).all()
-    products = [c.product for c in comparisons if c.product]
+    comp_stmt = select(Comparison).where(Comparison.user_id == current_user.id)
+    comparisons = list(db.session.execute(comp_stmt).scalars().all())
+    products = [c.product for c in comparisons if c.product and not c.product.is_deleted]
 
     return render_template('public/compare.html', products=products)
 
@@ -608,9 +625,12 @@ def checkout():
     # ---- 2. Get default address for logged-in users ----
     default_address = None
     if current_user.is_authenticated:
-        default_address = Address.query.filter_by(
-            user_id=current_user.id, is_default=True, is_deleted=False
-        ).first()
+        addr_stmt = select(Address).where(
+            Address.user_id == current_user.id,
+            Address.is_default.is_(True),
+            Address.is_deleted.is_(False)
+        )
+        default_address = db.session.execute(addr_stmt).scalars().first()
 
     if request.method == 'POST':
         # ---- 3. Build shipping address from form ----
@@ -715,11 +735,13 @@ def checkout():
 
 
 @public_bp.route('/order/<order_number>/success')
-def order_success(order_number):
+def order_success(order_number: str) -> str:
     """Order confirmation page (after successful payment or COD)."""
-    from app.models import Order
+    from app.services.order_service import OrderService
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
 
     # Authorization: only order owner or admin
     if order.user_id and current_user.is_authenticated and order.user_id != current_user.id and not current_user.is_admin():
@@ -729,11 +751,13 @@ def order_success(order_number):
 
 
 @public_bp.route('/order/<order_number>/card-payment')
-def order_card_payment(order_number):
+def order_card_payment(order_number: str) -> str:
     """Show bank card payment instructions."""
-    from app.models import Order
+    from app.services.order_service import OrderService
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
 
     if order.user_id and current_user.is_authenticated and order.user_id != current_user.id and not current_user.is_admin():
         abort(404)
@@ -754,15 +778,20 @@ def order_card_payment(order_number):
 
 
 @public_bp.route('/payment/mock/<order_number>', methods=['GET', 'POST'])
-def payment_mock(order_number):
+def payment_mock(order_number: str):
     """Mock payment page — simulates a gateway for development."""
-    from app.models import Order, PaymentTransaction
+    from app.models import PaymentTransaction
+    from app.services.order_service import OrderService
     from app.services.checkout_service import CheckoutService
     from app.services.payment_gateway import get_gateway
     from app.constants import TransactionStatus, PaymentStatus, OrderStatus
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
-    transaction = order.transactions.first()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
+
+    txn_stmt = select(PaymentTransaction).where(PaymentTransaction.order_id == order.id)
+    transaction = db.session.execute(txn_stmt).scalars().first()
     if not transaction:
         abort(404)
 
@@ -813,25 +842,22 @@ def payment_mock(order_number):
 
 
 @public_bp.route('/payment/callback/<order_number>', methods=['GET', 'POST'])
-def payment_callback(order_number):
+def payment_callback(order_number: str):
     """
     کال‌بک رسمی درگاه‌های پرداخت.
-
-    هر درگاه به‌شکل خودش برمی‌گردد:
-    - زرین‌پال: GET ?Authority=...&Status=OK|NOK
-    - آی‌دی‌پی: POST/GET با id / order_id / status
-    - دیجی‌پی: POST {result, trackingCode, providerId, amount, type}
-    - اسنپ‌پی: POST {status, paymentToken}
-    - بانک سپه (شاپرک): POST {State, ResNum, RefNum, TraceNo}
-    تشخیص درگاه از روی تراکنشِ ثبت‌شده انجام می‌شود (نه ورودی کاربر).
     """
-    from app.models import Order, PaymentTransaction
+    from app.models import PaymentTransaction
+    from app.services.order_service import OrderService
     from app.services.checkout_service import CheckoutService
     from app.services.payment_gateway import get_gateway, _callback_payload
     from app.constants import TransactionStatus, PaymentStatus, OrderStatus
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
-    transaction = order.transactions.order_by(PaymentTransaction.id.desc()).first()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
+
+    txn_stmt = select(PaymentTransaction).where(PaymentTransaction.order_id == order.id).order_by(PaymentTransaction.id.desc())
+    transaction = db.session.execute(txn_stmt).scalars().first()
     if not transaction:
         abort(404)
 
@@ -850,7 +876,6 @@ def payment_callback(order_number):
         transaction.status = TransactionStatus.SUCCESS.value
         transaction.paid_at = datetime.utcnow()
         transaction.gateway_response = result.raw_response or transaction.gateway_response
-        # شناسه پیگیری: هر درگاه در raw_response خودش برمی‌گرداند
         tracking = (
             result.raw_response.get('ref_id')      # زرین‌پال
             or result.raw_response.get('track_id')  # آی‌دی‌پی
@@ -896,14 +921,16 @@ def payment_callback(order_number):
 
 
 @public_bp.route('/payment/redirect/<order_number>')
-def payment_redirect(order_number):
+def payment_redirect(order_number: str):
     """
     صفحهٔ واسط برای درگاه‌هایی که کاربر باید با POST فرم به آن‌ها هدایت شود
-    (الگوی استاندارد شاپرک — بانک سپه). فرم خودکار submit می‌شود.
     """
-    from app.models import Order
+    from app.services.order_service import OrderService
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
+
     form_data = session.get(f'pay_form_{order_number}')
     if not form_data or not form_data.get('url'):
         flash('نشست پرداخت منقضی شده است. لطفاً دوباره تلاش کنید.', 'warning')
@@ -920,13 +947,17 @@ def payment_redirect(order_number):
 
 @public_bp.route('/order/<order_number>/pay', methods=['GET', 'POST'])
 @rate_limit(limit=5, period=3600, key_func=lambda: f'repay:{request.remote_addr}')
-def order_pay(order_number):
-    """پرداخت مجدد سفارش پرداخت‌نشده (در صورت خطا/لغو قبلی)."""
-    from app.models import Order, PaymentTransaction
+def order_pay(order_number: str):
+    """پرداخت مجدد سفارش پرداخت‌نشده."""
+    from app.models import PaymentTransaction
+    from app.services.order_service import OrderService
     from app.services.payment_gateway import get_gateway, list_available_gateways
     from app.constants import TransactionStatus
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
+
     if order.user_id and current_user.is_authenticated and order.user_id != current_user.id and not current_user.is_admin():
         abort(404)
     if order.payment_status in ('paid',) or order.status in ('delivered', 'cancelled', 'refunded'):
@@ -936,8 +967,8 @@ def order_pay(order_number):
     available = list_available_gateways()
     gateway_name = request.form.get('gateway') or request.args.get('gateway') or ''
     if gateway_name not in [g['id'] for g in available]:
-        # پیش‌فرض: درگاه قبلی همین سفارش (اگر هنوز فعال است)، وگرنه اولین درگاه
-        last_txn = order.transactions.order_by(PaymentTransaction.id.desc()).first()
+        txn_stmt = select(PaymentTransaction).where(PaymentTransaction.order_id == order.id).order_by(PaymentTransaction.id.desc())
+        last_txn = db.session.execute(txn_stmt).scalars().first()
         prev = last_txn.gateway if last_txn else ''
         gateway_name = prev if prev in [g['id'] for g in available] else (
             available[0]['id'] if available else 'mock'
@@ -971,12 +1002,14 @@ def order_pay(order_number):
 
 @public_bp.route('/order/<order_number>/cancel', methods=['POST'])
 @rate_limit(limit=5, period=3600, key_func=lambda: f'cancel_order:{request.remote_addr}')
-def cancel_order(order_number):
+def cancel_order(order_number: str):
     """Allow user to cancel their own order."""
-    from app.models import Order
+    from app.services.order_service import OrderService
     from app.services.checkout_service import CheckoutService, CheckoutError
 
-    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    order = OrderService.get_by_number(order_number)
+    if not order:
+        abort(404)
 
     if order.user_id and current_user.is_authenticated and order.user_id != current_user.id and not current_user.is_admin():
         abort(403)
@@ -995,36 +1028,39 @@ def cancel_order(order_number):
 # ==================== STATIC PAGES ====================
 
 @public_bp.route('/about')
-def about():
-    """About us page"""
+def about() -> str:
+    """About us page."""
     from app.models import TeamMember
-    page_obj = Page.query.filter_by(page_type='about', is_active=True, is_deleted=False).first()
-    team_members = TeamMember.query.filter_by(
-        is_active=True, is_deleted=False
-    ).order_by(TeamMember.sort_order).all()
+    page_stmt = select(Page).where(Page.page_type == 'about', Page.is_active.is_(True), Page.is_deleted.is_(False))
+    page_obj = db.session.execute(page_stmt).scalars().first()
+
+    tm_stmt = select(TeamMember).where(
+        TeamMember.is_active.is_(True), TeamMember.is_deleted.is_(False)
+    ).order_by(TeamMember.sort_order.asc())
+    team_members = list(db.session.execute(tm_stmt).scalars().all())
+
     return render_template('public/about.html', en_url='/en/about', page=page_obj, team_members=team_members)
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
 @rate_limit(limit=5, period=3600, key_func=lambda: f'contact:{request.remote_addr}')
 def contact():
-    """Contact us page"""
-
+    """Contact us page."""
     from app.blueprints.public.forms import ContactForm
     from app.services.notification_service import NotificationService
 
     form = ContactForm()
 
     if form.validate_on_submit():
-        from app.models import Contact, Address
+        from app.models import Contact
         from app.constants import PHONE_PATTERN_IR, PHONE_LANDLINE_IR
         import re
 
-        # Phone validation (Persian mobile/landline) — only if provided
         phone = (form.phone.data or '').strip()
         if phone and not re.match(PHONE_PATTERN_IR, phone) and not re.match(PHONE_LANDLINE_IR, phone):
             flash('شماره تلفن وارد شده نامعتبر است.', 'error')
-            page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
+            page_stmt = select(Page).where(Page.page_type == 'contact', Page.is_active.is_(True), Page.is_deleted.is_(False))
+            page = db.session.execute(page_stmt).scalars().first()
             return render_template('public/contact.html', en_url='/en/contact', form=form, page=page, success=False)
 
         try:
@@ -1038,7 +1074,6 @@ def contact():
             )
             contact_obj.save()
 
-            # Notify admins
             NotificationService.notify_admins(
                 title='پیام جدید تماس با ما',
                 message=f'{form.name.data} - {form.subject.data}',
@@ -1046,7 +1081,6 @@ def contact():
                 data={'contact_id': contact_obj.id}
             )
 
-            # Notify via Telegram
             try:
                 NotificationService.notify_telegram_contact(contact_obj)
             except Exception as e:
@@ -1059,7 +1093,8 @@ def contact():
             current_app.logger.error(f'Contact save error: {e}')
             flash('خطا در ارسال پیام. لطفاً مجدداً تلاش کنید.', 'error')
 
-    page = Page.query.filter_by(page_type='contact', is_active=True, is_deleted=False).first()
+    page_stmt = select(Page).where(Page.page_type == 'contact', Page.is_active.is_(True), Page.is_deleted.is_(False))
+    page = db.session.execute(page_stmt).scalars().first()
 
     return render_template('public/contact.html', en_url='/en/contact',
         form=form,
@@ -1069,38 +1104,41 @@ def contact():
 
 @public_bp.route('/faq')
 @cache.cached(timeout=300)
-def faq():
-    """FAQ page"""
-    
-    faqs = FAQ.query.filter_by(
-        is_active=True,
-        is_deleted=False
-    ).order_by(FAQ.sort_order).all()
-    
-    # Group by category
+def faq() -> str:
+    """FAQ page."""
+    faq_stmt = select(FAQ).where(
+        FAQ.is_active.is_(True),
+        FAQ.is_deleted.is_(False)
+    ).order_by(FAQ.sort_order.asc())
+    faqs = list(db.session.execute(faq_stmt).scalars().all())
+
     faq_categories = {}
-    for faq in faqs:
-        cat = faq.category or 'عمومی'
+    for f in faqs:
+        cat = f.category or 'عمومی'
         if cat not in faq_categories:
             faq_categories[cat] = []
-        faq_categories[cat].append(faq)
-    
+        faq_categories[cat].append(f)
+
     return render_template('public/faq.html', faqs=faqs, faq_categories=faq_categories, en_url='/en/faq')
 
 
 @public_bp.route('/terms')
-def terms():
-    """Terms and conditions page"""
-    
-    page = Page.query.filter_by(page_type='terms', is_active=True, is_deleted=False).first_or_404()
+def terms() -> str:
+    """Terms and conditions page."""
+    page_stmt = select(Page).where(Page.page_type == 'terms', Page.is_active.is_(True), Page.is_deleted.is_(False))
+    page = db.session.execute(page_stmt).scalars().first()
+    if not page:
+        abort(404)
     return render_template('public/page.html', page=page)
 
 
 @public_bp.route('/privacy')
-def privacy():
-    """Privacy policy page"""
-    
-    page = Page.query.filter_by(page_type='privacy', is_active=True, is_deleted=False).first_or_404()
+def privacy() -> str:
+    """Privacy policy page."""
+    page_stmt = select(Page).where(Page.page_type == 'privacy', Page.is_active.is_(True), Page.is_deleted.is_(False))
+    page = db.session.execute(page_stmt).scalars().first()
+    if not page:
+        abort(404)
     return render_template('public/page.html', page=page)
 
 
@@ -1108,23 +1146,15 @@ def privacy():
 
 @public_bp.route('/sitemap.xml')
 def sitemap():
-    """XML Sitemap"""
-    
+    """XML Sitemap."""
     from app.services.seo_service import SEOService
     sitemap_xml = SEOService.generate_sitemap()
-    
     return sitemap_xml, 200, {'Content-Type': 'application/xml'}
 
 
 @public_bp.route('/robots.txt')
 def robots():
-    """Robots.txt file — only block admin/user/api/private pages.
-
-    Note: We do NOT disallow /?* anymore because that would block
-    legitimate paginated/filtered category URLs and waste crawl budget.
-    Pagination uses /page/<n> which is indexable.
-    """
-
+    """Robots.txt file."""
     site_url = current_app.config.get('SITE_URL', request.url_root.rstrip('/'))
 
     content = f"""User-agent: *
@@ -1142,7 +1172,7 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /change-password
 
-# AI crawlers — allow for SEO/AEO discoverability
+# AI crawlers
 User-agent: GPTBot
 Allow: /
 
@@ -1158,29 +1188,28 @@ Sitemap: {site_url}/sitemap.xml"""
 
 @public_bp.route('/api/quick-search')
 def api_quick_search():
-    """Quick search API for autocomplete"""
-    
+    """Quick search API for autocomplete."""
     query = request.args.get('q', '').strip()
-    
+
     if not query or len(query) < 2:
         return jsonify({'results': []})
-    
+
     search_pattern = f'%{query}%'
-    
-    # Products
-    products = Product.query.filter(
-        Product.is_active == True,
-        Product.is_deleted == False,
+
+    prod_stmt = select(Product).where(
+        Product.is_active.is_(True),
+        Product.is_deleted.is_(False),
         Product.title.ilike(search_pattern)
-    ).limit(5).all()
-    
-    # Categories
-    categories = Category.query.filter(
-        Category.is_active == True,
-        Category.is_deleted == False,
+    ).limit(5)
+    products = list(db.session.execute(prod_stmt).scalars().all())
+
+    cat_stmt = select(Category).where(
+        Category.is_active.is_(True),
+        Category.is_deleted.is_(False),
         Category.title.ilike(search_pattern)
-    ).limit(3).all()
-    
+    ).limit(3)
+    categories = list(db.session.execute(cat_stmt).scalars().all())
+
     results_list = []
     for p in products:
         results_list.append({
@@ -1199,16 +1228,13 @@ def api_quick_search():
             'price': 'دسته‌بندی خدمات',
             'type': 'category'
         })
-    
+
     return jsonify({'results': results_list})
 
 
 @public_bp.route('/api/price-history/<int:product_id>')
-def api_price_history(product_id):
-    """Get price history for a product"""
-    
-    # This would typically come from a price history table
-    # For now, return mock data
+def api_price_history(product_id: int):
+    """Get price history for a product."""
     return jsonify({'prices': []})
 
 
@@ -1216,44 +1242,35 @@ def api_price_history(product_id):
 
 @public_bp.route('/feed/torob.xml')
 def feed_torob():
-    """Generate Torob-compatible XML feed"""
-    
+    """Generate Torob-compatible XML feed."""
     from app.services.export_service import ExportService
-    
     xml = ExportService.generate_torob_feed()
-    
     return xml, 200, {'Content-Type': 'application/xml'}
 
 
 @public_bp.route('/feed/emalls.xml')
 def feed_emalls():
-    """Generate Emalls-compatible XML feed"""
-    
+    """Generate Emalls-compatible XML feed."""
     from app.services.export_service import ExportService
-    
     xml = ExportService.generate_emalls_feed()
-    
     return xml, 200, {'Content-Type': 'application/xml'}
 
 
 @public_bp.route('/feed/products.json')
 def feed_products():
-    """Generate JSON feed for products"""
-    
+    """Generate JSON feed for products."""
     from app.services.export_service import ExportService
-    
     json_data = ExportService.generate_json_feed()
-    
     return jsonify(json_data)
 
 
-# ==================== NEWSLETTER (خبرنامه) ====================
+# ==================== NEWSLETTER ====================
 
 @public_bp.route('/newsletter/subscribe', methods=['POST'])
 @rate_limit(limit=5, period=600, key_func=lambda: f'newsletter:{request.remote_addr}')
 def newsletter_subscribe():
-    """Subscribe email to newsletter (AJAX/form)"""
-    from app.models import Subscriber
+    """Subscribe email to newsletter (AJAX/form)."""
+    from app.models.features import Subscriber
     import re
 
     email = (request.form.get('email') or (request.get_json(silent=True) or {}).get('email') or '').strip().lower()
@@ -1264,9 +1281,11 @@ def newsletter_subscribe():
         flash('ایمیل معتبر وارد کنید.', 'error')
         return redirect(request.referrer or url_for('public.home'))
 
-    existing = Subscriber.query.filter_by(email=email).first()
+    sub_stmt = select(Subscriber).where(Subscriber.email == email)
+    existing = db.session.execute(sub_stmt).scalars().first()
+
     if existing:
-        existing.unsubscribed_at = None  # resubscribe
+        existing.unsubscribed_at = None
         existing.save()
         message = 'ایمیل شما قبلاً ثبت شده بود — دوباره فعال شد. سپاس!'
     else:
@@ -1281,14 +1300,15 @@ def newsletter_subscribe():
     return redirect(request.referrer or url_for('public.home'))
 
 
-# ==================== STORIES (استوری‌ساز) ====================
+# ==================== STORIES ====================
 
 @public_bp.route('/stories/<int:story_id>/view', methods=['POST'])
-def story_view(story_id):
-    """Increment story views (AJAX)"""
-    from app.models import Story
-
-    story = Story.query.get_or_404(story_id)
+def story_view(story_id: int):
+    """Increment story views (AJAX)."""
+    from app.models.features import Story
+    story = db.session.get(Story, story_id)
+    if not story:
+        abort(404)
     story.views = (story.views or 0) + 1
     db.session.commit()
     return jsonify({'success': True, 'views': story.views})
