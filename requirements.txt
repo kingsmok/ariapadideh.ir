@@ -19,6 +19,12 @@ Alembic>=1.13.0
 psycopg2-binary>=2.9.9
 redis>=5.0.1
 
+# Background Tasks (app/tasks/* — email, telegram, scheduled storefront jobs)
+celery[redis]>=5.3.6,<6.0
+
+# Server-side sessions backed by Redis (gracefully skipped when Redis is down)
+Flask-Session>=0.5.0
+
 # Localization & Iranian Calendar
 jdatetime>=6.0.0
 

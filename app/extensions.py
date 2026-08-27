@@ -107,6 +107,52 @@ def init_redis(app):
         return None
 
 
+def init_session(app) -> None:
+    """Attach a Redis-backed server-side session store when possible.
+
+    ``SESSION_TYPE='redis'`` بدون Flask-Session یک کلید مرده در config است؛
+    این تابع آن را واقعی می‌کند: سشن‌ها سمت سرور (Redis) ذخیره و فقط یک
+    کوکی امضاشدهٔ بی‌محتوا به مرورگر داده می‌شود (کوچک‌ترین سطح ریسک نشتی
+    سشن). در نبود Redis یا Flask-Session، رفتار پیش‌فرض فلاسک (کوکی
+    امضاشده) بدون هیچ خطایی حفظ می‌شود.
+
+    Args:
+        app: نمونهٔ Flask app (باید پس از ``init_redis`` صدا زده شود).
+    """
+    if app.config.get('TESTING'):
+        return
+    if str(app.config.get('SESSION_TYPE', '')).lower() != 'redis':
+        return
+    if redis_client is None:
+        _log.info(
+            "SESSION_TYPE='redis' requested but Redis is unavailable; "
+            "keeping signed-cookie sessions for this process."
+        )
+        return
+
+    try:
+        from flask_session import Session
+
+        # Flask-Session دادهٔ سریالایز‌شدهٔ باینری ذخیره می‌کند؛ کلاینت
+        # کش با decode_responses=True برای آن مناسب نیست → کلاینت مجزا.
+        app.config.setdefault(
+            'SESSION_REDIS',
+            redis.Redis(
+                host=app.config.get('CACHE_REDIS_HOST', 'localhost'),
+                port=app.config.get('CACHE_REDIS_PORT', 6379),
+                db=app.config.get('SESSION_REDIS_DB', 2),
+                password=app.config.get('REDIS_PASSWORD'),
+                decode_responses=False,
+            ),
+        )
+        Session(app)
+        _log.info('Server-side sessions enabled (Redis db=%s).',
+                  app.config.get('SESSION_REDIS_DB', 2))
+    except Exception as exc:  # noqa: BLE001 — راه‌اندازی سشن هرگز نباید بوت را بکُشد
+        _log.warning('Flask-Session init failed (%s: %s); using default cookie sessions.',
+                     type(exc).__name__, exc)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     """Load user by ID for Flask-Login"""

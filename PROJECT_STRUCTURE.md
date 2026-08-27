@@ -69,6 +69,13 @@ flask_pro/
 │   │   ├── export_service.py
 │   │   └── telegram_service.py
 │   │
+│   ├── tasks/                     # Celery Background Tasks
+│   │   ├── __init__.py            # enqueue() + fallback همگام
+│   │   ├── celery_app.py          # Celery factory + ContextTask + beat schedule
+│   │   ├── mail_tasks.py          # ایمیل‌های تراکنشی (retry/backoff)
+│   │   ├── notify_tasks.py        # تلگرام + اعلان ادمین
+│   │   └── order_tasks.py         # expire unpaid orders / stale carts (beat)
+│   │
 │   ├── utils/                     # Utilities
 │   │   ├── __init__.py
 │   │   ├── decorators.py

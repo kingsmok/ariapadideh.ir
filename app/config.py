@@ -37,6 +37,7 @@ class Config:
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True
     SESSION_KEY_PREFIX = 'flask_pro:'
+    SESSION_REDIS_DB = int(os.getenv('SESSION_REDIS_DB', '2'))
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     
     # Cookie
@@ -102,13 +103,32 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE = BASE_DIR / 'logs' / 'app.log'
     
-    # Celery
+    # Celery / Background Jobs
+    # وقتی CELERY_ENABLED خاموش باشد (پیش‌فرض توسعه/تست)، لایهٔ app.tasks
+    # تسک‌ها را به‌صورت همگام در همین پروسه اجرا می‌کند؛ هیچ قابلیت‌ای با
+    # نبود Redis از کار نمی‌افتد.
+    CELERY_ENABLED = get_env_bool('CELERY_ENABLED', False)
     CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
     CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
     CELERY_TASK_SERIALIZER = 'json'
     CELERY_RESULT_SERIALIZER = 'json'
     CELERY_ACCEPT_CONTENT = ['json']
     CELERY_TIMEZONE = 'Asia/Tehran'
+    CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '300'))
+    CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv('CELERY_TASK_SOFT_TIME_LIMIT', '270'))
+    CELERY_RESULT_EXPIRES = int(os.getenv('CELERY_RESULT_EXPIRES', str(60 * 60 * 24)))
+
+    # ==================== Storefront Policies ====================
+    # پنجرهٔ پرداخت سفارش‌های «در انتظار پرداخت»؛ بعد از آن تسک beat سفارش را
+    # لغو و موجودی رزروشده را آزاد می‌کند. 0 یا منفی = غیرفعال.
+    ORDER_PAYMENT_GRACE_MINUTES = int(os.getenv('ORDER_PAYMENT_GRACE_MINUTES', '45'))
+    # نگهداری سبد خرید رهاشدهٔ کاربران مهمان (روز). 0 یا منفی = غیرفعال.
+    GUEST_CART_RETENTION_DAYS = int(os.getenv('GUEST_CART_RETENTION_DAYS', '30'))
+
+    # کلیدهای معتبر API (جدا شده با کاما). بدون کلید تعریف‌شده، routes محافظت‌شده
+    # به‌صورت fail-closed روی 503 می‌روند (رفتار api_required در utils/decorators.py).
+    VALID_API_KEYS = get_env_list('VALID_API_KEYS', [])
+
     
     # SEO Defaults
     SITE_NAME = os.getenv('SITE_NAME', 'فلاسک پرو')
@@ -181,6 +201,8 @@ class DevelopmentConfig(Config):
     CACHE_TYPE = 'SimpleCache'
     WTF_CSRF_ENABLED = False
     COOKIE_SECURE = False
+    # در توسعه تسک‌ها همگام اجرا می‌شوند مگر آنکه عمداً CELERY_ENABLED=true ست شده باشد
+    CELERY_ENABLED = get_env_bool('CELERY_ENABLED', False)
 
 
 class TestingConfig(Config):
@@ -190,6 +212,10 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = 'SimpleCache'
+    # در تست هرگز broker لازم نیست؛ enqueue همیشه inline اجرا می‌کند
+    CELERY_ENABLED = False
+    ORDER_PAYMENT_GRACE_MINUTES = 45
+    GUEST_CART_RETENTION_DAYS = 30
 
 
 class ProductionConfig(Config):
@@ -200,6 +226,8 @@ class ProductionConfig(Config):
     CACHE_TYPE = 'RedisCache'
     RATELIMIT_ENABLED = True
     LOG_LEVEL = 'WARNING'
+    # در production به‌طور پیش‌فرض صف‌گذاری فعال است (برای غیرفعال‌سازی: CELERY_ENABLED=false)
+    CELERY_ENABLED = get_env_bool('CELERY_ENABLED', True)
 
 
 config = {
