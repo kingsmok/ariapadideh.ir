@@ -542,8 +542,13 @@ def products_feed() -> Response:
 
 @api_bp.route('/health', methods=['GET'])
 def health_check() -> Response:
-    """Health check endpoint."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': time.time()
-    })
+    """Health check endpoint.
+
+    قبلاً همیشه 200 برمی‌گرداند («سالم» حتی با DB خاموش) که برای مانیتورینگ
+    خطرناک بود؛ اکنون به HealthService واگذار می‌شود و کد وضعیت بازتاب
+    وابستگی‌های واقعی است (503 فقط در حالت down).
+    """
+    from app.services.health_service import HealthService
+
+    body, status = HealthService.snapshot()
+    return jsonify(body), status

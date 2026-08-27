@@ -48,6 +48,14 @@ def create_app(config_name: str = None) -> Flask:
     
     # Initialize extensions
     init_extensions(app)
+
+    # Celery — bind the task app to this Flask instance so ContextTask works.
+    from app.tasks.celery_app import init_celery
+    init_celery(app)
+
+    # Redis-backed server-side sessions (no-op when Redis is unavailable).
+    from app.extensions import init_session
+    init_session(app)
     
     # Register blueprints
     register_blueprints(app)

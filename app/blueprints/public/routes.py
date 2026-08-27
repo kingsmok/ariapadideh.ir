@@ -1082,7 +1082,11 @@ def contact():
             )
 
             try:
-                NotificationService.notify_telegram_contact(contact_obj)
+                # ارسال تلگرام بیرون از request path — با Celery صف می‌شود و
+                # در حالت غیرفعال به‌صورت همگام اجرا می‌گردد.
+                from app.tasks import enqueue
+                from app.tasks.notify_tasks import telegram_contact_task
+                enqueue(telegram_contact_task, contact_obj.id)
             except Exception as e:
                 current_app.logger.warning(f'Telegram notify failed: {e}')
 
@@ -1312,3 +1316,19 @@ def story_view(story_id: int):
     story.views = (story.views or 0) + 1
     db.session.commit()
     return jsonify({'success': True, 'views': story.views})
+
+
+# ==================== INFRA HEALTH ====================
+
+@public_bp.route('/healthz', methods=['GET'])
+def healthz():
+    """Health endpoint for load-balancers / container orchestration.
+
+    مسیر استاندارد کنار `/` تا healthcheck داکر و LB بدون فرض پیشوند API
+    کار کند. منطق بررسی کامل در ``HealthService`` است؛ این روت فقط پروب‌ها را
+    صدا زده و وضعیت HTTP را برمی‌گرداند (503 فقط وقتی دیتابیس down باشد).
+    """
+    from app.services.health_service import HealthService
+
+    body, status = HealthService.snapshot()
+    return jsonify(body), status

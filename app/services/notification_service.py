@@ -143,9 +143,11 @@ class NotificationService:
     
     @staticmethod
     def send_contact_reply(contact: Contact, reply_text: str = '') -> bool:
-        """Send reply to contact via email"""
-        from app.services.email_service import EmailService
+        """Send reply to contact via email.
 
+        ارسال واقعی از طریق Celery انجام می‌شود (و در حالت غیرفعال، همگام
+        توسط خود enqueue) تا پاسخ ادمین پشتِ SMTP گیر نکند.
+        """
         if not contact.email:
             return False
 
@@ -153,18 +155,20 @@ class NotificationService:
         if not reply_text:
             return True
 
-        return EmailService.send_contact_reply(
-            contact_email=contact.email,
-            contact_name=contact.name,
-            reply_text=reply_text,
-            original_subject=contact.subject or 'پیام شما',
-        )
+        from app.tasks import enqueue
+        from app.tasks.mail_tasks import send_contact_reply_email
+
+        result = enqueue(send_contact_reply_email, contact.id, reply_text)
+        return result is not None
 
     @staticmethod
     def send_order_confirmation(order: Order) -> bool:
-        """Send order confirmation email to customer"""
-        from app.services.email_service import EmailService
+        """Confirm an order to the customer (in-app notification + email).
 
+        اعلان داخل‌اپ بلافاصله نوشته می‌شود (کاربر باید همان لحظه در پنل ببیند)؛
+        ایمیل — چون شبکه‌ای و کُند است — به صف Celery سپرده می‌شود و در حالت
+        غیرفعال همان‌جا همگام اجرا می‌گردد.
+        """
         # Always create in-app notification
         if order.user:
             NotificationService.send_to_user(
@@ -175,13 +179,21 @@ class NotificationService:
                 data={'order_id': order.id}
             )
 
-        # Send actual email
-        return EmailService.send_order_confirmation(order)
+        # Dispatch the actual email through the task layer
+        from app.tasks import enqueue
+        from app.tasks.mail_tasks import send_order_confirmation_email
+
+        result = enqueue(send_order_confirmation_email, order.id)
+        return result is not None
 
     @staticmethod
     def send_password_reset(user: User, reset_url: str = None) -> bool:
-        """Send password reset email"""
-        from app.services.email_service import EmailService
+        """Dispatch a password-reset email.
+
+        ساخت توکن حتماً همگام انجام می‌شود (چون URL بازیابی به آن وابسته است
+        و باید همین دورِ commit ثبت شود)؛ ولی ارسال SMTP از طریق Celery
+        انجام می‌شود تا مسیر درخواست کاربر پشت سرور ایمیل بلوکه نشود.
+        """
         from flask import url_for
 
         if reset_url is None:
@@ -189,8 +201,11 @@ class NotificationService:
             token = user.generate_reset_token()
             reset_url = url_for('user.reset_password', token=token, _external=True)
 
-        # Send email
-        email_sent = EmailService.send_password_reset(user, reset_url)
+        # Dispatch email via task layer (async if Celery enabled, inline otherwise)
+        from app.tasks import enqueue
+        from app.tasks.mail_tasks import send_password_reset_email
+
+        result = enqueue(send_password_reset_email, user.id, reset_url)
 
         # Also create in-app notification
         NotificationService.send_to_user(
@@ -201,4 +216,4 @@ class NotificationService:
             data={'action': 'password_reset'}
         )
 
-        return email_sent
+        return result is not None

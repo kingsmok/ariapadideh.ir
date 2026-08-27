@@ -173,6 +173,9 @@ class CheckoutService:
             )
 
         # ---- 8. Notify (post-commit) ----
+        # اعلان داخلی ادمین‌ها همین‌جا نوشته می‌شود (محلی و سریع)؛
+        # اما تماس شبکه‌ای با تلگرام به صف Celery می‌رود تا در صورت کُندی/قطعی
+        # تلگرام، ثبت سفارش کاربر با خطا یا تأخیر مواجه نشود.
         try:
             NotificationService.notify_admins(
                 title='سفارش جدید',
@@ -180,7 +183,9 @@ class CheckoutService:
                 type='order',
                 data={'order_id': order.id}
             )
-            NotificationService.notify_telegram_order_new(order)
+            from app.tasks import enqueue
+            from app.tasks.notify_tasks import telegram_order_new_task
+            enqueue(telegram_order_new_task, order.id)
         except Exception as e:
             # Don't fail the order if notification fails
             current_app.logger.warning(f'Order notification failed: {e}')

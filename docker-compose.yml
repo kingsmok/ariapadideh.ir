@@ -1,0 +1,127 @@
+# ============================================================================
+# Flask Pro — Stack کامل: PostgreSQL + Redis + Gunicorn + Celery Worker + Beat
+#
+#   SECRET_KEY=... docker compose up -d --build
+#
+# نکته production: مقادیر پیش‌فرض زیر فقط برای راه‌اندازی سریع local است؛
+# در عمل SECRET_KEY و POSTGRES_PASSWORD را در env یا .env override کنید.
+# ============================================================================
+
+name: flask-pro
+
+x-app-env: &app-env
+  FLASK_ENV: production
+  DATABASE_URL: postgresql+psycopg2://flaskpro:${POSTGRES_PASSWORD:-flaskpro}@db:5432/flaskpro
+  SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+  SITE_URL: ${SITE_URL:-http://localhost:8000}
+  SITE_NAME: ${SITE_NAME:-فلاسک پرو}
+  # Redis — کش، سشن سمت‌سرور و Celery هر سه
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  CACHE_TYPE: RedisCache
+  SESSION_TYPE: redis
+  SESSION_REDIS_DB: "2"
+  CELERY_ENABLED: "true"
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/1
+  # سیاست‌های فروشگاه
+  ORDER_PAYMENT_GRACE_MINUTES: ${ORDER_PAYMENT_GRACE_MINUTES:-45}
+  GUEST_CART_RETENTION_DAYS: ${GUEST_CART_RETENTION_DAYS:-30}
+  # سرویس‌های ایرانی (اختیاری — با خالی‌بودن، حالت safe/dev حفظ می‌شود)
+  SMS_DRIVER: ${SMS_DRIVER:-console}
+  KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY:-}
+  ENABLED_PAYMENT_GATEWAYS: ${ENABLED_PAYMENT_GATEWAYS:-mock}
+  ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-}
+  ZARINPAL_SANDBOX: ${ZARINPAL_SANDBOX:-false}
+  PAYMENT_CURRENCY_UNIT: ${PAYMENT_CURRENCY_UNIT:-toman}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
+  MAIL_SERVER: ${MAIL_SERVER:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER:-}
+  VALID_API_KEYS: ${VALID_API_KEYS:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: flaskpro
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flaskpro}
+      POSTGRES_DB: flaskpro
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flaskpro -d flaskpro"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    image: flask-pro:latest
+    environment:
+      <<: *app-env
+      CONTAINER_ROLE: web
+      RUN_MIGRATIONS: "1"          # مهاجرت فقط در همین کانتینر اجرا می‌شود
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - uploads:/app/app/static/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    image: flask-pro:latest
+    build: .
+    command: >-
+      celery -A worker.celery worker
+      --loglevel=INFO
+      --queues=default,mail,notifications
+      --concurrency=${CELERY_CONCURRENCY:-2}
+    environment:
+      <<: *app-env
+      CONTAINER_ROLE: worker
+      RUN_MIGRATIONS: "0"
+    volumes:
+      - uploads:/app/app/static/uploads
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+
+  beat:
+    image: flask-pro:latest
+    command: celery -A worker.celery beat --loglevel=INFO
+    environment:
+      <<: *app-env
+      CONTAINER_ROLE: beat
+      RUN_MIGRATIONS: "0"
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    # ⚠️ همیشه دقیقاً یک beat در کل کلاستر — بیشتر از یک‌بار = اجرای دوباره jobها
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

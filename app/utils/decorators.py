@@ -2,6 +2,7 @@
 Custom Decorators
 """
 import hashlib
+import hmac
 import time
 import threading
 from collections import defaultdict
@@ -168,19 +169,12 @@ def api_required(f):
                 'message': 'دسترسی API در حال حاضر غیرفعال است.',
             }), 503
 
-        if api_key not in valid_keys:
-            # Constant-time comparison to prevent timing attacks
-            import hmac
-            valid_match = False
-            for stored_key in valid_keys:
-                if hmac.compare_digest(api_key, stored_key):
-                    valid_match = True
-                    break
-            if not valid_match:
-                return jsonify({
-                    'error': 'Invalid API key',
-                    'message': 'کلید API نامعتبر است.',
-                }), 401
+        # Constant-time comparison to prevent timing attacks
+        if not any(hmac.compare_digest(api_key, stored_key) for stored_key in valid_keys):
+            return jsonify({
+                'error': 'Invalid API key',
+                'message': 'کلید API نامعتبر است.',
+            }), 401
 
         return f(*args, **kwargs)
     return decorated
@@ -319,6 +313,3 @@ def log_action(action):
             return result
         return decorated
     return decorator
-
-
-import hashlib
