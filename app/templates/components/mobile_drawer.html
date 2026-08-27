@@ -1,0 +1,144 @@
+<!-- Mobile Navigation Off-canvas Drawer -->
+<div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+
+<aside class="mobile-drawer-container"
+       id="mobile-drawer"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="drawer-title"
+       aria-hidden="true">
+
+    <!-- Drawer Header -->
+    <div class="mobile-drawer-header">
+        <div class="d-flex align-items-center gap-2">
+            <div class="brand-badge-rahsa" aria-hidden="true">ر</div>
+            <div>
+                <span id="drawer-title" class="d-block font-black text-white" style="font-size:1.15rem; line-height:1.2;">
+                    {{ site_settings.general_site_name or 'رهسا دیو' }}
+                </span>
+                <span class="text-yellow" style="font-size:0.7rem; font-weight:700;">منوی دسترسی سریع</span>
+            </div>
+        </div>
+        <button type="button"
+                class="mobile-drawer-close"
+                id="close-drawer-btn"
+                aria-label="بستن منو">
+            ✕
+        </button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="mobile-drawer-body">
+
+        <!-- User Authentication Card -->
+        <div class="glass-card p-3 mb-4" style="border-radius:0.85rem;">
+            {% if current_user.is_authenticated %}
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span aria-hidden="true" style="font-size:1.3rem;">👤</span>
+                    <div>
+                        <div class="font-bold text-white" style="font-size:0.95rem;">{{ current_user.full_name }}</div>
+                        <div class="text-muted" style="font-size:0.775rem;">{{ current_user.email or current_user.phone }}</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('user.dashboard') }}" class="btn-rahsa-cta flex-1" style="padding:0.5rem 0.85rem; font-size:0.8rem; text-align:center;" aria-label="پنل کاربری">
+                        📌 پنل کاربری
+                    </a>
+                    <a href="{{ url_for('user.logout') }}" class="btn-rahsa-outline" style="padding:0.5rem 0.85rem; font-size:0.8rem; color:#ef4444 !important; border-color:rgba(239,68,68,0.4);" aria-label="خروج">
+                        خروج
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-white font-bold mb-2" style="font-size:0.875rem;">خوش آمدید به پلتفرم رهسا دیو</div>
+                <a href="{{ url_for('user.login') }}" class="btn-rahsa-cta w-100" style="padding:0.6rem; font-size:0.85rem; text-align:center; display:block;" aria-label="ورود به حساب">
+                    👤 ورود / ثبت‌نام
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Main Services -->
+        <div class="mb-4">
+            <h3 class="text-yellow" style="font-size:0.75rem; font-weight:800; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                خدمات و محصولات اصلی
+            </h3>
+            <nav aria-label="دسته‌بندی خدمات">
+                <ul style="list-style:none; padding:0; margin:0;">
+                    <li>
+                        <a href="{{ url_for('public.home') }}"
+                           class="mobile-drawer-link {{ 'active' if request.endpoint == 'public.home' else '' }}">
+                            <span aria-hidden="true">💻</span> صفحه اصلی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='web-design') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">🌐</span> طراحی وب‌سایت اختصاصی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='smart-bots') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">🤖</span> ساخت ربات تلگرام و ایتا
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='programming-scripts') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">📜</span> اسکریپت پایتون و اتوماسیون
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('public.category', slug='software-automation') }}"
+                           class="mobile-drawer-link">
+                            <span aria-hidden="true">⚙️</span> توسعه نرم‌افزار سفارشی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/#quote-section" class="mobile-drawer-link" style="color:var(--accent-gold); font-weight:800;">
+                            <span aria-hidden="true">🧮</span> محاسبه‌گر قیمت پروژه
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Information & Support -->
+        <div class="mb-4">
+            <h3 class="text-yellow" style="font-size:0.75rem; font-weight:800; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                {{ 'Information & Support' if g.get('lang','fa') == 'en' else 'اطلاعات و پشتیبانی' }}
+            </h3>
+            <nav aria-label="{{ 'Information & Support' if g.get('lang','fa') == 'en' else 'اطلاعات و پشتیبانی' }}">
+                <ul style="list-style:none; padding:0; margin:0;">
+                    <li>
+                        <a href="{{ url_for('en.about') if g.get('lang','fa') == 'en' else url_for('public.about') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">🏢</span> {{ 'About Rahsa Dev' if g.get('lang','fa') == 'en' else 'درباره شرکت رهسا دیو' }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('en.contact') if g.get('lang','fa') == 'en' else url_for('public.contact') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">📞</span> {{ 'Contact & Free Consultation' if g.get('lang','fa') == 'en' else 'تماس و مشاوره رایگان' }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('en.faq') if g.get('lang','fa') == 'en' else url_for('public.faq') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">❓</span> {{ 'FAQ' if g.get('lang','fa') == 'en' else 'سوالات متداول' }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('en.blog') if g.get('lang','fa') == 'en' else url_for('public.blog') }}" class="mobile-drawer-link">
+                            <span aria-hidden="true">📰</span> {{ 'Software Blog' if g.get('lang','fa') == 'en' else 'مجله تخصصی نرم‌افزار' }}
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Contact Hotline Box -->
+        <div class="glass-card p-3" style="background:rgba(251,176,59,0.08); border-color:rgba(251,176,59,0.25);">
+            <div class="text-yellow font-bold mb-1" style="font-size:0.8rem;">📞 مشاوره تلفنی مستقیم:</div>
+            <div class="bidi-plaintext font-black text-white" style="font-size:1.1rem;">071-37271621</div>
+            <div class="bidi-plaintext font-black text-white" style="font-size:1.1rem;">021-88991234</div>
+        </div>
+
+    </div>
+</aside>

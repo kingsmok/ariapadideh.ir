@@ -1,0 +1,53 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}مدیریت کاتالوگ خدمات - رهسا دیو{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>⚡ کاتالوگ خدمات نرم‌افزاری</h2>
+    <a href="{{ url_for('admin.agency_service_edit') }}" class="btn-rahsa-cta">+ افزودن خدمت جدید</a>
+</div>
+
+<div class="card bg-navy-card text-light p-3">
+    <table class="table table-dark table-hover mb-0">
+        <thead>
+            <tr>
+                <th>عنوان خدمت</th>
+                <th>دسته‌بندی</th>
+                <th>قیمت پایه (تومان)</th>
+                <th>زمان برآوردی</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in services %}
+            <tr>
+                <td><strong>{{ s.icon }} {{ s.title }}</strong></td>
+                <td><span class="badge-rahsa secondary">{{ s.category_type }}</span></td>
+                <td>{{ s.starting_price | format_price }}</td>
+                <td>{{ s.estimated_days }} روز</td>
+                <td>
+                    {% if s.is_active %}
+                        <span class="badge-rahsa success">فعال</span>
+                    {% else %}
+                        <span class="badge-rahsa danger">غیرفعال</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.agency_service_edit', service_id=s.id) }}" class="btn btn-sm btn-warning">ویرایش</a>
+                    <form action="{{ url_for('admin.agency_service_delete', service_id=s.id) }}" method="POST" class="d-inline" onsubmit="return confirm('آیا از حذف این خدمت اطمینان دارید؟');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class=" text-muted">هیچ خدمتی ثبت نشده است.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,142 +1,150 @@
-<footer class="site-footer">
-    <!-- Newsletter -->
-    <div class="footer-newsletter">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h5><i class="fas fa-envelope"></i> خبرنامه</h5>
-                    <p>برای اطلاع از جدیدترین محصولات و تخفیف‌ها، ایمیل خود را وارد کنید</p>
+<!-- Site Footer — No inline styles, all classes from main.css -->
+<footer class="site-footer mt-auto" style="background:#0b0f11; border-top:1px solid rgba(255,255,255,0.05); padding-top:3.5rem; padding-bottom:2rem;">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- Brand Column -->
+            <div class="col-12 col-md-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="brand-badge-rahsa" aria-hidden="true">ر</div>
+                    <span class="text-gradient-purple-gold" style="font-weight:800; font-size:1.25rem;">
+                        {{ site_settings.general_site_name or 'رهسا دیو' }}
+                    </span>
                 </div>
-                <div class="col-md-6">
-                    <form action="#" method="POST" class="newsletter-form">
-                        <div class="input-group">
-                            <input type="email" name="email" class="form-control" 
-                                   placeholder="ایمیل شما..." required>
-                            <button type="submit" class="btn btn-primary">
-                                عضویت
-                            </button>
-                        </div>
-                    </form>
+                <p class="text-muted" style="font-size:0.875rem; line-height:1.8; max-width:320px;">
+                    آتلیه تخصصی مهندسی نرم‌افزار. پیشگام در خلق راهکارهای دیجیتال سازمانی با معماری مدرن.
+                </p>
+
+                <!-- Social Icons -->
+                <div class="d-flex gap-2 mt-3" style="margin-top:1rem;">
+                    {% if site_settings.social_instagram %}
+                    <a href="{{ site_settings.social_instagram }}"
+                       class="social-icon-hover"
+                       aria-label="اینستاگرام"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.social_telegram %}
+                    <a href="{{ site_settings.social_telegram }}"
+                       class="social-icon-hover"
+                       aria-label="تلگرام"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.social_whatsapp %}
+                    <a href="{{ site_settings.social_whatsapp }}"
+                       class="social-icon-hover"
+                       aria-label="واتساپ"
+                       target="_blank" rel="noopener noreferrer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488"/>
+                        </svg>
+                    </a>
+                    {% endif %}
                 </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-6 col-md-3">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Quick Links' if g.get('lang','fa') == 'en' else 'دسترسی سریع' }}</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
+                    {% if nav_footer %}
+                        {# منوی فوتر داینامیک — از پنل مدیریت (منوها، موقعیت: فوتر) #}
+                        {% for item in nav_footer %}
+                        <li>
+                            <a href="{{ item.url }}" class="footer-link-hover text-muted"
+                               {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                {% if item.icon %}{{ item.icon }} {% endif %}{{ item.title }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                    <li><a href="{{ url_for('public.categories_list') }}" class="footer-link-hover text-muted">خدمات نرم‌افزاری</a></li>
+                    <li><a href="/#quote-section" class="footer-link-hover text-muted">مشاوره استراتژیک</a></li>
+                    <li><a href="{{ url_for('public.about') }}" class="footer-link-hover text-muted">درباره ما</a></li>
+                    <li><a href="{{ url_for('public.contact') }}" class="footer-link-hover text-muted">تماس با ما</a></li>
+                    <li><a href="{{ url_for('public.faq') }}" class="footer-link-hover text-muted">سوالات متداول</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Services -->
+            <div class="col-6 col-md-2">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Services' if g.get('lang','fa') == 'en' else 'خدمات' }}</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2.1; font-size:0.875rem;">
+                    <li><a href="/category/web-design" class="footer-link-hover text-muted">طراحی وب</a></li>
+                    <li><a href="/category/smart-bots" class="footer-link-hover text-muted">ربات هوشمند</a></li>
+                    <li><a href="/category/software-automation" class="footer-link-hover text-muted">اتوماسیون</a></li>
+                    <li><a href="/category/programming-scripts" class="footer-link-hover text-muted">اسکریپت</a></li>
+                </ul>
+            </div>
+
+            <!-- Address & Contact -->
+            <div class="col-12 col-md-3">
+                <h4 style="color:#ffffff; font-size:1rem; font-weight:800; margin-bottom:1rem;">{{ 'Contact Us' if g.get('lang','fa') == 'en' else 'ارتباط با ما' }}</h4>
+                <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.875rem;" class="text-muted">
+                    {% if site_settings.contact_address %}
+                    <li class="d-flex align-items-start gap-2 mb-2">
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📍</span>
+                        <span>{{ site_settings.contact_address }}</span>
+                    </li>
+                    {% endif %}
+                    {% if site_settings.contact_phone %}
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📞</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_phone }}</span>
+                    </li>
+                    {% endif %}
+                    {% if site_settings.contact_mobile %}
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">📱</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_mobile }}</span>
+                    </li>
+                    {% endif %}
+                    {% if site_settings.contact_email %}
+                    <li class="d-flex align-items-center gap-2">
+                        <span style="color:var(--accent-gold); flex-shrink:0;" aria-hidden="true">✉️</span>
+                        <span class="bidi-plaintext">{{ site_settings.contact_email }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+        </div>
+
+        {# فرم خبرنامه (الگوی قالب‌های مدرن مثل کرافتو) #}
+        {% if site_settings.features_newsletter_enabled != false %}
+        <div class="newsletter-rahsa" style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2rem; padding-top:2rem;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h3 style="color:#fff; font-size:1rem; font-weight:800; margin-bottom:0.3rem;">📬 از تخفیفها و مقالات جدید جا نمانید</h3>
+                    <p class="text-muted" style="font-size:0.8rem; margin:0;">{{ 'Subscribe to our newsletter — no spam, unsubscribe anytime.' if g.get('lang','fa') == 'en' else 'عضویت در خبرنامه — بدون اسپم، لغو عضویت در هر لحظه.' }}</p>
+                </div>
+                <form action="{{ url_for('public.newsletter_subscribe') }}" method="POST" class="d-flex gap-2 newsletter-form-rahsa" style="flex:1; max-width:420px;" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="email" name="email" class="form-control-rahsa" style="flex:1; padding:0.65rem 1rem; font-size:0.85rem;"
+                           placeholder="ایمیل شما" required aria-label="ایمیل برای خبرنامه">
+                    <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.3rem; font-size:0.85rem;">عضویت</button>
+                </form>
             </div>
         </div>
-    </div>
-    
-    <!-- Footer Main -->
-    <div class="footer-main">
-        <div class="container">
-            <div class="row">
-                <!-- About -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="footer-about">
-                        <h5>{{ site_settings.general_site_name or 'فلاسک پرو' }}</h5>
-                        <p>{{ site_settings.general_tagline or 'بهترین تجربه خرید آنلاین' }}</p>
-                        <div class="footer-contact">
-                            {% if site_settings.contact_address %}
-                                <p><i class="fas fa-map-marker-alt"></i> {{ site_settings.contact_address }}</p>
-                            {% endif %}
-                            {% if site_settings.contact_phone %}
-                                <p><i class="fas fa-phone"></i> {{ site_settings.contact_phone }}</p>
-                            {% endif %}
-                            {% if site_settings.contact_email %}
-                                <p><i class="fas fa-envelope"></i> {{ site_settings.contact_email }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Links -->
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-links">
-                        <h5>دسترسی سریع</h5>
-                        <ul>
-                            <li><a href="{{ url_for('public.home') }}">صفحه اصلی</a></li>
-                            <li><a href="{{ url_for('public.about') }}">درباره ما</a></li>
-                            <li><a href="{{ url_for('public.contact') }}">تماس با ما</a></li>
-                            <li><a href="{{ url_for('public.blog') }}">وبلاگ</a></li>
-                            <li><a href="{{ url_for('public.faq') }}">سوالات متداول</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Services -->
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-links">
-                        <h5>خدمات</h5>
-                        <ul>
-                            <li><a href="{{ url_for('public.terms') }}">قوانین و مقررات</a></li>
-                            <li><a href="{{ url_for('public.privacy') }}">حریم خصوصی</a></li>
-                            <li><a href="#">ارسال و تحویل</a></li>
-                            <li><a href="#">گارانتی و بازگشت</a></li>
-                            <li><a href="#">روش‌های پرداخت</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Social -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="footer-social">
-                        <h5>ما را دنبال کنید</h5>
-                        <div class="social-links">
-                            {% if site_settings.social_instagram %}
-                                <a href="{{ site_settings.social_instagram }}" target="_blank" aria-label="اینستاگرام">
-                                    <i class="fab fa-instagram"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_telegram %}
-                                <a href="{{ site_settings.social_telegram }}" target="_blank" aria-label="تلگرام">
-                                    <i class="fab fa-telegram"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_whatsapp %}
-                                <a href="{{ site_settings.social_whatsapp }}" target="_blank" aria-label="واتساپ">
-                                    <i class="fab fa-whatsapp"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_twitter %}
-                                <a href="{{ site_settings.social_twitter }}" target="_blank" aria-label="توییتر">
-                                    <i class="fab fa-twitter"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_facebook %}
-                                <a href="{{ site_settings.social_facebook }}" target="_blank" aria-label="فیسبوک">
-                                    <i class="fab fa-facebook"></i>
-                                </a>
-                            {% endif %}
-                            {% if site_settings.social_linkedin %}
-                                <a href="{{ site_settings.social_linkedin }}" target="_blank" aria-label="لینکدین">
-                                    <i class="fab fa-linkedin"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Trust Badges -->
-                        <div class="trust-badges mt-4">
-                            <img src="{{ url_for('static', filename='images/enamad.png') }}" alt="نماد اعتماد">
-                            <img src="{{ url_for('static', filename='images/samandehi.png') }}" alt="ساماندهی">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="copyright">
-                        © {{ current_year }} {{ site_settings.general_site_name or 'فلاسک پرو' }}. 
-                        {{ site_settings.general_copyright or 'تمامی حقوق محفوظ است.' }}
-                    </p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="payment-methods">
-                        <img src="{{ url_for('static', filename='images/payment.png') }}" alt="روش‌های پرداخت">
-                    </div>
-                </div>
-            </div>
+        {% endif %}
+
+        <!-- Copyright -->
+        <div class="" style="border-top:1px solid rgba(255,255,255,0.05); margin-top:2.5rem; padding-top:1.5rem;">
+            <p class="text-muted" style="font-size:0.825rem; margin:0;">
+                <span data-persian-num>© ۲۰۲۶</span> {{ site_settings.general_site_name or 'رهسا دیو' }}. تمام حقوق محفوظ است.
+            </p>
         </div>
     </div>
 </footer>

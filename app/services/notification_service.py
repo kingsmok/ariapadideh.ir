@@ -142,19 +142,30 @@ class NotificationService:
         return NotificationService.notify_telegram(message)
     
     @staticmethod
-    def send_contact_reply(contact: Contact) -> bool:
+    def send_contact_reply(contact: Contact, reply_text: str = '') -> bool:
         """Send reply to contact via email"""
-        
-        # This would integrate with email service
-        # For now, just mark as sent
-        return True
-    
+        from app.services.email_service import EmailService
+
+        if not contact.email:
+            return False
+
+        # If reply_text not provided, just mark as replied
+        if not reply_text:
+            return True
+
+        return EmailService.send_contact_reply(
+            contact_email=contact.email,
+            contact_name=contact.name,
+            reply_text=reply_text,
+            original_subject=contact.subject or 'پیام شما',
+        )
+
     @staticmethod
     def send_order_confirmation(order: Order) -> bool:
         """Send order confirmation email to customer"""
-        
-        # This would integrate with email service
-        # For now, just create notification
+        from app.services.email_service import EmailService
+
+        # Always create in-app notification
         if order.user:
             NotificationService.send_to_user(
                 user_id=order.user_id,
@@ -163,12 +174,31 @@ class NotificationService:
                 type='order',
                 data={'order_id': order.id}
             )
-        
-        return True
-    
+
+        # Send actual email
+        return EmailService.send_order_confirmation(order)
+
     @staticmethod
-    def send_password_reset(user: User, reset_url: str) -> bool:
+    def send_password_reset(user: User, reset_url: str = None) -> bool:
         """Send password reset email"""
-        
-        # This would integrate with email service
-        return True
+        from app.services.email_service import EmailService
+        from flask import url_for
+
+        if reset_url is None:
+            # Generate URL if not provided
+            token = user.generate_reset_token()
+            reset_url = url_for('user.reset_password', token=token, _external=True)
+
+        # Send email
+        email_sent = EmailService.send_password_reset(user, reset_url)
+
+        # Also create in-app notification
+        NotificationService.send_to_user(
+            user_id=user.id,
+            title='بازیابی رمز عبور',
+            message='لینک بازیابی رمز عبور به ایمیل شما ارسال شد.',
+            type='warning',
+            data={'action': 'password_reset'}
+        )
+
+        return email_sent

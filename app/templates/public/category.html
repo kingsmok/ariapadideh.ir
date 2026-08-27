@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% from 'macros/product_card.html' import product_card with context %}
+
+{% block title %}{{ category.title if category else 'دسته‌بندی خدمات' }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+
+        <!-- Breadcrumb (semantic + JSON-LD) -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}] %}
+        {% if category %}
+        {% if category.parent %}
+        {% set _crumbs = _crumbs + [{'name': category.parent.title, 'url': url_for('public.category', slug=category.parent.slug, _external=True)}] %}
+        {% endif %}
+        {% set _crumbs = _crumbs + [{'name': category.title, 'url': url_for('public.category', slug=category.slug, _external=True)}] %}
+        {% endif %}
+
+        <nav aria-label="مسیر دسترسی" class="mb-3">
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{% if category %}{{ render_service_schema(category)|safe }}{% endif %}{% endblock %}
+
+        <!-- Category Banner Header -->
+        <div class="glass-card mb-4" style="padding:2.5rem; background:linear-gradient(135deg, rgba(20,33,61,0.9) 0%, rgba(10,17,40,0.9) 100%);">
+            <div class="row align-items-center gy-3">
+                <div class="col-12 col-md-8">
+                    <span class="d-block text-yellow font-bold mb-1" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;" aria-hidden="true">
+                        🗂️ دسته‌بندی تخصصی
+                    </span>
+                    <h1 class="text-white" style="font-size:clamp(1.5rem, 4vw, 2rem); font-weight:900; margin-bottom:0.5rem;">
+                        {{ category.title if category else 'خدمات نرم‌افزاری' }}
+                    </h1>
+                    <p class="text-muted" style="font-size:0.925rem; margin:0; line-height:1.7; max-width:640px;">
+                        {{ category.description or 'مشاهده لیست پکیج‌های تحویل آنی، سورس‌کدها و سفارش پروژه‌های این حوزه' }}
+                    </p>
+                </div>
+                <div class="col-12 col-md-4 text-md-start">
+                    <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta" style="padding:0.6rem 1.25rem; font-size:0.85rem;" aria-label="سفارش پروژه اختصاصی">
+                        <span>سفارش پروژه اختصاصی</span>
+                        <span aria-hidden="true">🚀</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Child Categories -->
+        {% if child_categories %}
+        <div class="mb-4">
+            <h2 class="text-white mb-3" style="font-size:1rem; font-weight:800;">زیردسته‌ها:</h2>
+            <div class="d-flex flex-wrap gap-2">
+                {% for child in child_categories %}
+                <a href="{{ url_for('public.category', slug=child.slug) }}" class="badge-rahsa info text-decoration-none">
+                    {{ child.title }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# فیلتر ایجکسی محصولات — سئو-محور (الگوی قالب نادر) #}
+        <div class="filter-bar-rahsa" id="products-filter-bar"
+             data-category="{{ category.slug }}"
+             data-api="{{ url_for('api.filter_products') }}">
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-sort">مرتب‌سازی:</label>
+                <select id="filter-sort" class="form-control-rahsa">
+                    <option value="newest">جدیدترین</option>
+                    <option value="cheapest">ارزان‌ترین</option>
+                    <option value="expensive">گران‌ترین</option>
+                    <option value="popular">پرفروش‌ترین</option>
+                    <option value="discount">بیشترین تخفیف</option>
+                </select>
+            </div>
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-min-price">قیمت از (تومان)</label>
+                <input type="number" id="filter-min-price" class="form-control-rahsa" min="0" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="filter-group-rahsa">
+                <label class="text-muted" for="filter-max-price">تا</label>
+                <input type="number" id="filter-max-price" class="form-control-rahsa" min="0" placeholder="∞" inputmode="numeric">
+            </div>
+            <label class="filter-check-rahsa">
+                <input type="checkbox" id="filter-in-stock"> فقط موجود
+            </label>
+            <label class="filter-check-rahsa">
+                <input type="checkbox" id="filter-on-sale"> دارای تخفیف
+            </label>
+            <button type="button" id="filter-apply" class="btn-rahsa-cta" style="padding:0.55rem 1.2rem; font-size:0.85rem;">اعمال فیلتر</button>
+            <button type="button" id="filter-reset" class="btn-rahsa-outline" style="padding:0.55rem 1rem; font-size:0.85rem;">حذف فیلترها</button>
+        </div>
+
+        <!-- Products / Services Grid -->
+        <div class="row g-4" id="products-grid" aria-live="polite">
+            {% if products and products.items %}
+                {% for product in products.items %}
+                <div class="col-12 col-md-6 col-lg-4 filter-product-item">
+                    {{ product_card(product) }}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12" id="products-empty-state">
+                    <div class="empty-state">
+                        <div class="empty-state-icon" aria-hidden="true">📦</div>
+                        <h2 class="empty-state-title">محصولی در این دسته یافت نشد</h2>
+                        <p class="empty-state-message">
+                            در حال حاضر پکیج جدیدی در این دسته‌بندی تعریف نشده است.
+                            می‌توانید به‌صورت سفارشی با ما تماس بگیرید.
+                        </p>
+                        <a href="{{ url_for('public.contact') }}" class="btn-rahsa-cta empty-state-action">
+                            <span>ارتباط با کارشناسان</span>
+                            <span aria-hidden="true">←</span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products and products.pages and products.pages > 1 %}
+        <nav class="pagination-rahsa mt-5" aria-label="صفحه‌بندی محصولات">
+            {% if products.has_prev %}
+            <a href="{{ url_for('public.category', slug=category.slug, page=products.prev_num) }}" aria-label="صفحه قبلی">
+                <span aria-hidden="true">→</span>
+            </a>
+            {% else %}
+            <span class="disabled" aria-hidden="true">→</span>
+            {% endif %}
+
+            {% for page_num in products.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+                {% if page_num %}
+                    {% if page_num == products.page %}
+                    <span class="active" aria-current="page">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('public.category', slug=category.slug, page=page_num) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                <span>…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if products.has_next %}
+            <a href="{{ url_for('public.category', slug=category.slug, page=products.next_num) }}" aria-label="صفحه بعدی">
+                <span aria-hidden="true">←</span>
+            </a>
+            {% else %}
+            <span class="disabled" aria-hidden="true">←</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Rahsa Dev — Enterprise Software, Web & AI-Powered Bots{% endblock %}
+
+{% block content %}
+<!-- ==================== HERO (EN) ==================== -->
+<section class="hero-section">
+    <div class="hero-glow-1" aria-hidden="true"></div>
+    <div class="hero-glow-2" aria-hidden="true"></div>
+
+    <div class="container" style="position:relative; z-index:10;">
+        <div class="row align-items-center gy-5">
+            <div class="col-12 col-lg-7">
+                <div class="hero-badge">
+                    <span class="pulse-dot" aria-hidden="true"></span>
+                    Software &amp; Web Agency
+                </div>
+                <h1 class="hero-title text-white" style="font-size:clamp(1.8rem, 4vw, 3rem); font-weight:900; line-height:1.25; margin:1.2rem 0;">
+                    We build <span class="gold-gradient-text">scalable software</span>,<br>
+                    online stores &amp; smart bots
+                </h1>
+                <p class="text-muted" style="font-size:1.05rem; line-height:1.9; max-width:540px;">
+                    From corporate portals and e-commerce platforms to Telegram bots and AI-powered
+                    automation — delivered by a senior engineering team with 15+ years of experience.
+                </p>
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-top:1.6rem;">
+                    <a href="{{ url_for('en.contact') }}" class="btn-rahsa-cta" aria-label="Start your project">
+                        <span>Start Your Project</span>
+                    </a>
+                    <a href="{{ url_for('en.products') }}" class="btn-rahsa-outline" style="text-decoration:none;">
+                        Browse Products
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-lg-5">
+                <div class="glass-card" style="padding:1.8rem;">
+                    <h2 style="color:#fff; font-size:1.05rem; font-weight:800; margin-bottom:1rem;">What we deliver</h2>
+                    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.7rem; font-size:0.92rem;">
+                        <li>⚙️ &nbsp;Custom enterprise software &amp; portals</li>
+                        <li>🛒 &nbsp;E-commerce platforms with Iranian payment gateways</li>
+                        <li>🤖 &nbsp;Telegram / Eitaa smart bots &amp; automation</li>
+                        <li>📈 &nbsp;AI trading &amp; analytics tools</li>
+                        <li>☁️ &nbsp;Cloud deployment, DevOps &amp; maintenance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== SERVICES (EN) ==================== -->
+<section class="section section-dark">
+    <div class="container">
+        <div class="section-divider">
+            <h2>Our <span class="gold-gradient-text">Services</span></h2>
+            <p>End-to-end digital solutions focused on quality, security and scalability.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">💻 Web Development</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">High-performance websites and web apps built with modern stacks, SEO-ready and fully responsive.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">🤖 Smart Bots</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Telegram &amp; Eitaa bots for sales, support, notifications and internal automation.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">⚙️ Software &amp; Automation</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Custom ERP/CRM, invoicing systems and workflow automation tailored to your business.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">📈 AI Solutions</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Market analysis bots, AI-assisted content tools and intelligent data pipelines.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">🛒 E-Commerce</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Complete online stores with multi-gateway checkout, invoices and label printing.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800;">☁️ Cloud &amp; DevOps</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Deployment, monitoring, backups and long-term maintenance on Iranian and global clouds.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FEATURED PRODUCTS (EN) ==================== -->
+{% if featured_products %}
+<section class="section" style="padding-top:2rem;">
+    <div class="container">
+        <div class="featured-header">
+            <div>
+                <h2 class="text-white" style="font-size:1.6rem; font-weight:900; margin-bottom:0.25rem;">Ready-made Packages</h2>
+                <p class="text-muted" style="font-size:0.875rem; margin:0;">Instant delivery, full docs, 1-year warranty</p>
+            </div>
+            <a href="{{ url_for('en.products') }}" class="text-yellow font-bold" style="text-decoration:none;">
+                View all products <span aria-hidden="true">→</span>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for product in featured_products[:6] %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="product-card h-100" aria-label="{{ product.title }}">
+                    <a href="{{ url_for('public.product', slug=product.slug) }}" class="product-card-image" aria-label="{{ product.title }}">
+                        <img src="{{ product.main_image_url }}" alt="{{ product.title }}" loading="lazy" width="400" height="300">
+                        {% if product.is_discount_active %}
+                            <span class="product-card-badge danger">🔥 {{ product.discount_percent }}%</span>
+                        {% elif product.is_featured %}
+                            <span class="product-card-badge">⭐ Featured</span>
+                        {% endif %}
+                    </a>
+                    <div class="product-card-body">
+                        <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.8rem;">
+                            <span>📁 {{ product.categories[0].title if product.categories else 'General' }}</span>
+                        </div>
+                        <h3 class="product-card-title" style="font-size:1rem;">
+                            <a href="{{ url_for('public.product', slug=product.slug) }}" class="text-white" style="text-decoration:none;" dir="rtl">{{ product.title }}</a>
+                        </h3>
+                        <div class="mt-auto pt-3" style="border-top:1px dashed var(--glass-border);">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div class="product-card-price" data-persian-num>{{ format_price(product.current_price) }}</div>
+                                <a href="{{ url_for('public.product', slug=product.slug) }}" class="btn-rahsa-cta" style="padding:0.4rem 0.9rem; font-size:0.8rem; text-decoration:none;">Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-muted" style="font-size:0.78rem; margin-top:1rem;">
+            ℹ️ Product details pages are in Persian — drop us a line in English anytime via the <a href="{{ url_for('en.contact') }}" class="text-yellow">contact form</a>.
+        </p>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== LATEST POSTS (EN) ==================== -->
+{% if latest_posts %}
+<section class="section">
+    <div class="container">
+        <div class="section-divider">
+            <h2>From the <span class="gold-gradient-text">Blog</span></h2>
+            <p>Latest articles (Persian, with English translations where available)</p>
+        </div>
+        <div class="row g-4">
+            {% for post in latest_posts %}
+            <div class="col-12 col-md-4">
+                <div class="glass-card h-100" style="padding:1.4rem;">
+                    <h3 style="font-size:1rem; font-weight:800; margin-bottom:0.6rem;">
+                        <a href="{{ url_for('en.post', slug=post.slug) }}" class="text-white" style="text-decoration:none;">
+                            {{ post.title_en or post.title }}
+                        </a>
+                    </h3>
+                    <p class="text-muted" style="font-size:0.85rem; line-height:1.7; margin:0;">
+                        {{ (post.excerpt_en or post.excerpt or '')|truncate(120) }}
+                    </p>
+                    <a href="{{ url_for('en.post', slug=post.slug) }}" class="text-yellow" style="font-size:0.82rem; text-decoration:none; display:inline-block; margin-top:0.8rem;">
+                        Read more →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== CTA (EN) ==================== -->
+<section class="section" id="en-cta">
+    <div class="container">
+        <div class="quote-section-card">
+            <h2 class="text-white" style="font-size:1.6rem; font-weight:900; margin-bottom:0.5rem;">Let's talk about your project</h2>
+            <p class="text-muted" style="max-width:640px; line-height:1.9;">
+                Tell us what you need — we reply within one business day. Free consultation, no strings attached.
+            </p>
+            <a href="{{ url_for('en.contact') }}" class="btn-rahsa-cta" style="text-decoration:none; display:inline-block; margin-top:1rem;">
+                <span>Contact Us</span>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

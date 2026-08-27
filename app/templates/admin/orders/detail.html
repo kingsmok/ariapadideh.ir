@@ -1,0 +1,62 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}جزئیات سفارش #{{ order.order_number }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:800px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
+            سفارش شماره #{{ order.order_number }}
+        </h2>
+        <a href="{{ url_for('admin.orders') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
+    </div>
+
+    <div style="background:var(--bg-navy-elevated); padding:1.25rem; border-radius:0.75rem; border:1px solid var(--glass-border); margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; font-size:0.95rem;">
+        <div><strong>مبلغ کل:</strong> <span style="color:var(--accent-gold); font-weight:800;">{{ format_price(order.total_amount) }}</span></div>
+        <div><strong>وضعیت پرداخت:</strong> {{ order.payment_status_fa or order.payment_status }}</div>
+        <div><strong>کد رهگیری مرسوله:</strong> {{ order.tracking_code or '-' }}</div>
+        <div><strong>تاریخ ثبت:</strong> {{ order.created_at.strftime('%Y/%m/%d %H:%M') if order.created_at else '' }}</div>
+    </div>
+
+    {# تراکنش‌های پرداخت (درگاه‌ها) #}
+    <div style="margin-bottom:1.5rem;">
+        <h3 style="font-size:1.05rem; font-weight:800; color:var(--text-white); margin:0 0 0.75rem;">
+            💳 تراکنش‌های پرداخت
+        </h3>
+        {% if order.transactions.all() %}
+        <div style="overflow-x:auto; border:1px solid var(--glass-border); border-radius:0.75rem;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:640px;">
+                <thead>
+                    <tr style="background:rgba(255,255,255,0.04); color:var(--text-gray-400);">
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">درگاه</th>
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">مبلغ</th>
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">وضعیت</th>
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">شناسه مرجع</th>
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">کد پیگیری پرداخت</th>
+                        <th style="padding:0.6rem 0.9rem; text-align:right;">زمان پرداخت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in order.transactions.order_by('id desc') %}
+                    {% set gw_labels = {'mock': 'درگاه آزمایشی', 'zarinpal': 'زرین‌پال', 'idpay': 'آی‌دی‌پی',
+                                        'digipay': 'دیجی‌پی', 'snapppay': 'اسنپ‌پی (اقساطی)', 'sepah': 'بانک سپه'} %}
+                    {% set st_colors = {'success': 'color:var(--accent-success, #22c55e);', 'failed': 'color:var(--accent-danger, #ef4444);',
+                                        'cancelled': 'color:var(--accent-warning, #f59e0b);', 'pending': 'color:var(--text-gray-400);'} %}
+                    <tr style="border-top:1px solid var(--glass-border);">
+                        <td style="padding:0.6rem 0.9rem; color:var(--text-white); font-weight:700;">{{ gw_labels.get(t.gateway, t.gateway or '—') }}</td>
+                        <td style="padding:0.6rem 0.9rem;">{{ format_price(t.amount) }}</td>
+                        <td style="padding:0.6rem 0.9rem; font-weight:700; {{ st_colors.get(t.status, '') }}">{{ t.status }}</td>
+                        <td style="padding:0.6rem 0.9rem; direction:ltr; text-align:right; color:var(--text-gray-400);">{{ t.reference_id or '—' }}</td>
+                        <td style="padding:0.6rem 0.9rem; direction:ltr; text-align:right; color:var(--accent-gold, #fbb034); font-weight:700;">{{ t.tracking_code or '—' }}</td>
+                        <td style="padding:0.6rem 0.9rem; color:var(--text-gray-400);">{{ t.paid_at.strftime('%Y/%m/%d %H:%M') if t.paid_at else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:var(--text-gray-400);">تراکنشی برای این سفارش ثبت نشده است.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

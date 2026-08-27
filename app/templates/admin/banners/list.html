@@ -1,0 +1,37 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}مدیریت بنرهای تبلیغاتی{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">بنرهای تبلیغاتی و اطلاعیه‌ها</h2>
+        <a href="{{ url_for('admin.banner_edit') }}" class="btn-rahsa-cta">➕ ایجاد بنر جدید</a>
+    </div>
+
+    <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+            <tr style="background:var(--bg-navy-elevated); border-bottom:2px solid var(--glass-border); text-align:right;">
+                <th style="padding:0.85rem;">عنوان بنر</th>
+                <th style="padding:0.85rem;">موقعیت</th>
+                <th style="padding:0.85rem; text-align:center;">ویرایش</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if banners %}
+                {% for b in banners %}
+                <tr style="border-bottom:1px solid var(--glass-border);">
+                    <td style="padding:0.85rem; font-weight:700; color:var(--text-white);">{{ b.title }}</td>
+                    <td style="padding:0.85rem; color:var(--text-gray-400);">{{ b.position }}</td>
+                    <td style="padding:0.85rem; text-align:center;">
+                        <a href="{{ url_for('admin.banner_edit', banner_id=b.id) }}" class="btn-rahsa-outline" style="padding:0.25rem 0.6rem; font-size:0.8rem;">✏️ ویرایش</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="3" style="text-align:center; padding:2rem; color:var(--text-gray-400);">بنری ثبت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

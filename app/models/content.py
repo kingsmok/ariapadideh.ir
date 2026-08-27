@@ -3,8 +3,8 @@ Content Management Models (Pages, Posts, Comments)
 """
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum, JSON
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum, JSON, and_
+from sqlalchemy.orm import relationship, Mapped, foreign
 
 from app.extensions import db
 from app.models.base import BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMixin, MetaMixin
@@ -118,6 +118,12 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     slug = db.Column(db.String(500), unique=True, nullable=False, index=True)
     excerpt = db.Column(db.String(1000), nullable=True)
     content = db.Column(Text, nullable=True)
+
+    # نسخهٔ انگلیسی (چندزبانهٔ محتوا — /en/blog/<slug>)
+    # اگر خالی باشد، نسخهٔ انگلیسی مقاله محتوای فارسی را با یادداشت نمایش می‌دهد
+    title_en = db.Column(db.String(500), nullable=True)
+    excerpt_en = db.Column(db.String(1000), nullable=True)
+    content_en = db.Column(Text, nullable=True)
     
     # Featured image
     featured_image = db.Column(db.String(500), nullable=True)
@@ -160,7 +166,7 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     # Relationships
     author = relationship('User', foreign_keys=[author_id])
     category = relationship('Category', foreign_keys=[category_id])
-    comments = relationship('Comment', back_populates='post', lazy='dynamic', cascade='all, delete-orphan')
+    comments = relationship('Comment', primaryjoin="and_(Comment.commentable_type=='post', foreign(Comment.commentable_id)==Post.id)", back_populates='post', lazy='dynamic', cascade='all, delete-orphan', overlaps="comments")
     
     def publish(self) -> None:
         """Publish the post"""
@@ -180,20 +186,21 @@ class Post(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
     
     def get_related_posts(self, limit: int = 5) -> List['Post']:
         """Get related posts by tags and category"""
-        from app.models.content import Post
-        
+        from app.models.content import Post, PostTag
+
         tag_ids = [tag.id for tag in self.tags]
         related = Post.query.filter(
             Post.id != self.id,
             Post.status == 'published',
             Post.is_deleted == False
         )
-        
+
         if tag_ids:
-            related = related.join(post_tags).filter(post_tags.c.tag_id.in_(tag_ids))
+            related = related.join(PostTag, PostTag.post_id == Post.id).filter(
+                PostTag.tag_id.in_(tag_ids))
         elif self.category_id:
             related = related.filter(Post.category_id == self.category_id)
-        
+
         return related.distinct().limit(limit).all()
     
     def get_schema_data(self) -> dict:
@@ -263,8 +270,8 @@ class Comment(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin):
     user = relationship('User', foreign_keys=[user_id], back_populates='comments')
     parent = relationship('Comment', remote_side='Comment.id', back_populates='replies')
     replies = relationship('Comment', back_populates='parent', lazy='dynamic')
-    product = relationship('Product', back_populates='comments')
-    post = relationship('Post', back_populates='comments')
+    product = relationship('Product', primaryjoin="and_(Comment.commentable_type=='product', foreign(Comment.commentable_id)==Product.id)", back_populates='comments', overlaps="comments,post")
+    post = relationship('Post', primaryjoin="and_(Comment.commentable_type=='post', foreign(Comment.commentable_id)==Post.id)", back_populates='comments', overlaps="comments,product")
     
     @property
     def display_name(self) -> str:

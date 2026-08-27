@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}تکمیل خرید | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="mb-5">
+            <h1 class="text-white d-flex align-items-center gap-3" style="font-size:2rem; font-weight:900; margin-bottom:0.5rem;">
+                <span aria-hidden="true">📝</span>
+                <span>تکمیل اطلاعات خرید</span>
+            </h1>
+            <p class="text-muted" style="font-size:0.95rem;">
+                لطفاً اطلاعات گیرنده و روش پرداخت را تکمیل کنید.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('public.checkout') }}" id="checkout-form" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-4">
+                <!-- Left: Form -->
+                <div class="col-lg-8">
+                    <!-- Shipping Address -->
+                    <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <h2 class="text-white" style="font-size:1.15rem; font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">📍</span>
+                            <span>اطلاعات گیرنده</span>
+                        </h2>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="recipient_name" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    نام و نام خانوادگی <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       id="recipient_name"
+                                       name="recipient_name"
+                                       class="form-control form-control-rahsa"
+                                       value="{{ form_data.recipient_name if form_data else (default_address.recipient_name if default_address else (current_user.full_name if current_user.is_authenticated else '')) }}"
+                                       required
+                                       minlength="2"
+                                       maxlength="100"
+                                       placeholder="مثال: علی محمدی">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="recipient_phone" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    شماره تماس <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel"
+                                       id="recipient_phone"
+                                       name="recipient_phone"
+                                       class="form-control form-control-rahsa"
+                                       value="{{ form_data.recipient_phone if form_data else (default_address.recipient_phone if default_address else (current_user.phone if current_user.is_authenticated else '')) }}"
+                                       required
+                                       pattern="^09[0-9]{9}$|^0[0-9]{10}$"
+                                       placeholder="09123456789"
+                                       dir="ltr">
+                                <small class="text-muted" style="font-size:0.75rem;">فرمت: ۰۹xxxxxxxxx</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="province" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    استان <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       id="province"
+                                       name="province"
+                                       class="form-control form-control-rahsa"
+                                       value="{{ form_data.province if form_data else (default_address.province if default_address else '') }}"
+                                       required
+                                       placeholder="مثال: تهران">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    شهر <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       id="city"
+                                       name="city"
+                                       class="form-control form-control-rahsa"
+                                       value="{{ form_data.city if form_data else (default_address.city if default_address else '') }}"
+                                       required
+                                       placeholder="مثال: تهران">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="postal_code" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    کد پستی
+                                </label>
+                                <input type="text"
+                                       id="postal_code"
+                                       name="postal_code"
+                                       class="form-control form-control-rahsa"
+                                       value="{{ form_data.postal_code if form_data else (default_address.postal_code if default_address else '') }}"
+                                       maxlength="10"
+                                       pattern="^[0-9]{10}$"
+                                       placeholder="۱۰ رقمی"
+                                       dir="ltr">
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label text-white" style="font-size:0.9rem; margin-bottom:0.5rem;">
+                                    آدرس کامل <span class="text-danger">*</span>
+                                </label>
+                                <textarea id="address"
+                                          name="address"
+                                          class="form-control form-control-rahsa"
+                                          required
+                                          minlength="10"
+                                          maxlength="500"
+                                          rows="3"
+                                          placeholder="خیابان، کوچه، پلاک، واحد...">{{ form_data.address if form_data else (default_address.address if default_address else '') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Note -->
+                    <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <h2 class="text-white" style="font-size:1.15rem; font-weight:800; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">💬</span>
+                            <span>یادداشت سفارش (اختیاری)</span>
+                        </h2>
+                        <textarea name="customer_note"
+                                  class="form-control form-control-rahsa"
+                                  maxlength="500"
+                                  rows="2"
+                                  placeholder="اگر نکته‌ای برای فروشنده دارید، اینجا بنویسید..."></textarea>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <h2 class="text-white" style="font-size:1.15rem; font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">💳</span>
+                            <span>روش پرداخت</span>
+                        </h2>
+
+                        <div class="d-flex flex-column gap-2" role="radiogroup" aria-label="روش پرداخت">
+                            <!-- Online (default, always available) -->
+                            <label class="payment-method-card" style="cursor:pointer; padding:1rem; border:2px solid var(--accent-primary); border-radius:var(--radius-md); background:rgba(251,176,59,0.05); display:flex; align-items:center; gap:1rem; transition:var(--transition);">
+                                <input type="radio" name="payment_method" value="online" checked style="width:20px; height:20px; accent-color:var(--accent-primary);">
+                                <div style="flex:1;">
+                                    <div class="text-white font-bold" style="font-size:1rem;">پرداخت آنلاین</div>
+                                    <div class="text-muted" style="font-size:0.85rem;">پرداخت از طریق درگاه بانکی</div>
+                                </div>
+                                <span style="font-size:1.5rem;" aria-hidden="true">💳</span>
+                            </label>
+
+                            <!-- Gateway picker — انتخاب درگاه آنلاین -->
+                            {% if payment_gateways %}
+                            <div id="gateway-picker" class="d-flex flex-column gap-2" style="margin:0.25rem 0 0.5rem 1.75rem; padding:0.85rem; border:1px dashed var(--glass-border); border-radius:var(--radius-md);">
+                                <span class="text-muted" style="font-size:0.8rem; font-weight:700;">انتخاب درگاه پرداخت:</span>
+                                {% for g in payment_gateways %}
+                                <label class="payment-method-card gateway-option" style="cursor:pointer; padding:0.7rem 0.85rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); display:flex; align-items:center; gap:0.75rem; transition:var(--transition); {{ 'border-color:var(--accent-primary); background:rgba(251,176,59,0.08);' if loop.first }}">
+                                    <input type="radio" name="gateway" value="{{ g.id }}" {{ 'checked' if loop.first }} style="width:17px; height:17px; accent-color:var(--accent-primary);">
+                                    <div style="flex:1;">
+                                        <div class="text-white font-bold" style="font-size:0.92rem;">{{ g.label }}</div>
+                                        <div class="text-muted" style="font-size:0.76rem;">{{ g.description }}</div>
+                                    </div>
+                                    <span class="badge rounded-pill" style="background:rgba(251,176,59,0.15); color:var(--accent-primary); font-size:0.7rem; font-weight:800; direction:ltr;">{{ g.badge }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <label class="payment-method-card" style="cursor:pointer; padding:1rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); display:flex; align-items:center; gap:1rem; transition:var(--transition);">
+                                <input type="radio" name="payment_method" value="cash" style="width:20px; height:20px; accent-color:var(--accent-primary);">
+                                <div style="flex:1;">
+                                    <div class="text-white font-bold" style="font-size:1rem;">پرداخت در محل</div>
+                                    <div class="text-muted" style="font-size:0.85rem;">پرداخت هنگام تحویل کالا</div>
+                                </div>
+                                <span style="font-size:1.5rem;" aria-hidden="true">💵</span>
+                            </label>
+
+                            <label class="payment-method-card" style="cursor:pointer; padding:1rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); display:flex; align-items:center; gap:1rem; transition:var(--transition);">
+                                <input type="radio" name="payment_method" value="card" style="width:20px; height:20px; accent-color:var(--accent-primary);">
+                                <div style="flex:1;">
+                                    <div class="text-white font-bold" style="font-size:1rem;">کارت به کارت</div>
+                                    <div class="text-muted" style="font-size:0.85rem;">واریز به شماره کارت و ارسال رسید</div>
+                                </div>
+                                <span style="font-size:1.5rem;" aria-hidden="true">🏦</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Summary -->
+                <aside class="col-lg-4">
+                    <div class="glass-card" style="padding:1.5rem; position:sticky; top:90px;">
+                        <h2 class="text-white" style="font-size:1.2rem; font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem;">
+                            <span aria-hidden="true">📋</span>
+                            <span>خلاصه سفارش</span>
+                        </h2>
+
+                        <!-- Cart items -->
+                        <div style="max-height:280px; overflow-y:auto; margin-bottom:1rem;">
+                            {% for item in cart_items %}
+                            {% set p = item.product if item.product is defined else item['product'] %}
+                            {% set q = item.quantity if item.quantity is defined else item['quantity'] %}
+                            <div class="d-flex align-items-center gap-2" style="padding:0.6rem 0; border-bottom:1px solid var(--glass-border);">
+                                <img src="{{ p.main_image_url }}"
+                                     alt="{{ p.title }}{% if p.short_description %} - {{ p.short_description|striptags|truncate(60) }}{% endif %}"
+                                     style="width:48px; height:48px; object-fit:cover; border-radius:var(--radius-sm);"
+                                     loading="lazy"
+                                     decoding="async"
+                                     width="48" height="48">
+                                <div style="flex:1; min-width:0;">
+                                    <div class="text-white" style="font-size:0.85rem; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.title }}</div>
+                                    <div class="text-muted" style="font-size:0.75rem;">
+                                        <span data-persian-num>{{ q }}</span> × <span data-persian-num>{{ format_price(p.current_price) }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-yellow font-bold" style="font-size:0.9rem;" data-persian-num>
+                                    {{ format_price(p.current_price * q) }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <hr style="border-color:var(--glass-border); margin-block:1rem;">
+
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                            <span class="text-muted">جمع محصولات:</span>
+                            <strong class="text-white" data-persian-num>{{ format_price(cart_total) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                            <span class="text-muted">ارسال:</span>
+                            <strong class="text-success">رایگان</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3" style="font-size:0.9rem;">
+                            <span class="text-muted">مالیات:</span>
+                            <strong class="text-success">۰٪</strong>
+                        </div>
+
+                        <hr style="border-color:var(--glass-border); margin-block:1rem;">
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="text-white font-bold" style="font-size:1rem;">مبلغ نهایی:</span>
+                            <strong class="text-yellow" style="font-size:1.4rem; font-weight:900;" data-persian-num>
+                                {{ format_price(cart_total) }}
+                            </strong>
+                        </div>
+
+                        <button type="submit"
+                                class="btn-rahsa-cta w-100"
+                                style="padding:0.85rem; font-size:1rem;"
+                                id="submit-btn">
+                            <span id="submit-text">تأیید و پرداخت</span>
+                            <span id="submit-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                        </button>
+
+                        <a href="{{ url_for('public.cart') }}" class="d-block text-center mt-3 text-muted" style="font-size:0.85rem; text-decoration:none;">
+                            <span aria-hidden="true">←</span> بازگشت به سبد خرید
+                        </a>
+
+                        <!-- Trust -->
+                        <div class="mt-4 pt-3" style="border-top:1px solid var(--glass-border);">
+                            <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.78rem; margin-bottom:0.4rem;">
+                                <span class="text-success" aria-hidden="true">🔒</span>
+                                <span>پرداخت امن و رمزنگاری‌شده</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.78rem;">
+                                <span class="text-success" aria-hidden="true">↩️</span>
+                                <span>۷ روز ضمانت بازگشت</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+.payment-method-card:has(input:checked) {
+    border-color: var(--accent-primary) !important;
+    background: rgba(251,176,59,0.08) !important;
+}
+.payment-method-card:hover {
+    border-color: rgba(251,176,59,0.4);
+}
+</style>
+
+<script>
+document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('submit-btn');
+    const text = document.getElementById('submit-text');
+    const spinner = document.getElementById('submit-spinner');
+    if (btn) {
+        btn.disabled = true;
+        text.textContent = 'در حال ثبت سفارش...';
+        spinner.classList.remove('d-none');
+    }
+});
+
+// Highlight selected payment method + toggle gateway picker
+function refreshPaymentCards() {
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        const inp = card.querySelector('input');
+        if (inp && inp.checked) {
+            card.style.borderColor = 'var(--accent-primary)';
+            card.style.background = 'rgba(251,176,59,0.08)';
+        } else if (!card.classList.contains('gateway-option')) {
+            card.style.borderColor = 'var(--glass-border)';
+            card.style.background = 'transparent';
+        }
+    });
+    const gw = document.getElementById('gateway-picker');
+    const online = document.querySelector('input[name="payment_method"][value="online"]');
+    // با کلاس d-none مخفی می‌کنیم چون .d-flex با !important است و style.display اثر ندارد
+    if (gw) gw.classList.toggle('d-none', !(online && online.checked));
+}
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', refreshPaymentCards);
+});
+document.querySelectorAll('input[name="gateway"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.gateway-option').forEach(card => {
+            const inp = card.querySelector('input');
+            card.style.borderColor = inp && inp.checked ? 'var(--accent-primary)' : 'var(--glass-border)';
+            card.style.background = inp && inp.checked ? 'rgba(251,176,59,0.08)' : 'transparent';
+        });
+    });
+});
+refreshPaymentCards();
+</script>
+{% endblock %}

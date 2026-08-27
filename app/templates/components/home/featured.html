@@ -1,0 +1,29 @@
+{% if featured_products %}
+<section class="section" style="padding-top:2rem;">
+    <div class="container">
+        <div class="featured-header">
+            <div>
+                <h2 class="text-white" style="font-size:1.6rem; font-weight:900; margin-bottom:0.25rem;">
+                    {{ (sec.title if sec is defined and sec.title else 'پکیج‌ها و سورس‌کدهای آماده') }}
+                </h2>
+                <p class="text-muted" style="font-size:0.875rem; margin:0;">
+                    تحویل آنی با مستندات کامل و گارانتی ۱ ساله
+                </p>
+            </div>
+            <a href="{{ url_for('public.search', type='products') }}" class="text-yellow font-bold" style="text-decoration:none;">
+                مشاهده همه محصولات
+                <span aria-hidden="true">←</span>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for product in featured_products[:6] %}
+            <div class="col-12 col-md-6 col-lg-4">
+                {{ product_card(product) }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endif %}

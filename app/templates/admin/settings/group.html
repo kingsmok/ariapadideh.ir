@@ -1,0 +1,42 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}ویرایش {{ group_title }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:800px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
+            تغییر متون و مقادیر: {{ group_title }}
+        </h2>
+        <a href="{{ url_for('admin.settings') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به گروه تنظیمات</a>
+    </div>
+
+    <form action="{{ url_for('admin.settings_group', group=group) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        {% if settings %}
+            {% for setting in settings %}
+            <div class="mb-4">
+                <label class="form-label-rahsa" style="font-weight:700; color:var(--text-white);">
+                    {{ setting.label or setting.key }}
+                </label>
+                {% if setting.type == 'text' %}
+                    <textarea name="setting_{{ setting.key }}" class="form-control-rahsa" style="min-height:90px;">{{ setting.value or '' }}</textarea>
+                {% else %}
+                    <input type="text" name="setting_{{ setting.key }}" class="form-control-rahsa" value="{{ setting.value or '' }}">
+                {% endif %}
+                {% if setting.description %}
+                    <small style="color:var(--text-gray-400); font-size:0.8rem; display:block; margin-top:0.25rem;">{{ setting.description }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
+                💾 ذخیره تغییرات و اعمال در وب‌سایت
+            </button>
+        {% else %}
+            <p style="color:var(--text-gray-400); text-align:center;">تنظیماتی در این بخش وجود ندارد.</p>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

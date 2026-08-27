@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}آدرس‌های من | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:900px;">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">پنل کاربری</a>
+                <span class="text-muted">/</span>
+                <span class="text-white font-bold">آدرس‌های من</span>
+            </div>
+            <a href="{{ url_for('user.address_edit') }}" class="btn-rahsa-cta">➕ افزودن آدرس جدید</a>
+        </div>
+
+        {% if addresses %}
+            <div class="row g-3">
+                {% for addr in addresses %}
+                <div class="col-12 col-md-6">
+                    <div class="glass-card" style="padding:1.5rem; height:100%; position:relative;">
+                        {% if addr.is_default %}
+                            <span class="badge-rahsa gold" style="position:absolute; top:1rem; inset-inline-end:1rem;">پیش‌فرض</span>
+                        {% endif %}
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span aria-hidden="true">📍</span>
+                            <h3 class="text-white font-bold" style="font-size:1.05rem; margin:0;">{{ addr.title or 'آدرس' }}</h3>
+                        </div>
+                        <div class="text-muted" style="font-size:0.88rem; line-height:1.9; margin-bottom:0.5rem;">
+                            {% if addr.recipient_name %}<div>👤 {{ addr.recipient_name }}</div>{% endif %}
+                            {% if addr.recipient_phone %}<div>📞 {{ addr.recipient_phone }}</div>{% endif %}
+                            <div>🗺️ {{ addr.province or '-' }} - {{ addr.city or '-' }}</div>
+                            <div>🏠 {{ addr.address or '' }}</div>
+                            {% if addr.postal_code %}<div>🔢 کد پستی: {{ addr.postal_code }}</div>{% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap mt-3">
+                            <a href="{{ url_for('user.address_edit', address_id=addr.id) }}" class="btn-rahsa-outline" style="padding:0.3rem 0.8rem; font-size:0.8rem;">✏️ ویرایش</a>
+                            {% if not addr.is_default %}
+                            <form method="POST" action="{{ url_for('user.address_set_default', address_id=addr.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <button type="submit" class="btn-rahsa-outline" style="padding:0.3rem 0.8rem; font-size:0.8rem;">⭐ پیش‌فرض</button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('user.address_delete', address_id=addr.id) }}"
+                                  style="display:inline;" onsubmit="return confirm('آدرس حذف شود؟');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <button type="submit" class="btn-rahsa-outline" style="padding:0.3rem 0.8rem; font-size:0.8rem; color:var(--accent-danger);">🗑️ حذف</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-card" style="padding:3rem; text-align:center; color:var(--text-gray-400);">
+                <div class="empty-state-icon mx-auto" style="margin-bottom:1rem;" aria-hidden="true">📍</div>
+                <p>هنوز آدرسی ثبت نکرده‌اید.</p>
+                <a href="{{ url_for('user.address_edit') }}" class="btn-rahsa-cta mt-2">➕ افزودن اولین آدرس</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,178 +1,162 @@
-<header class="site-header">
-    <!-- Top Bar -->
-    <div class="header-top">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="top-links">
-                    <a href="{{ url_for('public.about') }}">درباره ما</a>
-                    <a href="{{ url_for('public.contact') }}">تماس با ما</a>
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('user.dashboard') }}">پنل کاربری</a>
-                    {% endif %}
-                </div>
-                <div class="top-contact">
-                    <span><i class="fas fa-phone"></i> {{ site_settings.contact_phone or '021-12345678' }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Header -->
-    <div class="header-main">
-        <div class="container">
-            <div class="row align-items-center">
-                <!-- Logo -->
-                <div class="col-auto">
-                    <a href="{{ url_for('public.home') }}" class="logo">
-                        {% if site_settings.appearance_logo %}
-                            <img src="{{ site_settings.appearance_logo }}" alt="{{ site_settings.general_site_name }}">
-                        {% else %}
-                            <span class="logo-text">{{ site_settings.general_site_name or 'فلاسک پرو' }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-                
-                <!-- Search -->
-                <div class="col flex-grow-1 mx-4">
-                    <form action="{{ url_for('public.search') }}" method="GET" class="search-form">
-                        <div class="input-group">
-                            <input type="text" name="q" class="form-control" 
-                                   placeholder="جستجو در محصولات..." 
-                                   value="{{ request.args.get('q', '') }}"
-                                   autocomplete="off">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                        <div id="search-results" class="search-results-dropdown"></div>
-                    </form>
-                </div>
-                
-                <!-- Actions -->
-                <div class="col-auto">
-                    <div class="header-actions">
-                        <!-- Compare -->
-                        <a href="{{ url_for('public.compare') }}" class="action-btn" title="مقایسه">
-                            <i class="fas fa-balance-scale"></i>
-                        </a>
-                        
-                        <!-- Cart -->
-                        <a href="{{ url_for('public.cart') }}" class="action-btn cart-btn" title="سبد خرید">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="badge" id="cart-count">{{ cart_items_count if cart_items_count else 0 }}</span>
-                        </a>
-                        
-                        <!-- User -->
-                        {% if current_user.is_authenticated %}
-                            <div class="dropdown">
-                                <button class="action-btn" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><span class="dropdown-item-text">{{ current_user.full_name }}</span></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.dashboard') }}">پنل کاربری</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.orders') }}">سفارش‌های من</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.wishlist') }}">علاقه‌مندی‌ها</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('user.logout') }}">خروج</a></li>
-                                </ul>
-                            </div>
-                        {% else %}
-                            <a href="{{ url_for('user.login') }}" class="action-btn" title="ورود">
-                                <i class="fas fa-user"></i>
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Navigation -->
-    <nav class="header-nav">
-        <div class="container">
-            <div class="nav-wrapper">
-                <!-- Categories Button -->
-                <button class="categories-btn" id="categories-toggle">
-                    <i class="fas fa-bars"></i>
-                    <span>دسته‌بندی‌ها</span>
-                </button>
-                
-                <!-- Main Menu -->
-                <ul class="main-menu">
-                    <li><a href="{{ url_for('public.home') }}">صفحه اصلی</a></li>
-                    {% for category in categories[:6] if categories %}
-                        <li class="has-mega-menu">
-                            <a href="{{ url_for('public.category', slug=category.slug) }}">
-                                {{ category.title }}
-                            </a>
-                            {% if category.children.count() > 0 %}
-                                <div class="mega-menu">
-                                    <div class="container">
-                                        <div class="row">
-                                            {% for child in category.children.filter_by(is_active=True).limit(4) %}
-                                                <div class="col-3">
-                                                    <a href="{{ url_for('public.category', slug=child.slug) }}" class="mega-menu-title">
-                                                        {{ child.title }}
-                                                    </a>
-                                                    <ul class="mega-menu-items">
-                                                        {% for subchild in child.children.filter_by(is_active=True).limit(4) %}
-                                                            <li><a href="{{ url_for('public.category', slug=subchild.slug) }}">{{ subchild.title }}</a></li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% if category.image or category.banner %}
-                                            <div class="mega-menu-banner">
-                                                <img src="{{ category.banner or category.image }}" alt="">
-                                            </div>
-                                        {% endif %}
+<!-- Site Header — Uses CSS classes from main.css (no inline styles) -->
+<header class="site-navbar">
+    <div class="container h-100">
+        <div class="d-flex align-items-center justify-content-between h-100">
+
+            <!-- Brand -->
+            <a href="{{ url_for('public.home') }}"
+               class="d-flex align-items-center gap-2 text-decoration-none"
+               aria-label="{{ site_settings.general_site_name or 'رهسا دیو' }}">
+                <div class="brand-badge-rahsa" aria-hidden="true">ر</div>
+                <span class="text-gradient-purple-gold" style="font-size:1.35rem; font-weight:800; letter-spacing:-0.5px;">
+                    {{ site_settings.general_site_name or 'رهسا دیو' }}
+                </span>
+            </a>
+
+            <!-- Desktop Navigation Menu -->
+            <nav class="d-none d-md-flex align-items-center gap-1" aria-label="{{ 'Main menu' if g.get('lang','fa') == 'en' else 'منوی اصلی' }}">
+                {% if g.get('lang','fa') == 'en' %}
+                    {# English chrome — نسخهٔ انگلیسی (الگوی چندزبانهٔ قالب‌های راست‌چین) #}
+                    <a href="{{ url_for('en.home') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.home' else '' }}">Home</a>
+                    <a href="{{ url_for('en.products') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.products' else '' }}">Products</a>
+                    <a href="{{ url_for('en.blog') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.blog' else '' }}">Blog</a>
+                    <a href="{{ url_for('en.about') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.about' else '' }}">About</a>
+                    <a href="{{ url_for('en.contact') }}" class="nav-link-item {{ 'active' if request.endpoint == 'en.contact' else '' }}">Contact</a>
+                {% elif nav_header %}
+                    {# منوی داینامیک — از پنل مدیریت (منوها) #}
+                    {% for item in nav_header %}
+                        {% if item.children %}
+                            <div class="dropdown-hover-parent {{ 'mega-parent' if item.is_mega else '' }}">
+                                <a href="{{ item.url }}"
+                                   class="nav-link-item {{ 'active' if request.path == item.url else '' }}"
+                                   aria-haspopup="true" {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                    {{ item.title }}
+                                    <span aria-hidden="true" style="font-size:0.7em; margin-inline-start:4px;">▾</span>
+                                    {% if item.badge_text %}<span class="menu-badge-pill" {% if item.badge_color %}style="background:{{ item.badge_color }}"{% endif %}>{{ item.badge_text }}</span>{% endif %}
+                                </a>
+                                {% if item.is_mega %}
+                                <div class="mega-menu-panel" role="menu">
+                                    <div class="mega-menu-grid">
+                                        {% for child in item.children %}
+                                        <a href="{{ child.url }}" class="mega-menu-item" role="menuitem" {% if child.target == '_blank' %}target="_blank" rel="noopener"{% endif %}>
+                                            {% if child.icon %}<span aria-hidden="true">{{ child.icon }}</span>{% else %}<span aria-hidden="true">🔗</span>{% endif %}
+                                            <span>
+                                                <strong>{{ child.title }}</strong>
+                                                {% if child.badge_text %}<span class="menu-badge-pill" {% if child.badge_color %}style="background:{{ child.badge_color }}"{% endif %}>{{ child.badge_text }}</span>{% endif %}
+                                            </span>
+                                        </a>
+                                        {% endfor %}
                                     </div>
                                 </div>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                    <li><a href="{{ url_for('public.blog') }}">وبلاگ</a></li>
-                    <li><a href="{{ url_for('public.faq') }}">سوالات متداول</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
-
-<!-- Categories Sidebar -->
-<div class="categories-sidebar" id="categories-sidebar">
-    <div class="sidebar-header">
-        <h5>دسته‌بندی‌ها</h5>
-        <button class="close-sidebar" id="close-categories">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="sidebar-content">
-        <ul class="categories-list">
-            {% for category in categories if categories %}
-                <li class="has-sub">
-                    <a href="{{ url_for('public.category', slug=category.slug) }}">
-                        {% if category.icon %}
-                            <i class="{{ category.icon }}"></i>
+                                {% else %}
+                                <div class="dropdown-menu-glass" role="menu">
+                                    {% for child in item.children %}
+                                    <a href="{{ child.url }}" role="menuitem" {% if child.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if child.no_follow %} rel="nofollow"{% endif %}>
+                                        {% if child.icon %}<span aria-hidden="true">{{ child.icon }}</span>{% else %}<span aria-hidden="true">•</span>{% endif %}
+                                        {{ child.title }}
+                                        {% if child.badge_text %}<span class="menu-badge-pill" {% if child.badge_color %}style="background:{{ child.badge_color }}"{% endif %}>{{ child.badge_text }}</span>{% endif %}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <a href="{{ item.url }}"
+                               class="nav-link-item {{ 'active' if request.path == item.url else '' }}"
+                               {% if item.target == '_blank' %}target="_blank" rel="noopener"{% endif %}{% if item.no_follow %} rel="nofollow"{% endif %}>
+                                {{ item.title }}
+                                {% if item.badge_text %}<span class="menu-badge-pill" {% if item.badge_color %}style="background:{{ item.badge_color }}"{% endif %}>{{ item.badge_text }}</span>{% endif %}
+                            </a>
                         {% endif %}
-                        {{ category.title }}
+                    {% endfor %}
+                {% else %}
+                {# نسخهٔ پیش‌فرض — تا وقتی از پنل منویی ساخته نشده #}
+                <a href="{{ url_for('public.home') }}"
+                   class="nav-link-item {{ 'active' if request.endpoint == 'public.home' else '' }}">
+                    صفحه اصلی
+                </a>
+
+                <div class="dropdown-hover-parent">
+                    <a href="{{ url_for('public.categories_list') }}"
+                       class="nav-link-item {{ 'active' if request.endpoint in ['public.categories_list', 'public.category'] else '' }}"
+                       aria-haspopup="true">
+                        خدمات
+                        <span aria-hidden="true" style="font-size:0.7em; margin-inline-start:4px;">▾</span>
                     </a>
-                    {% if category.children.count() > 0 %}
-                        <button class="toggle-sub"><i class="fas fa-chevron-down"></i></button>
-                        <ul class="sub-categories">
-                            {% for child in category.children.filter_by(is_active=True).limit(8) %}
-                                <li>
-                                    <a href="{{ url_for('public.category', slug=child.slug) }}">{{ child.title }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+                    <div class="dropdown-menu-glass" role="menu">
+                        <a href="{{ url_for('public.categories_list') }}" role="menuitem">
+                            <span aria-hidden="true">📦</span> همه خدمات
+                        </a>
+                        <a href="/category/web-design" role="menuitem">
+                            <span aria-hidden="true">💻</span> طراحی وب‌سایت
+                        </a>
+                        <a href="/category/smart-bots" role="menuitem">
+                            <span aria-hidden="true">🤖</span> ربات‌های هوشمند
+                        </a>
+                        <a href="/category/software-automation" role="menuitem">
+                            <span aria-hidden="true">⚙️</span> نرم‌افزار و اتوماسیون
+                        </a>
+                        <a href="/category/programming-scripts" role="menuitem">
+                            <span aria-hidden="true">📝</span> برنامه‌نویسی و اسکریپت
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/#quote-section" class="nav-link-item">نمونه کارها</a>
+                <a href="{{ url_for('public.compare') }}"
+                   class="nav-link-item {{ 'active' if request.endpoint == 'public.compare' else '' }}">
+                    قیمت‌گذاری
+                </a>
+                <a href="{{ url_for('public.about') }}"
+                   class="nav-link-item {{ 'active' if request.endpoint == 'public.about' else '' }}">
+                    درباره ما
+                </a>
+                <a href="{{ url_for('public.contact') }}"
+                   class="nav-link-item {{ 'active' if request.endpoint == 'public.contact' else '' }}">
+                    تماس با ما
+                </a>
+                {% endif %}
+            </nav>
+
+            <!-- Actions CTA & Mobile Hamburger -->
+            <div class="d-flex align-items-center gap-3">
+                {# سوییچر زبان (فارسی/English) #}
+                {% set lang = g.get('lang', 'fa') %}
+                <a href="{{ (fa_url or '/') if lang == 'en' else (en_url or '/en/') }}"
+                   class="lang-switch-rahsa" hreflang="{{ 'fa' if lang == 'en' else 'en' }}"
+                   aria-label="{{ 'نسخهٔ فارسی' if lang == 'en' else 'English version' }}"
+                   title="{{ 'نسخهٔ فارسی' if lang == 'en' else 'English version' }}">
+                    {{ 'فا' if lang == 'en' else 'EN' }}
+                </a>
+
+                <a href="{{ '/#quote-section' if lang != 'en' else url_for('en.contact') }}"
+                   class="btn-rahsa-cta d-none d-md-inline-flex"
+                   aria-label="{{ 'Get a free consultation' if lang == 'en' else 'دریافت مشاوره رایگان' }}">
+                    <span>{{ 'Get a Quote' if g.get('lang','fa') == 'en' else 'مشاوره رایگان' }}</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                </a>
+
+                <button type="button"
+                        class="d-md-none border-0 bg-transparent text-yellow"
+                        id="open-drawer-btn"
+                        style="font-size:1.8rem; cursor:pointer; padding:0.25rem 0.5rem; line-height:1;"
+                        aria-label="باز کردن منوی موبایل"
+                        aria-expanded="false"
+                        aria-controls="mobile-drawer">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
     </div>
-</div>
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+</header>
+<!-- Spacer to offset fixed header height -->
+<div class="header-spacer" style="height:70px;" aria-hidden="true"></div>

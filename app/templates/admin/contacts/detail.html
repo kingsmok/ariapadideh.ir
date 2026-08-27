@@ -1,0 +1,28 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}جزئیات درخواست استعلام قیمت{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:800px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
+            اطلاعات درخواست: {{ contact.name }}
+        </h2>
+        <a href="{{ url_for('admin.contacts') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
+    </div>
+
+    <div style="background:var(--bg-navy-elevated); border-radius:0.75rem; padding:1.25rem; border:1px solid var(--glass-border); margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; font-size:0.95rem;">
+        <div><strong>👤 متقاضی:</strong> {{ contact.name }}</div>
+        <div><strong>📞 شماره همراه:</strong> <span style="color:var(--accent-gold); font-weight:700;">{{ contact.phone or '-' }}</span></div>
+        <div><strong>✉️ ایمیل:</strong> {{ contact.email or '-' }}</div>
+        <div><strong>📌 موضوع پروژه:</strong> {{ contact.subject or '-' }}</div>
+    </div>
+
+    <div class="mb-4">
+        <label style="font-weight:700; color:var(--text-white); display:block; margin-bottom:0.5rem;">توضیحات و نیازمندی‌های پروژه:</label>
+        <div style="background:var(--bg-navy-card); border-radius:0.75rem; padding:1.25rem; border:1px solid #cbd5e1; font-size:0.95rem; line-height:1.8; color:var(--text-gray-200);">
+            {{ contact.message }}
+        </div>
+    </div>
+</div>
+{% endblock %}

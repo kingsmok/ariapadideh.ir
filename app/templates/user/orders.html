@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}سفارش‌های من | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:920px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">پنل کاربری</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">سفارش‌های من</span>
+        </div>
+
+        {% if orders and orders.items %}
+            <div style="display:flex; flex-direction:column; gap:1rem;">
+                {% for order in orders.items %}
+                <div class="glass-card" style="padding:1.25rem 1.5rem;">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="text-white font-bold">سفارش #{{ order.order_number }}</span>
+                                <span class="badge-rahsa info">{{ order.status_fa }}</span>
+                                <span class="badge-rahsa {% if order.payment_status == 'paid' %}success{% else %}warning{% endif %}">
+                                    {{ order.payment_status_fa }}
+                                </span>
+                            </div>
+                            <div class="text-muted" style="font-size:0.82rem; margin-top:0.4rem;">
+                                {{ order.created_at|time_ago if order.created_at else '' }}
+                                {% if order.items.count() is defined %}
+                                · {{ order.items.count() }} کالا
+                                {% elif order.items %}
+                                · {{ order.items|length }} کالا
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-yellow font-bold" style="font-size:1.05rem;">{{ order.total_amount|format_price }}</div>
+                            <a href="{{ url_for('user.order_detail', order_id=order.id) }}" class="btn-rahsa-outline" style="padding:0.3rem 0.8rem; font-size:0.8rem;">
+                                مشاهده جزئیات ←
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if orders.pages and orders.pages > 1 %}
+            <nav style="display:flex; justify-content:center; gap:0.4rem; margin-top:1.5rem; flex-wrap:wrap;">
+                {% if orders.has_prev %}
+                    <a href="{{ url_for('user.orders', page=orders.prev_num, status=request.args.get('status','')) }}" class="btn-rahsa-outline" style="padding:0.35rem 0.9rem; font-size:0.85rem;">قبلی</a>
+                {% endif %}
+                {% for p in range(1, orders.pages + 1) %}
+                    {% if p == orders.page %}
+                        <span class="btn-rahsa-cta" style="padding:0.35rem 0.9rem; font-size:0.85rem;">{{ p }}</span>
+                    {% else %}
+                        <a href="{{ url_for('user.orders', page=p, status=request.args.get('status','')) }}" class="btn-rahsa-outline" style="padding:0.35rem 0.9rem; font-size:0.85rem;">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if orders.has_next %}
+                    <a href="{{ url_for('user.orders', page=orders.next_num, status=request.args.get('status','')) }}" class="btn-rahsa-outline" style="padding:0.35rem 0.9rem; font-size:0.85rem;">بعدی</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="glass-card" style="padding:3rem; text-align:center; color:var(--text-gray-400);">
+                <div class="empty-state-icon mx-auto" style="margin-bottom:1rem;" aria-hidden="true">🛍️</div>
+                <p>هنوز سفارشی ثبت نکرده‌اید.</p>
+                <a href="{{ url_for('public.categories_list') }}" class="btn-rahsa-cta mt-2">مشاهده محصولات</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

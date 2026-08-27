@@ -1,0 +1,38 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}درخواست‌های استعلام قیمت و پیام‌ها{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem;">درخواست‌های مشاوره و پیام‌های دریافتی</h2>
+
+    <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+            <tr style="background:var(--bg-navy-elevated); border-bottom:2px solid var(--glass-border); text-align:right;">
+                <th style="padding:0.85rem;">نام متقاضی</th>
+                <th style="padding:0.85rem;">شماره همراه</th>
+                <th style="padding:0.85rem;">نوع پروژه / موضوع</th>
+                <th style="padding:0.85rem;">تاریخ</th>
+                <th style="padding:0.85rem; text-align:center;">مشاهده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if contacts and contacts.items %}
+                {% for c in contacts.items %}
+                <tr style="border-bottom:1px solid var(--glass-border); {% if not c.is_read %}background:#f0f9ff;{% endif %}">
+                    <td style="padding:0.85rem; font-weight:700; color:var(--text-white);">{{ c.name }}</td>
+                    <td style="padding:0.85rem; color:var(--accent-gold); font-weight:700;">{{ c.phone or '-' }}</td>
+                    <td style="padding:0.85rem; color:var(--text-gray-200);">{{ c.subject or '-' }}</td>
+                    <td style="padding:0.85rem; color:var(--text-gray-400); font-size:0.8rem;">{{ c.created_at.strftime('%Y/%m/%d') if c.created_at else '' }}</td>
+                    <td style="padding:0.85rem; text-align:center;">
+                        <a href="{{ url_for('admin.contact_detail', contact_id=c.id) }}" class="btn-rahsa-outline" style="padding:0.25rem 0.6rem; font-size:0.8rem;">👁️ مشاهده جزئیات</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-gray-400);">درخواستی دریافت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

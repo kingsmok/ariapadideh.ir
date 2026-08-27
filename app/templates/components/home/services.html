@@ -1,0 +1,77 @@
+<!-- ==================== SERVICES BENTO GRID ==================== -->
+<section class="section section-dark">
+    <div class="container">
+
+        <div class="section-divider">
+            <h2>
+                {% if sec is defined and sec.title %}{{ sec.title }}{% else %}خدمات تخصصی <span class="gold-gradient-text">رهسا دیو</span>{% endif %}
+            </h2>
+            <p>
+                ارائه راهکارهای جامع دیجیتال با تمرکز بر کیفیت، امنیت و مقیاس‌پذیری.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Service 1: Large Card -->
+            <div class="col-12 col-lg-8">
+                <article class="service-card large">
+                    <div class="service-icon" aria-hidden="true">💻</div>
+                    <h3 class="service-title">توسعه نرم‌افزارهای سفارشی (ERP/CRM)</h3>
+                    <p class="service-description">
+                        طراحی و پیاده‌سازی سیستم‌های یکپارچه سازمانی با معماری میکروسرویس و رویکرد داده‌محور برای اتوماسیون فرآیندهای پیچیده کسب‌وکار شما.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='software-automation') }}" class="service-link" aria-label="اطلاعات بیشتر درباره نرم‌افزار سفارشی">
+                        اطلاعات بیشتر
+                        <span aria-hidden="true">←</span>
+                    </a>
+                </article>
+            </div>
+
+            <!-- Service 2: Smart Bots -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🤖</div>
+                    <h3 class="service-title">ربات‌های هوشمند (تلگرام / ایتا)</h3>
+                    <p class="service-description">
+                        توسعه ربات‌های دستیار فروش، استعلام صرافی و اتصال هوشمند به بانک.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='smart-bots') }}" class="service-link" aria-label="جزئیات ربات‌های هوشمند">
+                        مشاهده جزئیات
+                        <span aria-hidden="true">←</span>
+                    </a>
+                </article>
+            </div>
+
+            <!-- Service 3: Web Design -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="service-card">
+                    <div class="service-icon" aria-hidden="true">🌐</div>
+                    <h3 class="service-title">طراحی وب‌سایت اختصاصی</h3>
+                    <p class="service-description">
+                        پلتفرم‌های تحت وب واکنش‌گرا، سریع و ایمن با معماری مدرن پایتون.
+                    </p>
+                    <a href="{{ url_for('public.category', slug='web-design') }}" class="service-link" aria-label="جزئیات طراحی وب">
+                        مشاهده جزئیات
+                        <span aria-hidden="true">←</span>
+                    </a>
+                </article>
+            </div>
+
+            <!-- Service 4: Wide Card -->
+            <div class="col-12 col-lg-8">
+                <article class="service-card d-flex align-items-center gap-4">
+                    <div class="service-icon flex-shrink-0" style="width:64px; height:64px; border-radius:50%; font-size:2rem;" aria-hidden="true">🎨</div>
+                    <div>
+                        <h3 class="service-title">طراحی رابط و تجربه کاربری (UI/UX)</h3>
+                        <p class="service-description">
+                            خلق تجربه‌های دیجیتال کاربرمحور بر پایه تحقیقات و تست‌های کاربردپذیری دقیق برای افزایش نرخ تبدیل.
+                        </p>
+                    </div>
+                </article>
+            </div>
+
+        </div>
+
+    </div>
+</section>

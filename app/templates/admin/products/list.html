@@ -1,0 +1,100 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}محصولات{% endblock %}
+{% block page_title %}مدیریت محصولات، پکیج‌ها و اسکریپت‌ها{% endblock %}
+
+{% block admin_content %}
+<div class="glass-card" style="padding:1.5rem;">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="text-white" style="font-size:1.3rem; font-weight:800; margin:0;">لیست کلیه محصولات</h2>
+            <p class="text-muted" style="font-size:0.85rem; margin:0.25rem 0 0 0;">
+                مدیریت پکیج‌ها، سورس‌کدها و نرم‌افزارهای فروشگاه
+            </p>
+        </div>
+        <a href="{{ url_for('admin.product_edit') }}" class="btn-rahsa-cta" style="font-size:0.85rem; padding:0.55rem 1.25rem;" aria-label="افزودن محصول جدید">
+            <span>افزودن محصول جدید</span>
+            <span aria-hidden="true">➕</span>
+        </a>
+    </div>
+
+    {% if products and products.items %}
+    <div style="overflow-x:auto;">
+        <table class="table-rahsa">
+            <thead>
+                <tr>
+                    <th>شناسه</th>
+                    <th>عنوان</th>
+                    <th>قیمت</th>
+                    <th>وضعیت</th>
+                    <th style="text-align:center;">عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products.items %}
+                <tr>
+                    <td class="text-muted bidi-plaintext">#{{ p.id }}</td>
+                    <td class="text-white font-bold">{{ p.title }}</td>
+                    <td class="text-yellow font-black" data-persian-num>{{ format_price(p.current_price) }}</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span class="badge-rahsa success">فعال</span>
+                        {% else %}
+                        <span class="badge-rahsa danger">غیرفعال</span>
+                        {% endif %}
+                        {% if p.is_featured %}<span class="badge-rahsa gold">⭐ ویژه</span>{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn-rahsa-outline" style="padding:0.3rem 0.75rem; font-size:0.8rem;" aria-label="ویرایش {{ p.title }}">
+                            ✏️ ویرایش
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if products.pages > 1 %}
+    <nav class="pagination-rahsa mt-4" aria-label="صفحه‌بندی">
+        {% if products.has_prev %}
+        <a href="{{ url_for('admin.products', page=products.prev_num) }}" aria-label="قبلی">→</a>
+        {% else %}
+        <span class="disabled">→</span>
+        {% endif %}
+
+        {% for page_num in products.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if page_num %}
+                {% if page_num == products.page %}
+                <span class="active">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('admin.products', page=page_num) }}">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span>…</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if products.has_next %}
+        <a href="{{ url_for('admin.products', page=products.next_num) }}" aria-label="بعدی">←</a>
+        {% else %}
+        <span class="disabled">←</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon" aria-hidden="true">📦</div>
+        <h2 class="empty-state-title">هنوز محصولی ثبت نشده</h2>
+        <p class="empty-state-message">برای شروع، اولین محصول یا پکیج نرم‌افزاری خود را اضافه کنید.</p>
+        <a href="{{ url_for('admin.product_edit') }}" class="btn-rahsa-cta empty-state-action">
+            <span>افزودن اولین محصول</span>
+            <span aria-hidden="true">➕</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

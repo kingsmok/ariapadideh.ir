@@ -1,0 +1,42 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش کاربر' if user else 'ایجاد کاربر جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:700px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        {{ 'ویرایش کاربر ' ~ user.full_name if user else 'ایجاد کاربر جدید' }}
+    </h2>
+
+    <form action="{{ url_for('admin.user_edit', user_id=user.id) if user else url_for('admin.user_edit') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">نام</label>
+                {{ form.first_name(class="form-control-rahsa") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">نام خانوادگی</label>
+                {{ form.last_name(class="form-control-rahsa") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">ایمیل</label>
+                {{ form.email(class="form-control-rahsa") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">شماره همراه</label>
+                {{ form.phone(class="form-control-rahsa") }}
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label-rahsa">رمز عبور (جدید)</label>
+                {{ form.password(class="form-control-rahsa", placeholder="در صورت عدم تغییر خالی بگذارید") }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
+            💾 ذخیره اطلاعات کاربر
+        </button>
+    </form>
+</div>
+{% endblock %}

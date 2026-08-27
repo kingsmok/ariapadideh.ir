@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }} | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+
+        <!-- Breadcrumb (semantic + JSON-LD) -->
+        {% set _crumbs = [{'name': 'خانه', 'url': url_for('public.home', _external=True)}] %}
+        {% if product.categories and product.categories[0] %}
+            {% set _cat = product.categories[0] %}
+            {% if _cat.parent %}
+            {% set _crumbs = _crumbs + [{'name': _cat.parent.title, 'url': url_for('public.category', slug=_cat.parent.slug, _external=True)}, {'name': _cat.title, 'url': url_for('public.category', slug=_cat.slug, _external=True)}] %}
+            {% else %}
+            {% set _crumbs = _crumbs + [{'name': _cat.title, 'url': url_for('public.category', slug=_cat.slug, _external=True)}] %}
+            {% endif %}
+        {% endif %}
+        {% set _crumbs = _crumbs + [{'name': product.title, 'url': url_for('public.product', slug=product.slug, _external=True)}] %}
+
+        <nav aria-label="مسیر دسترسی" class="mb-4">
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
+                {% for crumb in _crumbs %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    {% if not loop.last %}
+                    <a itemprop="item" href="{{ crumb.url }}" class="text-muted text-decoration-none">
+                        <span itemprop="name">{{ crumb.name }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-yellow" itemprop="name" aria-current="page">{{ crumb.name }}</span>
+                    {% endif %}
+                    <meta itemprop="position" content="{{ loop.index }}">
+                </li>
+                {% if not loop.last %}
+                <li aria-hidden="true" class="text-muted">/</li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        {% block structured_data %}{{ render_breadcrumb_schema(_crumbs)|safe }}{{ render_product_schema(product)|safe }}{% endblock %}
+
+        <div class="row gy-4">
+
+            <!-- Product Images & Guarantees -->
+            <div class="col-12 col-lg-5">
+                <div class="glass-card" style="padding:1rem; margin-bottom:1rem;">
+                    <img src="{{ product.featured_image or url_for('static', filename='images/product_code_architect.png') }}"
+                         alt="{{ product.title }}{% if product.short_description %} - {{ product.short_description|striptags|truncate(80) }}{% endif %}"
+                         title="{{ product.title }}"
+                         loading="eager"
+                         fetchpriority="high"
+                         decoding="async"
+                         width="800"
+                         height="500"
+                         style="width:100%; height:auto; border-radius:var(--radius-lg); aspect-ratio:16/10; object-fit:cover;"
+                         onerror="this.src='{{ url_for('static', filename='images/no-image.png') }}'">
+                </div>
+
+                {% if product.images %}
+                <div class="row g-2 mb-3">
+                    {% for img in product.images[:4] %}
+                    <div class="col-3">
+                        <a href="{{ img.url }}" target="_blank" rel="noopener" aria-label="تصویر {{ loop.index }} از {{ product.title }}">
+                            <img src="{{ img.thumbnail_url or img.url }}"
+                                 alt="{{ product.title }} - تصویر {{ loop.index }} از {{ product.images|length }}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="200"
+                                 height="200"
+                                 style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Guarantees -->
+                <div class="glass-card" style="padding:1.25rem; background:rgba(10,17,40,0.6);">
+                    <h3 class="text-white mb-3" style="font-size:0.95rem; font-weight:800;">ضمانت‌های رهسا دیو:</h3>
+                    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">⚡</span>
+                            <span><strong class="text-white">تحویل کامل سورس‌کد</strong> — بدون لایسنس یا قفل دامنه</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">🛡️</span>
+                            <span><strong class="text-white">پشتیبانی ۱ ساله</strong> — رفع کامل باگ و به‌روزرسانی رایگان</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;">
+                            <span class="text-yellow" aria-hidden="true">📖</span>
+                            <span><strong class="text-white">مستندات کامل</strong> — راهنمای Deployment و راه‌اندازی</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Product Details & Purchase -->
+            <div class="col-12 col-lg-7">
+                <article class="glass-card" style="padding:2rem;">
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                        <span class="badge-rahsa gold">پکیج نرم‌افزاری آماده تحویل</span>
+                        {% if product.sku %}
+                        <span class="text-muted bidi-plaintext" style="font-size:0.75rem;">SKU: {{ product.sku }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="text-white" style="font-size:clamp(1.5rem, 3.5vw, 2rem); font-weight:900; line-height:1.3; margin-bottom:1rem;">
+                        {{ product.title }}
+                    </h1>
+
+                    {% if product.short_description %}
+                    <p class="text-muted" style="font-size:0.95rem; line-height:1.8; margin-bottom:1.5rem;">
+                        {{ product.short_description }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Price Box -->
+                    <div class="glass-card" style="padding:1.25rem 1.5rem; margin-bottom:1.25rem; background:rgba(10,17,40,0.8); border-color:rgba(251,176,59,0.3);">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <span class="text-muted d-block" style="font-size:0.775rem;">مبلغ سرمایه‌گذاری:</span>
+                                <div class="d-flex align-items-baseline gap-2">
+                                    {% if product.old_price and product.old_price > product.current_price %}
+                                    <span class="product-card-price-old" data-persian-num>{{ product.old_price|format_price }}</span>
+                                    {% endif %}
+                                    <strong class="text-yellow" id="product-price-display" data-base-price="{{ product.current_price or 0 }}" style="font-size:1.6rem; font-weight:900;" data-persian-num>
+                                        {{ product.current_price|format_price if product.current_price else 'استعلام قیمت' }}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <form action="{{ url_for('public.cart') }}" method="POST" class="d-flex gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit" class="btn-rahsa-cta" style="padding:0.65rem 1.4rem; font-size:0.9rem;" aria-label="خرید و دریافت فوری">
+                                    <span>خرید و دریافت فوری</span>
+                                    <span aria-hidden="true">🛒</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        {# Variation Swatches — سواچ رنگ/تصویر/دکمه (الگوی قالب نادر) #}
+                        {% if product.variations %}
+                        <div class="product-swatches-rahsa" id="product-swatches" data-swatches='{{ product.variations|tojson }}'>
+                            <span class="text-muted" style="font-size:0.8rem; margin-bottom:0.5rem;">انتخاب نسخه:</span>
+                            <div class="swatch-group-rahsa" role="radiogroup" aria-label="انتخاب نسخه محصول">
+                                {% for v in product.variations %}
+                                <button type="button" class="swatch-rahsa swatch-{{ v.type or 'label' }} {{ 'selected' if loop.first else '' }}"
+                                        data-price="{{ v.price if v.price is defined and v.price else 0 }}"
+                                        data-name="{{ v.name }}"
+                                        title="{{ v.name }}"
+                                        role="radio" aria-checked="{{ 'true' if loop.first else 'false' }}"
+                                        {{ 'disabled' if v.stock is defined and v.stock == 0 }}>
+                                    {% if v.type == 'color' %}
+                                    <span class="swatch-color-dot" style="background: {{ v.value or '#888' }};"></span>
+                                    {% elif v.type == 'image' and v.value %}
+                                    <img src="{{ v.value }}" alt="{{ v.name }}" loading="lazy">
+                                    {% else %}
+                                    <span class="swatch-label-text">{{ v.name }}</span>
+                                    {% endif %}
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <p class="swatch-selected-name text-muted" id="swatch-selected-name" style="font-size:0.78rem; margin:0.5rem 0 0;">
+                                نسخه انتخاب‌شده: {{ product.variations[0].name if product.variations else '' }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {# گالری ویدئو محصول + آپارات (الگوی قالب نادر) #}
+                    {% if product_videos %}
+                    <div class="product-videos-rahsa" style="margin-bottom:1.25rem;">
+                        <h2 class="text-white" style="font-size:1rem; font-weight:800; margin-bottom:0.75rem;">🎬 گالری ویدئو</h2>
+                        <div class="videos-grid-rahsa">
+                            {% for vid in product_videos %}
+                            <button type="button" class="video-thumb-rahsa" data-embed="{{ vid.embed_url() }}" data-title="{{ vid.title or 'ویدئو ' + loop.index|string }}">
+                                <span class="video-play-rahsa" aria-hidden="true">▶</span>
+                                <span>{{ vid.title or ('ویدئو ' ~ loop.index) }}</span>
+                                {% if vid.provider == 'aparat' %}<span class="video-provider-badge">آپارات</span>{% endif %}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="video-modal-rahsa" id="product-video-modal" hidden role="dialog" aria-modal="true" aria-label="پخش ویدئو">
+                        <div class="video-modal-inner">
+                            <button type="button" class="video-modal-close" aria-label="بستن">×</button>
+                            <div id="product-video-frame"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('public.contact') }}" class="btn-rahsa-outline w-100 " style="font-size:0.875rem; display:block; padding:0.7rem;" aria-label="درخواست تغییرات سفارشی">
+                        🧮 درخواست تغییرات یا توسعه سفارشی روی این پکیج
+                    </a>
+
+                    <!-- Specifications -->
+                    {% if product.specifications %}
+                    <div class="mt-4">
+                        <h2 class="text-white mb-3" style="font-size:1rem; font-weight:800;">ویژگی‌ها و مشخصات:</h2>
+                        <div class="table-rahsa" style="background:rgba(10,17,40,0.5);">
+                            {% for spec in product.specifications %}
+                            <div style="display:flex; padding:0.5rem 0.75rem; border-bottom:1px solid var(--glass-border);">
+                                <span class="text-muted" style="min-width:140px; font-size:0.85rem;">{{ spec.key }}:</span>
+                                <span class="text-white" style="font-size:0.85rem; font-weight:600;">{{ spec.value }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </article>
+
+                <!-- Long Description -->
+                {% if product.description %}
+                <div class="glass-card mt-4" style="padding:2rem;">
+                    <h2 class="text-white mb-3" style="font-size:1.1rem; font-weight:800;">شرح کامل محصول</h2>
+                    <div class="post-content" style="color:var(--text-gray-200); line-height:1.9; font-size:0.95rem;">
+                        {{ product.description|safe }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Related Products -->
+        {% if related_products %}
+        <section class="mt-5 pt-4" style="border-top:1px solid var(--glass-border);">
+            <h2 class="text-white mb-4" style="font-size:1.25rem; font-weight:800;">محصولات مرتبط</h2>
+            <div class="row g-4">
+                {% for related in related_products %}
+                <div class="col-12 col-md-6 col-lg-3">
+                    <article class="product-card h-100">
+                        <a href="{{ url_for('public.product', slug=related.slug) }}" class="product-card-image" aria-label="{{ related.title }}">
+                            <img src="{{ related.featured_image or url_for('static', filename='images/no-image.png') }}"
+                                 alt="{{ related.title }}{% if related.short_description %} - {{ related.short_description|striptags|truncate(70) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="300">
+                        </a>
+                        <div class="product-card-body">
+                            <h3 class="product-card-title">{{ related.title }}</h3>
+                            <div class="product-card-price" data-persian-num>{{ related.current_price|format_price }}</div>
+                        </div>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Related Articles (cross-link posts → products and vice-versa) -->
+        {% if related_posts %}
+        <section class="mt-5 pt-4" style="border-top:1px solid var(--glass-border);">
+            <h2 class="text-white mb-4" style="font-size:1.25rem; font-weight:800;">مقالات مرتبط</h2>
+            <div class="row g-4">
+                {% for art in related_posts %}
+                <article class="col-12 col-md-4">
+                    <a href="{{ url_for('public.post', slug=art.slug) }}" class="product-card d-block h-100 text-decoration-none" aria-label="{{ art.title }}">
+                        <div class="product-card-image">
+                            <img src="{{ art.featured_image or url_for('static', filename='images/no-image.png') }}"
+                                 alt="{{ art.title }}{% if art.excerpt %} - {{ art.excerpt|striptags|truncate(80) }}{% endif %}"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="400"
+                                 height="240">
+                        </div>
+                        <div class="product-card-body">
+                            <h3 class="product-card-title">{{ art.title }}</h3>
+                            {% if art.excerpt %}
+                            <p class="text-muted" style="font-size:0.825rem; line-height:1.6; margin:0;
+                                                         display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                                {{ art.excerpt|striptags|truncate(120) }}
+                            </p>
+                            {% endif %}
+                            <div class="mt-2 text-muted" style="font-size:0.75rem;">
+                                <time datetime="{{ art.published_at.isoformat() if art.published_at else art.created_at.isoformat() }}">
+                                    {{ art.published_at|default(art.created_at)|string|truncate(10, true, '') }}
+                                </time>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}نظرات کاربران{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem;">مدیریت نظرات و دیدگاه‌ها</h2>
+
+    <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+            <tr style="background:var(--bg-navy-elevated); border-bottom:2px solid var(--glass-border); text-align:right;">
+                <th style="padding:0.85rem;">نویسنده</th>
+                <th style="padding:0.85rem;">متن نظر</th>
+                <th style="padding:0.85rem;">تاریخ</th>
+                <th style="padding:0.85rem;">وضعیت</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if comments %}
+                {% for c in comments %}
+                <tr style="border-bottom:1px solid var(--glass-border);">
+                    <td style="padding:0.85rem; font-weight:700;">{{ c.user.name if c.user else 'ناشناس' }}</td>
+                    <td style="padding:0.85rem; max-width:400px; color:var(--text-gray-200);">{{ c.content }}</td>
+                    <td style="padding:0.85rem; color:var(--text-gray-400);">{{ c.created_at.strftime('%Y/%m/%d') if c.created_at else '' }}</td>
+                    <td style="padding:0.85rem;">
+                        <span class="badge {{ 'bg-success' if c.is_approved else 'bg-warning' }}">
+                            {{ 'تایید شده' if c.is_approved else 'در انتظار تایید' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-gray-400);">هیچ نظری ثبت نشده است.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

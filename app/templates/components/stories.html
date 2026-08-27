@@ -1,0 +1,50 @@
+{# نوار استوری اینستاگرامی — الگوی قالب نادر (استوری‌ساز اختصاصی) #}
+{% if stories and site_settings.features_stories_enabled != false %}
+<div class="stories-bar-wrap container" style="margin-top:1.5rem;">
+    <div class="stories-bar" role="region" aria-label="استوری‌ها">
+        {% for s in stories %}
+        <button type="button" class="story-item"
+                data-index="{{ loop.index0 }}"
+                data-image="{{ s.image or '' }}"
+                data-video="{{ s.video_url or '' }}"
+                data-title="{{ s.title }}"
+                data-link="{{ s.link or '' }}"
+                data-link-text="{{ s.link_text or 'مشاهده' }}"
+                data-duration="{{ s.duration or 5 }}"
+                data-view-url="{{ url_for('public.story_view', story_id=s.id) }}"
+                aria-label="استوری {{ s.title }}">
+            <span class="story-ring {{ 'seen' if s.views and s.views > 0 else '' }}">
+                {% if s.image %}
+                <img src="{{ s.image }}" alt="{{ s.title }}" loading="lazy">
+                {% else %}
+                <span class="story-fallback-initial" aria-hidden="true">{{ s.title[:1] }}</span>
+                {% endif %}
+            </span>
+            <span class="story-caption">{{ s.group_name }}</span>
+        </button>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Story Viewer Modal -->
+<div class="story-viewer" id="story-viewer" hidden role="dialog" aria-modal="true" aria-label="نمایش استوری">
+    <div class="story-viewer-inner">
+        <div class="story-progress" aria-hidden="true"><div class="story-progress-bar" id="story-progress-bar"></div></div>
+        <div class="story-viewer-head">
+            <strong id="story-viewer-title"></strong>
+            <div style="display:flex; gap:.5rem; align-items:center;">
+                <span id="story-view-views" class="story-views-badge" hidden></span>
+                <button type="button" id="story-close" class="story-close" aria-label="بستن">×</button>
+            </div>
+        </div>
+        <div class="story-viewer-media" id="story-viewer-media"></div>
+        {% if stories %}
+        <div class="story-viewer-nav">
+            <button type="button" id="story-next" class="story-nav-btn" aria-label="استوری بعدی">›</button>
+            <button type="button" id="story-prev" class="story-nav-btn" aria-label="استوری قبلی">‹</button>
+        </div>
+        {% endif %}
+        <a id="story-cta" class="btn-rahsa-cta story-cta" href="#" hidden target="_self"></a>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,28 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش بنر' if banner else 'ایجاد بنر جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:650px; margin:0 auto;" class="glass-card">
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        {{ 'ویرایش بنر ' ~ banner.title if banner else 'ایجاد بنر جدید' }}
+    </h2>
+
+    <form action="{{ url_for('admin.banner_edit', banner_id=banner.id) if banner else url_for('admin.banner_edit') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <div class="mb-3">
+            <label class="form-label-rahsa">عنوان بنر *</label>
+            {{ form.title(class="form-control-rahsa") }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label-rahsa">موقعیت بنر</label>
+            {{ form.position(class="form-select-rahsa") }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label-rahsa">تصویر بنر</label>
+            {{ form.image(class="form-control-rahsa") }}
+        </div>
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">💾 ذخیره بنر</button>
+    </form>
+</div>
+{% endblock %}

@@ -73,8 +73,8 @@ class Menu(BaseModel, TimestampMixin, SoftDeleteMixin, ActiveMixin, SortOrderMix
         return self.children.filter_by(is_deleted=False, is_active=True).count() > 0
     
     def get_children_ordered(self) -> List['Menu']:
-        """Get ordered children"""
-        return self.children.filter_by(is_deleted=False, is_active=True).order_by(self.sort_order).all()
+        """Get ordered children (فعال و حذف‌نشده، به ترتیب sort_order)"""
+        return self.children.filter_by(is_deleted=False, is_active=True).order_by(Menu.sort_order).all()
     
     @classmethod
     def get_menu_by_position(cls, position: str) -> List['Menu']:
@@ -504,7 +504,7 @@ class Resume(BaseModel, TimestampMixin, SoftDeleteMixin):
     ip_address = db.Column(String(45), nullable=True)
     
     # Relationships
-    user = relationship('User', back_populates='resumes')
+    user = relationship('User', foreign_keys=[user_id], back_populates='resumes')
     
     def update_status(self, status: str, reviewed_by: int = None, notes: str = None) -> None:
         """Update resume status"""

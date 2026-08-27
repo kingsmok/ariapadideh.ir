@@ -127,6 +127,45 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+
+    # ==================== Payment Gateways ====================
+    # واحد مبالغ فروشگاه — درگاه‌های ایرانی ریالی هستند؛ اگر مبالغ
+    # محصول به تومان ذخیره شده باشند خودکار ×۱۰ می‌شود.
+    PAYMENT_CURRENCY_UNIT = os.getenv('PAYMENT_CURRENCY_UNIT', 'toman')  # toman | rial
+
+    # درگاه‌های فعال (جدا شده با کاما) — ترتیب = ترتیب نمایش در تسویه حساب
+    # mock, zarinpal, idpay, digipay, snapppay, sepah
+    ENABLED_PAYMENT_GATEWAYS = get_env_list(
+        'ENABLED_PAYMENT_GATEWAYS', ['mock', 'zarinpal']
+    ) or ['mock']
+
+    # --- ZarinPal (PG v4) ---
+    ZARINPAL_MERCHANT_ID = os.getenv('ZARINPAL_MERCHANT_ID', '')
+    ZARINPAL_SANDBOX = get_env_bool('ZARINPAL_SANDBOX', False)
+
+    # --- IDPay (v1.1) ---
+    IDPAY_API_KEY = os.getenv('IDPAY_API_KEY', '')
+    IDPAY_SANDBOX = get_env_bool('IDPAY_SANDBOX', False)
+
+    # --- DigiPay (UPG) ---
+    DIGIPAY_CLIENT_ID = os.getenv('DIGIPAY_CLIENT_ID', '')
+    DIGIPAY_CLIENT_SECRET = os.getenv('DIGIPAY_CLIENT_SECRET', '')
+    DIGIPAY_USERNAME = os.getenv('DIGIPAY_USERNAME', '')
+    DIGIPAY_PASSWORD = os.getenv('DIGIPAY_PASSWORD', '')
+    DIGIPAY_SANDBOX = get_env_bool('DIGIPAY_SANDBOX', False)
+
+    # --- SnappPay (اقساطی) ---
+    SNAPPPAY_CLIENT_ID = os.getenv('SNAPPPAY_CLIENT_ID', '')
+    SNAPPPAY_CLIENT_SECRET = os.getenv('SNAPPPAY_CLIENT_SECRET', '')
+    SNAPPPAY_USERNAME = os.getenv('SNAPPPAY_USERNAME', '')
+    SNAPPPAY_PASSWORD = os.getenv('SNAPPPAY_PASSWORD', '')
+    SNAPPPAY_SANDBOX = get_env_bool('SNAPPPAY_SANDBOX', False)
+
+    # --- بانک سپه (الگوی استاندارد شاپرک/سپهر) ---
+    SEPASH_TERMINAL_ID = os.getenv('SEPASH_TERMINAL_ID', '')
+    SEPASH_API_BASE = os.getenv('SEPASH_API_BASE', 'https://sepehr.shaparak.ir:8081')
+    SEPASH_PAY_BASE = os.getenv('SEPASH_PAY_BASE', 'https://sepehr.shaparak.ir:8080')
+
     
     # Compress
     COMPRESS_ENABLED = True

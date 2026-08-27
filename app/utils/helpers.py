@@ -6,6 +6,7 @@ from functools import wraps
 import hashlib
 import re
 import json
+from typing import List
 
 
 def format_price(price: float, currency: str = 'IRR') -> str:
@@ -351,3 +352,161 @@ def is_ajax_request() -> bool:
     """Check if request is AJAX"""
     from flask import request
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+# ==================== Persian number conversion ====================
+
+PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
+ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
+PERSIAN_TO_EN_TABLE = str.maketrans(PERSIAN_DIGITS + ARABIC_DIGITS, '0123456789' * 2)
+EN_TO_PERSIAN_TABLE = str.maketrans('0123456789', PERSIAN_DIGITS)
+
+
+def to_persian_digits(text: str) -> str:
+    """Convert English/Arabic digits to Persian digits (۰۱۲۳...)."""
+    if not text:
+        return text
+    return str(text).translate(EN_TO_PERSIAN_TABLE)
+
+
+def to_english_digits(text: str) -> str:
+    """Convert Persian/Arabic digits to English (0-9)."""
+    if not text:
+        return text
+    return str(text).translate(PERSIAN_TO_EN_TABLE)
+
+
+# ==================== Table of Contents ====================
+
+def extract_toc(html_content: str, min_level: int = 2, max_level: int = 3) -> List[dict]:
+    """
+    Extract heading tags (h2-h3) from HTML and build a Table of Contents.
+
+    Each item: {'level': int, 'title': str, 'id': str}
+    The IDs are derived from the heading text (slugified) so anchors work.
+    """
+    if not html_content:
+        return []
+
+    # Find all h2-h3 with their text
+    pattern = re.compile(
+        r'<h([' + str(min_level) + '-' + str(max_level) + r'])(\b[^>]*)>(.*?)</h\1>',
+        re.DOTALL | re.IGNORECASE,
+    )
+
+    used_ids = set()
+    toc = []
+    for match in pattern.finditer(html_content):
+        level = int(match.group(1))
+        attrs = match.group(2) or ''
+        inner = match.group(3) or ''
+
+        # If an id is already set in HTML, use it
+        id_match = re.search(r'\bid\s*=\s*["\']([^"\']+)["\']', attrs)
+        if id_match:
+            heading_id = id_match.group(1)
+        else:
+            # Strip HTML tags to get plain text
+            text = re.sub(r'<[^>]+>', '', inner)
+            text = re.sub(r'\s+', ' ', text).strip()
+            heading_id = _slugify_for_anchor(text)
+            if not heading_id:
+                continue
+            # Ensure unique
+            base = heading_id
+            i = 2
+            while heading_id in used_ids:
+                heading_id = f"{base}-{i}"
+                i += 1
+
+        used_ids.add(heading_id)
+
+        # Clean title
+        title = re.sub(r'<[^>]+>', '', inner)
+        title = re.sub(r'\s+', ' ', title).strip()
+        if not title:
+            continue
+
+        toc.append({
+            'level': level,
+            'title': title,
+            'id': heading_id,
+        })
+
+    return toc
+
+
+def _slugify_for_anchor(text: str) -> str:
+    """Make a URL-safe anchor id (works with Persian)."""
+    if not text:
+        return ''
+    text = text.strip().lower()
+    # Replace Persian/Arabic digits with Latin
+    text = text.translate(PERSIAN_TO_EN_TABLE)
+    # Replace spaces with hyphens
+    text = re.sub(r'\s+', '-', text)
+    # Keep Persian letters, Latin letters, digits, hyphens
+    text = re.sub(r'[^\w\u0600-\u06FF\-]', '', text)
+    text = re.sub(r'-+', '-', text)
+    return text.strip('-')
+
+
+def inject_heading_ids(html_content: str, min_level: int = 2, max_level: int = 3) -> str:
+    """
+    Add id="..." attributes to h2-h3 in HTML so TOC anchors work.
+
+    This mutates the HTML in-place but safely (preserves existing ids).
+    """
+    if not html_content:
+        return html_content
+
+    def repl(match):
+        level = match.group(1)
+        attrs = match.group(2) or ''
+        inner = match.group(3) or ''
+
+        # Don't overwrite an existing id
+        if 'id=' in attrs.lower():
+            return match.group(0)
+
+        text = re.sub(r'<[^>]+>', '', inner)
+        text = re.sub(r'\s+', ' ', text).strip()
+        heading_id = _slugify_for_anchor(text)
+        if not heading_id:
+            return match.group(0)
+        return f'<h{level} id="{heading_id}"{attrs}>{inner}</h{level}>'
+
+    pattern = re.compile(
+        r'<h([' + str(min_level) + '-' + str(max_level) + r'])(\b[^>]*)>(.*?)</h\1>',
+        re.DOTALL | re.IGNORECASE,
+    )
+    return pattern.sub(repl, html_content)
+
+
+
+def unique_slug(model, text, slug_field='slug', exclude_id=None, max_attempts=1000):
+    """Generate a guaranteed-unique slug for a SQLAlchemy model.
+
+    Falls back to a short random token when ``text`` produces an empty slug
+    (e.g. purely Persian input), so models with a NOT NULL/unique ``slug``
+    never raise an IntegrityError on create.
+    """
+    import secrets
+    base = slugify(text)
+    if not base:
+        table = getattr(model, '__tablename__', 'item') or 'item'
+        base = f"{table}-{secrets.token_hex(3)}"
+
+    slug = base
+    n = 1
+    field = getattr(model, slug_field)
+    for _ in range(max_attempts):
+        q = model.query.filter(field == slug)
+        if exclude_id is not None:
+            q = q.filter(model.id != exclude_id)
+        if not q.first():
+            return slug
+        slug = f"{base}-{n}"
+        n += 1
+    # Extremely unlikely fallback
+    return f"{base}-{secrets.token_hex(3)}"

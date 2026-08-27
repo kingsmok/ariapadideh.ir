@@ -1,0 +1,79 @@
+<section class="hero-section">
+    <div class="hero-glow-1" aria-hidden="true"></div>
+    <div class="hero-glow-2" aria-hidden="true"></div>
+
+    <div class="container" style="position:relative; z-index:10;">
+        <div class="row align-items-center gy-5">
+
+            <!-- Hero Content -->
+            <div class="col-12 col-lg-7">
+                <div class="hero-badge">
+                    <span class="pulse-dot" aria-hidden="true"></span>
+                    <span class="hero-badge-text">پیشگام در تحول دیجیتال</span>
+                </div>
+
+                <h1 class="hero-title">
+                    معماری آینده با
+                    <br>
+                    <span class="gold-gradient-text">نرم‌افزارهای سازمانی</span> هوشمند
+                </h1>
+
+                <p class="hero-description">
+                    <strong>رهسا دیو</strong>، آتلیه تخصصی توسعه نرم‌افزار در شیراز. ما با بهره‌گیری از جدیدترین تکنولوژی‌ها و اصول مهندسی نرم‌افزار، سیستم‌های یکپارچه (ERP/CRM) و راهکارهای دیجیتال را برای سازمان شما خلق می‌کنیم.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <a href="#quote-section" class="btn-rahsa-cta" aria-label="شروع پروژه">
+                        <span>شروع پروژه</span>
+                        <span aria-hidden="true">←</span>
+                    </a>
+                    <a href="{{ url_for('public.categories_list') }}" class="btn-rahsa-outline" aria-label="مشاهده نمونه کارها">
+                        <span>مشاهده نمونه کارها</span>
+                    </a>
+                </div>
+
+                <!-- Metrics Counter -->
+                <div class="d-flex align-items-center gap-4 pt-4 mt-2" style="border-top:1px solid rgba(255,255,255,0.1);">
+                    <div>
+                        <div class="hero-metric" data-persian-num>۵۰+</div>
+                        <div class="hero-metric-label">پروژه موفق</div>
+                    </div>
+                    <div class="hero-divider" aria-hidden="true"></div>
+                    <div>
+                        <div class="hero-metric" data-persian-num>۹۹٪</div>
+                        <div class="hero-metric-label">رضایت مشتریان</div>
+                    </div>
+                    <div class="hero-divider" aria-hidden="true"></div>
+                    <div>
+                        <div class="hero-metric" data-persian-num>۱۲+</div>
+                        <div class="hero-metric-label">سال تجربه</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Visual -->
+            <div class="col-12 col-lg-5">
+                <div class="hero-visual glass-card">
+                    <img src="{{ url_for('static', filename='images/hero_3d_architect.png') }}"
+                         alt="معماری سه‌بعدی نرم‌افزار سازمانی - آتلیه رهسا دیو"
+                         title="معماری رهسا دیو"
+                         loading="eager"
+                         fetchpriority="high"
+                         decoding="async"
+                         width="800"
+                         height="600"
+                         onerror="this.style.display='none'">
+
+                    <div class="hero-floating-badge">
+                        <div class="hero-floating-badge-icon" aria-hidden="true">⚙️</div>
+                        <div>
+                            <div class="hero-floating-badge-title">Clean Architecture</div>
+                            <div class="hero-floating-badge-sub">SOLID Principles</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

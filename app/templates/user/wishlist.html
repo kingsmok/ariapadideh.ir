@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}علاقه‌مندی‌های من | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:920px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">پنل کاربری</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">علاقه‌مندی‌های من</span>
+        </div>
+
+        {% if wishlist_items %}
+            <div class="row g-3">
+                {% for w in wishlist_items %}
+                {% set product = w.product %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="glass-card" style="padding:1.25rem; height:100%; display:flex; flex-direction:column;">
+                        <a href="{{ url_for('public.product', slug=product.slug) }}" class="text-decoration-none">
+                            <h3 class="text-white font-bold" style="font-size:1rem; margin:0 0 0.5rem; min-height:2.6em;">
+                                {{ product.title }}
+                            </h3>
+                        </a>
+                        <div class="text-muted" style="font-size:0.8rem; margin-bottom:0.75rem;">
+                            {{ truncate_text(product.short_description, 70) }}
+                        </div>
+                        <div class="text-yellow font-bold mb-3" style="font-size:1.05rem;">
+                            {{ product.price|format_price }}
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap mt-auto">
+                            <form method="POST" action="{{ url_for('user.api_cart_add') }}" style="display:inline;" class="add-to-cart-form" data-product="{{ product.id }}">
+                                <button type="submit" class="btn-rahsa-cta" style="padding:0.3rem 0.7rem; font-size:0.8rem;">🛒 افزودن به سبد</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('user.wishlist_remove', product_id=product.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <button type="submit" class="btn-rahsa-outline" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--accent-danger);">🗑️ حذف</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-card" style="padding:3rem; text-align:center; color:var(--text-gray-400);">
+                <div class="empty-state-icon mx-auto" style="margin-bottom:1rem;" aria-hidden="true">❤️</div>
+                <p>لیست علاقه‌مندی‌های شما خالی است.</p>
+                <a href="{{ url_for('public.categories_list') }}" class="btn-rahsa-cta mt-2">مشاهده محصولات</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

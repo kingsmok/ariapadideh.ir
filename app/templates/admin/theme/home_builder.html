@@ -1,0 +1,72 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}صفحه‌ساز خانه{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">🏠 صفحه‌ساز خانه</h2>
+            <p style="color:var(--text-gray-400); font-size:0.8rem; margin:0.5rem 0 0;">
+                بخش‌های صفحهٔ اول را بکشید و جابه‌جا کنید، خاموش/روشن کنید یا عنوان‌شان را عوض کنید.
+                «عنوان سفارشی» اختیاری است — خالی بماند عنوان پیش‌فرض قالب استفاده می‌شود.
+            </p>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+            <a href="/" target="_blank" class="btn-rahsa-outline" style="text-decoration:none;">👁 مشاهدهٔ سایت</a>
+        </div>
+    </div>
+
+    <form method="POST" id="home-builder-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+        <div id="hb-sections" style="margin-top:1.25rem;">
+            {% for sec in sections %}
+            <div class="drag-item hb-item" draggable="true" data-key="{{ sec.key }}">
+                <span class="drag-handle" aria-hidden="true">⠿</span>
+
+                <input type="hidden" name="section_key[]" value="{{ sec.key }}">
+
+                <div style="flex:1; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <strong style="color:var(--text-white); min-width:150px;">{{ section_labels.get(sec.key, sec.key) }}</strong>
+                    <span style="color:var(--text-gray-400); font-size:0.72rem;">({{ sec.key }})</span>
+                    <input type="text" name="title_{{ sec.key }}" value="{{ sec.title }}"
+                           placeholder="عنوان سفارشی (اختیاری)"
+                           class="form-control-rahsa" style="max-width:280px; padding:0.35rem 0.6rem; font-size:0.82rem;">
+                </div>
+
+                <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:var(--text-gray-300); font-size:0.82rem; margin:0;">
+                    <input type="checkbox" name="enabled[]" value="{{ sec.key }}" {{ 'checked' if sec.enabled else '' }}>
+                    {{ 'نمایش' if sec.enabled else 'مخفی' }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn-rahsa-cta w-100 mt-3">💾 ذخیرهٔ چیدمان صفحهٔ اول</button>
+    </form>
+</div>
+
+<script>
+(function () {
+    var list = document.getElementById('hb-sections');
+    if (!list) return;
+    var dragged = null;
+    list.querySelectorAll('.hb-item').forEach(function (item) {
+        item.addEventListener('dragstart', function () { dragged = item; item.classList.add('dragging'); });
+        item.addEventListener('dragend', function () {
+            item.classList.remove('dragging');
+            // ترتیب جدید در DOM = ترتیب ارسال فرم (ورودی‌های hidden به همان ترتیب جابه‌جا شده‌اند)
+        });
+        item.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            if (!dragged || dragged === item) return;
+            var rect = item.getBoundingClientRect();
+            var after = (e.clientY - rect.top) > rect.height / 2;
+            list.insertBefore(dragged, after ? item.nextSibling : item);
+        });
+        item.addEventListener('drop', function (e) { e.preventDefault(); });
+    });
+})();
+</script>
+{% endblock %}

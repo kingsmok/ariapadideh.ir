@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}تیکت جدید | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:680px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="{{ url_for('user.tickets') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">تیکت‌ها</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">تیکت جدید</span>
+        </div>
+
+        <div class="glass-card" style="padding:2rem;">
+            <h1 class="text-white" style="font-size:1.2rem; font-weight:800; margin-bottom:1.5rem;">ثبت تیکت پشتیبانی</h1>
+
+            <form action="{{ url_for('user.ticket_new') }}" method="POST" enctype="multipart/form-data" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+                <div class="mb-3">
+                    <label for="tk_subject" class="form-label-rahsa">موضوع <span style="color:var(--accent-danger);">*</span></label>
+                    <input type="text" id="tk_subject" name="subject" class="form-control-rahsa" required
+                           value="{{ form_data.subject or '' }}" placeholder="مثلاً: سؤال درباره سفارش #1024">
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label for="tk_dept" class="form-label-rahsa">دپارتمان</label>
+                        <select id="tk_dept" name="department" class="form-control-rahsa">
+                            <option value="general">عمومی</option>
+                            <option value="order">سفارش</option>
+                            <option value="technical">فنی</option>
+                            <option value="billing">مالی</option>
+                            <option value="feedback">انتقاد/پیشنهاد</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label for="tk_priority" class="form-label-rahsa">اولویت</label>
+                        <select id="tk_priority" name="priority" class="form-control-rahsa">
+                            <option value="low">کم</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="high">فوری</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tk_message" class="form-label-rahsa">شرح درخواست <span style="color:var(--accent-danger);">*</span></label>
+                    <textarea id="tk_message" name="message" class="form-control-rahsa" rows="6" required
+                              placeholder="مشکل یا سؤال خود را کامل توضیح دهید…">{{ form_data.message or '' }}</textarea>
+            <div class="mb-3 mt-2">
+                <label class="form-label-rahsa" style="font-size:0.8rem;">📎 پیوست (اختیاری — تصویر/PDF/ZIP تا ۵ مگابایت)</label>
+                <input type="file" name="attachment" class="form-control-rahsa" style="padding:0.4rem;"
+                       accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.zip,.rar,.7z,.txt,.doc,.docx,.xls,.xlsx,.csv">
+            </div>
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem;">ارسال تیکت</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

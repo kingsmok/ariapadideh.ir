@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}مقایسه محصولات | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:1100px;">
+
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="text-decoration:none; font-size:0.9rem;">پنل کاربری</a>
+            <span class="text-muted">/</span>
+            <span class="text-white font-bold">مقایسه محصولات</span>
+        </div>
+
+        {% if products %}
+            <div style="overflow-x:auto;">
+                <table class="glass-card" style="width:100%; border-collapse:collapse; font-size:0.88rem; padding:0;">
+                    <thead>
+                        <tr style="border-bottom:2px solid var(--glass-border);">
+                            <th style="padding:1rem; text-align:right; color:var(--text-gray-400);">ویژگی</th>
+                            {% for p in products %}
+                            <th style="padding:1rem; min-width:170px; text-align:center; vertical-align:top;">
+                                <a href="{{ url_for('public.product', slug=p.slug) }}" class="text-white font-bold" style="text-decoration:none;">{{ p.title }}</a>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom:1px solid var(--glass-border);">
+                            <td style="padding:0.85rem; color:var(--text-gray-400);">قیمت</td>
+                            {% for p in products %}
+                            <td style="padding:0.85rem; text-align:center; color:var(--text-yellow); font-weight:700;">{{ p.price|format_price }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% if products|selectattr('old_price')|list %}
+                        <tr style="border-bottom:1px solid var(--glass-border);">
+                            <td style="padding:0.85rem; color:var(--text-gray-400);">قیمت قبلی</td>
+                            {% for p in products %}
+                            <td style="padding:0.85rem; text-align:center; color:var(--text-gray-400); text-decoration:line-through;">
+                                {{ p.old_price|format_price if p.old_price else '-' }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endif %}
+                        <tr style="border-bottom:1px solid var(--glass-border);">
+                            <td style="padding:0.85rem; color:var(--text-gray-400);">موجودی</td>
+                            {% for p in products %}
+                            <td style="padding:0.85rem; text-align:center;">
+                                {% if p.stock_quantity and p.stock_quantity > 0 %}
+                                    <span class="badge-rahsa success">موجود</span>
+                                {% else %}
+                                    <span class="badge-rahsa danger">ناموجود</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--glass-border);">
+                            <td style="padding:0.85rem; color:var(--text-gray-400);">توضیحات</td>
+                            {% for p in products %}
+                            <td style="padding:0.85rem; text-align:center; color:var(--text-gray-400); font-size:0.82rem;">
+                                {{ truncate_text(p.short_description, 80) or '-' }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td style="padding:0.85rem; color:var(--text-gray-400);">عملیات</td>
+                            {% for p in products %}
+                            <td style="padding:0.85rem; text-align:center;">
+                                <form method="POST" action="{{ url_for('user.api_cart_add') }}" class="add-to-cart-form" data-product="{{ p.id }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-rahsa-cta" style="padding:0.3rem 0.7rem; font-size:0.78rem;">🛒 سبد</button>
+                                </form>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="glass-card" style="padding:3rem; text-align:center; color:var(--text-gray-400);">
+                <div class="empty-state-icon mx-auto" style="margin-bottom:1rem;" aria-hidden="true">📊</div>
+                <p>هیچ محصولی برای مقایسه انتخاب نشده است.</p>
+                <a href="{{ url_for('public.compare') }}" class="btn-rahsa-cta mt-2">افزودن محصول به مقایسه</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

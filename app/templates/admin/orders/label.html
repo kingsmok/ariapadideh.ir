@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لیبل پستی {{ order.order_number }}</title>
+    <style>
+        /* لیبل پستی — سایز استاندارد 10×15 (الگوی لیبل‌ساز قالب نادر) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Vazirmatn', 'IRANSans', Tahoma, sans-serif; background: #e2e8f0; padding: 2rem; }
+        .label-sheet {
+            width: 15cm; height: 10cm; margin: 0 auto; background: #fff;
+            border: 2px solid #0f172a; border-radius: 6px;
+            display: grid; grid-template-columns: 1.15fr .85fr; overflow: hidden;
+        }
+        .label-main { padding: .9rem 1rem; display: flex; flex-direction: column; gap: .5rem; font-size: 13px; line-height: 1.8; }
+        .label-side { border-inline-start: 2px dashed #0f172a; padding: .9rem .8rem; display: flex; flex-direction: column; justify-content: space-between; font-size: 12px; }
+        .label-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: .4rem; }
+        .label-brand { font-weight: 800; font-size: 15px; }
+        .label-row b { display: inline-block; min-width: 70px; }
+        .label-big { font-size: 15px; font-weight: 800; }
+        .label-addr { border: 1px solid #94a3b8; border-radius: 6px; padding: .5rem .7rem; background: #f8fafc; }
+        .barcode { font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; text-align: center; background: #f8fafc; border-radius: 4px; padding: .35rem .2rem; direction: ltr; }
+        .label-actions { text-align: center; margin-top: 1.5rem; }
+        .label-actions button { background: #0a1128; color: #fff; border: none; border-radius: 8px; padding: .65rem 1.8rem; font: inherit; font-weight: 700; cursor: pointer; }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .label-actions { display: none; }
+            .label-sheet { border-color: #000; }
+        }
+    </style>
+</head>
+<body>
+    <div class="label-sheet">
+        <div class="label-main">
+            <div class="label-top">
+                <span class="label-brand">{{ site_settings.general_site_name or 'رهسا دیو' }}</span>
+                <span style="font-size:11px; color:#475569;">{{ order.created_at.strftime('%Y/%m/%d') if order.created_at else '' }}</span>
+            </div>
+
+            <div>
+                <div style="font-size:11px; color:#475569;">فرستنده</div>
+                <div class="label-big">{{ site_settings.general_site_name or 'رهسا دیو' }}</div>
+                <div style="font-size:12px;">{{ site_settings.contact_address or '' }}</div>
+            </div>
+
+            <div class="label-addr">
+                <div style="font-size:11px; color:#475569;">گیرنده</div>
+                <div class="label-big">{{ order.recipient_name or (order.user.full_name if order.user else '') }}</div>
+                <div><b>تلفن:</b> <span dir="ltr">{{ order.recipient_phone or '' }}</span></div>
+                <div><b>آدرس:</b> {{ order.province or '' }}{{ '، ' + order.city if order.city else '' }}{{ '، ' + order.address if order.address else '' }}</div>
+                {% if order.postal_code %}<div><b>کد پستی:</b> <span dir="ltr">{{ order.postal_code }}</span></div>{% endif %}
+            </div>
+
+            {% if order.shipping_method %}<div><b>روش ارسال:</b> {{ order.shipping_method }}</div>{% endif %}
+        </div>
+
+        <div class="label-side">
+            <div>
+                <div style="font-size:11px; color:#475569;">سفارش</div>
+                <div class="barcode">*{{ order.order_number }}*</div>
+                <div style="text-align:center; font-size:11px;" dir="ltr">{{ order.order_number }}</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; color:#475569;">وضعیت پرداخت</div>
+                <div class="label-big" style="color: {{ '#047857' if order.payment_status == 'paid' else '#b45309' }};">
+                    {{ 'پرداخت شده' if order.payment_status == 'paid' else 'پرداخت در محل' }}
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; color:#475569;">مبلغ</div>
+                <div class="label-big">{{ '{:,}'.format(order.total_amount or 0) }}<br><span style="font-size:11px;">تومان</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="label-actions">
+        <button onclick="window.print()" type="button">🖨 چاپ لیبل (10×15)</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us — Rahsa Dev{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:3rem;">
+    <div class="container">
+        <div class="section-divider">
+            <h2>About <span class="gold-gradient-text">Rahsa Dev</span></h2>
+            <p>A senior software team building digital products since 2010.</p>
+        </div>
+
+        <div class="row g-4 align-items-center">
+            <div class="col-12 col-lg-6">
+                <div class="glass-card h-100" style="padding:1.8rem;">
+                    <h3 class="text-white" style="font-size:1.15rem; font-weight:800; margin-bottom:1rem;">Who we are</h3>
+                    <p class="text-muted" style="line-height:2;">
+                        We are an Iranian software and web agency (brand: <strong dir="rtl">رهسا دیو</strong>) delivering
+                        enterprise portals, e-commerce platforms, Telegram/Eitaa bots and AI-powered tools.
+                        Our stack centers on Python/Flask and modern front-end engineering, with a strong focus
+                        on security, performance and maintainability.
+                    </p>
+                    <p class="text-muted" style="line-height:2;">
+                        Every project ships with documentation, monitoring and a one-year warranty —
+                        the same standards we apply to our own ready-made products.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="glass-card" style="padding:1.3rem; text-align:center;">
+                            <div class="text-yellow" style="font-size:1.8rem; font-weight:900;">15+</div>
+                            <div class="text-muted" style="font-size:0.85rem;">years of experience</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card" style="padding:1.3rem; text-align:center;">
+                            <div class="text-yellow" style="font-size:1.8rem; font-weight:900;">120+</div>
+                            <div class="text-muted" style="font-size:0.85rem;">delivered projects</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card" style="padding:1.3rem; text-align:center;">
+                            <div class="text-yellow" style="font-size:1.8rem; font-weight:900;">50+</div>
+                            <div class="text-muted" style="font-size:0.85rem;">happy clients</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card" style="padding:1.3rem; text-align:center;">
+                            <div class="text-yellow" style="font-size:1.8rem; font-weight:900;">1yr</div>
+                            <div class="text-muted" style="font-size:0.85rem;">warranty on delivery</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4" style="margin-top:1rem;">
+            <div class="col-12 col-md-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1rem; font-weight:800;">🎯 Our mission</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Make world-class software engineering accessible to Iranian businesses at fair, transparent prices.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1rem; font-weight:800;">🛡️ How we work</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Fixed quotes, milestone-based delivery, clean handover with source code and docs — no lock-in.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="glass-card h-100" style="padding:1.5rem;">
+                    <h3 class="text-white" style="font-size:1rem; font-weight:800;">🤝 Long-term support</h3>
+                    <p class="text-muted" style="font-size:0.9rem; line-height:1.8;">Ticket-based support with SLA options, monitoring and continuous improvement plans.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:2.5rem;">
+            <a href="{{ url_for('en.contact') }}" class="btn-rahsa-cta" style="text-decoration:none;">
+                <span>Work with us</span>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

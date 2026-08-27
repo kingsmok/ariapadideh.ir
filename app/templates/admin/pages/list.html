@@ -1,0 +1,47 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}مدیریت صفحات و متن‌های ثابت سایت{% endblock %}
+
+{% block admin_content %}
+<div style="padding:1.5rem;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-white); margin:0;">صفحات عمومی و محتوای متنی (درباره ما، قوانین، تماس و ...)</h2>
+        <a href="{{ url_for('admin.page_edit') }}" class="btn-rahsa-cta">
+            ➕ ایجاد صفحه جدید
+        </a>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead>
+                <tr style="background:var(--bg-navy-elevated); border-bottom:2px solid var(--glass-border); text-align:right;">
+                    <th style="padding:0.85rem;">عنوان صفحه</th>
+                    <th style="padding:0.85rem;">نامک (آدرس URL)</th>
+                    <th style="padding:0.85rem;">نوع صفحه</th>
+                    <th style="padding:0.85rem; text-align:center;">عملیات ویرایش</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if pages %}
+                    {% for p in pages %}
+                    <tr style="border-bottom:1px solid var(--glass-border);">
+                        <td style="padding:0.85rem; font-weight:700; color:var(--text-white);">{{ p.title }}</td>
+                        <td style="padding:0.85rem; color:var(--accent-gold); font-weight:600;">/{{ p.slug }}</td>
+                        <td style="padding:0.85rem; color:var(--text-gray-400);">{{ p.page_type }}</td>
+                        <td style="padding:0.85rem; text-align:center;">
+                            <a href="{{ url_for('admin.page_edit', page_id=p.id) }}" class="btn-rahsa-outline" style="padding:0.25rem 0.6rem; font-size:0.8rem;">
+                                ✏️ ویرایش متن‌ها و محتوا
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:2rem; color:var(--text-gray-400);">صفحه‌ای ثبت نشده است.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

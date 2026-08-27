@@ -1,0 +1,152 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش پکیج' if product else 'افزودن پکیج / نرم‌افزار جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="padding:2rem; max-width:900px; margin:0 auto;" class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--glass-border); padding-bottom:1rem;">
+        <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-white); margin:0;">
+            {{ 'ویرایش اطلاعات پکیج' if product else 'تعریف پکیج / اسکریپت جدید' }}
+        </h2>
+        <a href="{{ url_for('admin.products') }}" class="btn-rahsa-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">بازگشت به لیست</a>
+    </div>
+
+    <form action="{{ url_for('admin.product_edit', product_id=product.id) if product else url_for('admin.product_edit') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label-rahsa">عنوان پکیج / نرم‌افزار *</label>
+                {{ form.title(class="form-control-rahsa", placeholder="مثال: پکیج جامع طراحی سایت فروشگاهی") }}
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <label class="form-label-rahsa">نامک (Slug)</label>
+                {{ form.slug(class="form-control-rahsa", placeholder="flask-pro-ecommerce") }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">قیمت اصلی (تومان) *</label>
+                {{ form.price(class="form-control-rahsa", placeholder="15800000") }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label-rahsa">قیمت قبل از تخفیف (تومان)</label>
+                {{ form.old_price(class="form-control-rahsa", placeholder="18500000") }}
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label-rahsa">توضیح کوتاه</label>
+                {{ form.short_description(class="form-control-rahsa", style="min-height:70px;") }}
+            </div>
+            
+            <div class="col-12 mb-3">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label class="form-label-rahsa">توضیحات کامل و ویژگی‌های فنی</label>
+                    {# پیش‌نویس با هوش مصنوعی (الگوی قالب کرافتو) #}
+                    <button type="button" class="btn-rahsa-outline ai-draft-btn" id="ai-draft-btn"
+                            data-target="description" data-preset="product_desc"
+                            style="padding:0.3rem 0.8rem; font-size:0.75rem;" title="تولید پیش‌نویس با هوش مصنوعی">
+                        🤖 پیش‌نویس با AI
+                    </button>
+                </div>
+                {{ form.description(class="form-control-rahsa", style="min-height:140px;") }}
+                <div class="ai-draft-status text-muted" id="ai-draft-status" style="font-size:0.72rem; margin-top:0.35rem;"></div>
+            </div>
+
+            {# Variation Swatches — سواچ رنگ/تصویر/دکمه (الگوی قالب نادر) #}
+            <div class="col-12 mb-3">
+                <label class="form-label-rahsa">متغیرها / سواچ (JSON)</label>
+                {{ form.variations(class="form-control-rahsa", style="min-height:110px; direction:ltr; font-size:0.78rem;", placeholder='[{"name":"نسخه پایه","type":"label","value":"","price":0,"stock":10}, {"name":"قرمز","type":"color","value":"#ff0000","price":500000,"stock":3}]') }}
+                <div class="text-muted" style="font-size:0.72rem; margin-top:0.3rem;">
+                    type یکی از <code>color</code> (دایرهٔ رنگ)، <code>image</code> (تصویر — value = URL)، <code>label</code> (دکمهٔ متنی) ·
+                    price = اضافه‌بر قیمت پایه · stock = موجودی (۰ = غیرفعال)
+                </div>
+            </div>
+
+            {# گالری ویدئو محصول — هر خط: عنوان | لینک (الگوی قالب نادر) #}
+            <div class="col-12 mb-3">
+                <label class="form-label-rahsa">ویدئوهای محصول (هر خط: عنوان | لینک)</label>
+                {{ form.videos(class="form-control-rahsa", style="min-height:80px; direction:ltr; font-size:0.78rem;", placeholder='دموی محصول | https://www.aparat.com/v/xxxxx') }}
+                <div class="text-muted" style="font-size:0.72rem; margin-top:0.3rem;">
+                    آپارات / یوتیوب / فایل mp4 — به‌صورت خودکار تشخیص داده و قابل پخش می‌شود.
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="form-check" style="display:flex; gap:0.5rem; align-items:center; margin-top:1rem;">
+                    {{ form.is_active() }}
+                    <label style="font-weight:700;">پکیج فعال و آماده خرید باشد</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="form-check" style="display:flex; gap:0.5rem; align-items:center; margin-top:1rem;">
+                    {{ form.is_featured() }}
+                    <label style="font-weight:700;">نمایش به عنوان پکیج ویژه در صفحه اصلی</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-rahsa-cta btn-lg w-100 mt-3">
+            💾 ذخیره تغییرات و بروزرسانی
+        </button>
+    </form>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    // پیش‌نویس با هوش مصنوعی (الگوی قالب کرافتو — در صورت تنظیم AI_API_KEY)
+    const btn = document.getElementById('ai-draft-btn');
+    const status = document.getElementById('ai-draft-status');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+        const titleInput = document.getElementById('title') || document.querySelector('input[name="title"]');
+        const topic = (titleInput && titleInput.value) || '';
+        if (!topic) {
+            status.textContent = '⚠️ اول عنوان محصول را وارد کنید.';
+            status.style.color = 'var(--accent-warning)';
+            return;
+        }
+
+        const target = document.getElementById('description');
+        const preset = btn.dataset.preset || 'product_desc';
+
+        btn.disabled = true;
+        btn.classList.add('is-loading');
+        status.style.color = '';
+        status.textContent = '🤖 در حال تولید پیش‌نویس…';
+
+        fetch('{{ url_for("admin.ai_generate") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+            },
+            body: JSON.stringify({ preset: preset, topic: topic })
+        })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+            if (res.ok && res.data.success) {
+                target.value = res.data.text;
+                status.style.color = 'var(--accent-success)';
+                status.textContent = '✅ پیش‌نویس تولید شد — بازبینی کنید و ویرایش نمایید.';
+            } else {
+                status.style.color = 'var(--accent-warning)';
+                status.textContent = '⚠️ ' + (res.data.message || 'تولید ناموفق بود.');
+            }
+        })
+        .catch(function () {
+            status.style.color = 'var(--accent-danger)';
+            status.textContent = '⚠️ خطای ارتباط با سرور.';
+        })
+        .finally(function () {
+            btn.disabled = false;
+            btn.classList.remove('is-loading');
+        });
+    });
+})();
+</script>
+{% endblock %}

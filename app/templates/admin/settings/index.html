@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}مدیریت تنظیمات و متن‌های سایت{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    {% for key, group in settings_groups.items() %}
+    <div class="col-md-4 mb-4">
+        <div style="background:var(--bg-navy-card); border-radius:1rem; padding:1.5rem; border:1px solid var(--glass-border); height:100%; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div>
+                <div style="font-size:2rem; margin-bottom:0.5rem;">⚙️</div>
+                <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-white); margin-bottom:0.5rem;">{{ group.title }}</h3>
+                <p style="font-size:0.85rem; color:var(--text-gray-400); margin-bottom:1rem;">
+                    تغییر متون، اطلاعات و پیکربندی بخش {{ group.title }}
+                </p>
+            </div>
+            <a href="{{ url_for('admin.settings_group', group=key) }}" class="btn-rahsa-cta w-100">
+                ویرایش تنظیمات {{ group.title }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

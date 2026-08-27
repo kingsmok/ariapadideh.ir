@@ -1,0 +1,75 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}{{ 'ویرایش استوری' if story else 'استوری جدید' }}{% endblock %}
+
+{% block admin_content %}
+<div style="max-width:680px; margin:0 auto;" class="glass-card">
+    <div style="padding:1.5rem 2rem;">
+        <h2 style="font-size:1.25rem; font-weight:800; color:var(--text-white); margin:0 0 1.5rem;">
+            {{ '✏️ ویرایش: ' + story.title if story else '➕ استوری جدید' }}
+        </h2>
+
+        <form action="{{ url_for('admin.story_edit', story_id=story.id if story else None) }}" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">عنوان *</label>
+                <input type="text" name="title" class="form-control" required value="{{ story.title if story else '' }}" placeholder="مثلاً: تخفیف ویژه پایان فصل">
+            </div>
+
+            <div class="row g-2" style="margin-bottom:1rem;">
+                <div class="col-6">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">گروه (نوار نمایش)</label>
+                    <input type="text" name="group_name" class="form-control" value="{{ story.group_name or 'عمومی' if story else 'عمومی' }}" placeholder="عمومی / تخفیف‌ها / نمونه‌کارها">
+                </div>
+                <div class="col-6">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">نوع رسانه</label>
+                    <select name="media_type" class="form-control">
+                        <option value="image" {{ 'selected' if story and story.media_type == 'image' else '' }}>تصویر</option>
+                        <option value="video" {{ 'selected' if story and story.media_type == 'video' else '' }}>ویدئو</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">تصویر استوری / کاور (URL)</label>
+                <input type="text" name="image" class="form-control" dir="ltr" value="{{ story.image or '' if story else '' }}" placeholder="/static/uploads/stories/cover.jpg">
+                <small style="color:var(--text-gray-400);">نسبت پیشنهادی ۹:۱۶ عمودی (مثل استوری اینستاگرام)</small>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" style="color:var(--text-white); font-size:.85rem;">لینک ویدئو (برای نوع ویدئو — mp4)</label>
+                <input type="text" name="video_url" class="form-control" dir="ltr" value="{{ story.video_url or '' if story else '' }}">
+            </div>
+
+            <div class="row g-2" style="margin-bottom:1rem;">
+                <div class="col-6">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">لینک CTA</label>
+                    <input type="text" name="link" class="form-control" dir="ltr" value="{{ story.link or '' if story else '' }}" placeholder="/products">
+                </div>
+                <div class="col-3">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">متن CTA</label>
+                    <input type="text" name="link_text" class="form-control" value="{{ story.link_text or 'مشاهده' if story else 'مشاهده' }}">
+                </div>
+                <div class="col-3">
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">مدت (ثانیه)</label>
+                    <input type="number" name="duration" class="form-control" min="2" max="30" value="{{ story.duration or 5 if story else 5 }}">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.5rem;">
+                <div>
+                    <label class="form-label" style="color:var(--text-white); font-size:.85rem;">ترتیب</label>
+                    <input type="number" name="sort_order" class="form-control" style="width:100px;" value="{{ story.sort_order if story else 0 }}">
+                </div>
+                <label style="color:var(--text-white); font-size:.85rem; display:flex; gap:.4rem; align-items:center; margin-top:1rem;">
+                    <input type="checkbox" name="is_active" value="1" {{ 'checked' if (story and story.is_active) or not story else '' }}> فعال
+                </label>
+            </div>
+
+            <button type="submit" class="btn-rahsa-cta" style="padding:.65rem 1.6rem;">ذخیره</button>
+            <a href="{{ url_for('admin.stories') }}" class="btn-rahsa-outline" style="padding:.65rem 1.2rem;">انصراف</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -11,14 +11,17 @@ Flask-Assets>=2.1.0
 Flask-Compress>=1.15.0
 
 # Database
-SQLAlchemy>=1.4.53,<2.0.0
+# Pin >=2.0.36: SQLAlchemy 2.0.36+ added compatibility for Python 3.14
+# (earlier versions raise "TypingOnly ... has additional attributes
+# {'__firstlineno__', '__static_attributes__'}" on import under Python 3.14).
+SQLAlchemy>=2.0.36
 Alembic>=1.13.0
 psycopg2-binary>=2.9.9
 redis>=5.0.1
 
 # Security
 WTForms>=3.1.0
-WTForms-SQLAlchemy>=3.1.0
+WTForms-SQLAlchemy>=0.4.2
 email-validator>=2.1.0
 bcrypt>=4.1.2
 bleach>=6.1.0

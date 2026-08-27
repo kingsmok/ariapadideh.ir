@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}دسته‌بندی خدمات و محصولات | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class=" mb-5">
+            <span class="d-block text-yellow font-bold mb-2" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;" aria-hidden="true">
+                🗂️ کاتالوگ جامع خدمات
+            </span>
+            <h1 class="text-white" style="font-size:clamp(1.75rem, 4vw, 2.2rem); font-weight:900; margin-bottom:0.75rem;">
+                دسته‌بندی‌های نرم‌افزاری و تکنولوژی <span class="text-yellow">رهسا دیو</span>
+            </h1>
+            <p class="text-muted" style="font-size:0.95rem; max-width:600px; margin:0 auto;">
+                انتخاب دسته‌بندی درخواستی شما جهت مشاهده پکیج‌ها، سورس‌کدها و نمونه‌کارهای مرتبط
+            </p>
+        </div>
+
+        <div class="row g-4">
+            {% if parent_categories %}
+                {% for cat in parent_categories %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <a href="{{ url_for('public.category', slug=cat.slug) }}"
+                       class="glass-card d-block h-100 text-decoration-none"
+                       style="padding:1.75rem; transition:var(--transition);"
+                       aria-label="مشاهده دسته {{ cat.title }}">
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div aria-hidden="true" style="font-size:2rem; width:50px; height:50px; background:var(--glass-bg); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                {% if 'ربات' in cat.title %}🤖
+                                {% elif 'وب' in cat.title %}🌐
+                                {% elif 'نرم' in cat.title %}⚙️
+                                {% elif 'اسکریپت' in cat.title %}📜
+                                {% else %}📦{% endif %}
+                            </div>
+                            <div>
+                                <h3 class="text-white" style="font-size:1.15rem; font-weight:800; margin:0 0 0.25rem 0;">
+                                    {{ cat.title }}
+                                </h3>
+                                <span class="text-yellow" style="font-size:0.75rem; font-weight:700;">
+                                    <span data-persian-num>{{ cat.products|length }}</span> محصول و خدمت
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="text-muted" style="font-size:0.875rem; line-height:1.7; margin:0;">
+                            {{ cat.description or 'مشاهده کلیه سورس‌کدها و پکیج‌های توسعه داده شده در این حوزه' }}
+                        </p>
+
+                        <div class="mt-3 d-flex align-items-center gap-2 text-yellow" style="font-size:0.85rem; font-weight:700;">
+                            <span>مشاهده همه</span>
+                            <span aria-hidden="true">←</span>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <div class="empty-state-icon" aria-hidden="true">🗂️</div>
+                        <h2 class="empty-state-title">دسته‌بندی یافت نشد</h2>
+                        <p class="empty-state-message">
+                            هنوز دسته‌بندی برای نمایش وجود ندارد. به‌زودی خدمات و محصولات در این بخش قرار می‌گیرند.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}

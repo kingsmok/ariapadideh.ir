@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us — Rahsa Dev{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:3rem;">
+    <div class="container">
+        <div class="section-divider">
+            <h2>Get in <span class="gold-gradient-text">Touch</span></h2>
+            <p>We reply within one business day.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="glass-card" style="padding:1.8rem;">
+                    {% if success %}
+                    <div class="alert alert-success" role="alert" style="background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.4); color:#bbf7d0; padding:1rem 1.2rem; border-radius:12px;">
+                        ✅ <strong>Message received!</strong> We'll get back to you at your email shortly.
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-rahsa" for="ct-name">Your name *</label>
+                                <input type="text" id="ct-name" name="name" class="form-control-rahsa" required minlength="2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-rahsa" for="ct-email">Email *</label>
+                                <input type="email" id="ct-email" name="email" class="form-control-rahsa" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-rahsa" for="ct-subject">Subject</label>
+                                <input type="text" id="ct-subject" name="subject" class="form-control-rahsa" placeholder="Project inquiry, support, …">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-rahsa" for="ct-message">Message *</label>
+                                <textarea id="ct-message" name="message" class="form-control-rahsa" rows="6" required minlength="10"
+                                          placeholder="Tell us about your project — goals, timeline, budget range…"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-rahsa-cta w-100 mt-4">✉️ Send Message</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="glass-card h-100" style="padding:1.8rem;">
+                    <h3 class="text-white" style="font-size:1.05rem; font-weight:800; margin-bottom:1.2rem;">Contact channels</h3>
+                    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1rem; font-size:0.92rem;">
+                        {% if site_settings.contact_email %}
+                        <li>📧 &nbsp;<a href="mailto:{{ site_settings.contact_email }}" class="text-yellow" dir="ltr">{{ site_settings.contact_email }}</a></li>
+                        {% endif %}
+                        {% if site_settings.contact_phone %}
+                        <li>☎️ &nbsp;<span class="text-muted" dir="ltr">{{ site_settings.contact_phone }}</span></li>
+                        {% endif %}
+                        {% if site_settings.contact_address %}
+                        <li>📍 &nbsp;<span class="text-muted" dir="rtl">{{ site_settings.contact_address }}</span></li>
+                        {% endif %}
+                        {% if site_settings.contact_working_hours %}
+                        <li>🕒 &nbsp;<span class="text-muted" dir="rtl">{{ site_settings.contact_working_hours }}</span> <span class="text-muted">(Sat–Thu)</span></li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-muted" style="font-size:0.82rem; margin-top:1.4rem; line-height:1.8;">
+                        We're based in Shiraz / Tehran, Iran — and work remotely with clients worldwide.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {# نقشهٔ تعاملی مشترک با نسخهٔ فارسی #}
+        {% if site_settings.contact_osm_map_enabled != false and site_settings.contact_map_lat and site_settings.contact_map_lng %}
+        <div class="glass-card" style="margin-top:2.5rem; padding:1rem;">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span aria-hidden="true" style="font-size:1.3rem;">🗺️</span>
+                <h2 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">Find us on the map</h2>
+            </div>
+            <div id="contact-leaflet-map" aria-label="Our location on the interactive map"></div>
+            <p class="text-muted" style="font-size:0.75rem; margin:0.6rem 0 0;">
+                © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="text-muted">OpenStreetMap</a> contributors
+            </p>
+        </div>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+        <script>
+            (function () {
+                var lat = parseFloat('{{ site_settings.contact_map_lat }}') || 35.7056;
+                var lng = parseFloat('{{ site_settings.contact_map_lng }}') || 51.3850;
+                var zoom = parseInt('{{ site_settings.contact_map_zoom }}', 10) || 15;
+                try {
+                    var map = L.map('contact-leaflet-map', { scrollWheelZoom: false }).setView([lat, lng], zoom);
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(map);
+                    L.marker([lat, lng]).addTo(map).bindPopup('<strong>Rahsa Dev</strong>');
+                    map.on('click', function () { map.scrollWheelZoom.enable(); });
+                } catch (e) { /* CDN unavailable — skip silently */ }
+            })();
+        </script>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

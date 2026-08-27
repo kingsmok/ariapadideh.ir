@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title_en or post.title }} — Rahsa Dev Blog{% endblock %}
+{% block meta_description %}{{ (post.excerpt_en or post.excerpt or '')|truncate(155) }}{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:3rem;">
+    <div class="container" style="max-width:860px;">
+        <nav aria-label="Breadcrumb" style="font-size:0.8rem; margin-bottom:1.2rem;">
+            <a href="{{ url_for('en.home') }}" class="text-muted">Home</a>
+            <span class="text-muted"> / </span>
+            <a href="{{ url_for('en.blog') }}" class="text-muted">Blog</a>
+            <span class="text-muted"> / </span>
+            <span class="text-yellow">{{ (post.title_en or post.title)|truncate(40) }}</span>
+        </nav>
+
+        <article class="glass-card" style="padding:2.2rem;">
+            <div class="d-flex align-items-center gap-3 text-muted" style="font-size:0.82rem; margin-bottom:1rem; flex-wrap:wrap;">
+                <span>📅 {{ post.published_at.strftime('%B %d, %Y') if post.published_at else '' }}</span>
+                <span>👁 {{ post.views or 0 }} views</span>
+                {% if post.category %}<span>📁 <span dir="rtl">{{ post.category.title }}</span></span>{% endif %}
+            </div>
+
+            {% if has_english %}
+            <h1 class="text-white" style="font-size:1.7rem; font-weight:900; line-height:1.4; margin-bottom:1.2rem;">
+                {{ post.title_en }}
+            </h1>
+            {% if post.excerpt_en %}
+            <p class="text-muted" style="font-size:1.02rem; line-height:1.9; border-inline-start:3px solid var(--accent-gold); padding-inline-start:1rem;">
+                {{ post.excerpt_en }}
+            </p>
+            {% endif %}
+            <div class="post-content-en text-gray-200" style="line-height:2; font-size:1rem; margin-top:1.5rem;">
+                {{ post.content_en|safe }}
+            </div>
+            {% else %}
+            <h1 class="text-white" dir="rtl" style="font-size:1.6rem; font-weight:900; line-height:1.5; margin-bottom:0.8rem;">
+                {{ post.title }}
+            </h1>
+            <p class="text-muted" style="font-size:0.9rem;">
+                ℹ️ This article hasn't been translated to English yet — the original Persian version is shown below.
+            </p>
+            <hr style="border-color:var(--glass-border); margin:1.5rem 0;">
+            <div class="text-gray-200" dir="rtl" style="line-height:2.2; font-size:1rem; text-align:right;">
+                {{ post.content|safe }}
+            </div>
+            {% endif %}
+        </article>
+
+        {% if post.tags %}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1.2rem;">
+            {% for tag in post.tags %}
+            <span class="btn-rahsa-outline" style="padding:0.2rem 0.8rem; font-size:0.78rem;" dir="rtl">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if related_posts %}
+        <div style="margin-top:2.5rem;">
+            <h2 class="text-white" style="font-size:1.2rem; font-weight:800; margin-bottom:1rem;">Related articles</h2>
+            <div class="row g-3">
+                {% for rp in related_posts %}
+                <div class="col-12 col-md-4">
+                    <div class="glass-card h-100" style="padding:1.2rem;">
+                        <h3 style="font-size:0.95rem; font-weight:700; margin:0 0 0.5rem;">
+                            <a href="{{ url_for('en.post', slug=rp.slug) }}" class="text-white" style="text-decoration:none;">
+                                {{ rp.title_en or rp.title }}
+                            </a>
+                        </h3>
+                        <p class="text-muted" style="font-size:0.82rem; margin:0;">{{ (rp.excerpt_en or rp.excerpt or '')|truncate(90) }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div style="text-align:center; margin:2.5rem 0;">
+            <a href="{{ url_for('en.blog') }}" class="btn-rahsa-outline" style="text-decoration:none; padding:0.5rem 1.2rem;">← Back to Blog</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

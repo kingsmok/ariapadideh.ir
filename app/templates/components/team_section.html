@@ -1,0 +1,60 @@
+{# بخش تیم ما + نوار مهارت — الگوی قالب‌های آرنیکا/ستیا #}
+{% if team_members %}
+<section class="section" id="team-members-section" aria-labelledby="team-members-title">
+    <div class="container">
+        <div class="section-head-rahsa" style="text-align:center; margin-bottom:2.5rem;">
+            <h2 id="team-members-title" class="text-white" style="font-size:1.6rem; font-weight:900;">{{ (sec.title if sec is defined and sec.title else 'تیم متخصص ما') }}</h2>
+            <p class="text-muted" style="font-size:0.9rem; margin-top:0.5rem;">دستیاران همیشگی رشد کسب‌وکار شما</p>
+        </div>
+
+        <div class="team-grid-rahsa">
+            {% for member in team_members %}
+            <article class="team-card-rahsa">
+                <div class="team-avatar-rahsa" aria-hidden="true">
+                    {% if member.avatar %}
+                    <img src="{{ member.avatar }}" alt="{{ member.full_name }}" loading="lazy">
+                    {% else %}
+                    <span>{{ member.full_name[:1] }}</span>
+                    {% endif %}
+                </div>
+                <h3 class="text-white" style="font-size:1.05rem; font-weight:800; margin:0;">{{ member.full_name }}</h3>
+                {% if member.role_title %}<p class="team-role-rahsa">{{ member.role_title }}</p>{% endif %}
+                {% if member.bio %}<p class="text-muted team-bio-rahsa">{{ member.bio }}</p>{% endif %}
+
+                {% if member.skill_list() %}
+                <div class="team-skills-rahsa">
+                    {% for skill in member.skill_list() %}
+                    <div class="skill-row-rahsa">
+                        <div class="skill-label-rahsa">
+                            <span>{{ skill.name }}</span><span class="text-muted">{{ skill.level }}٪</span>
+                        </div>
+                        <div class="skill-bar-rahsa" role="img" aria-label="{{ skill.name }}: {{ skill.level }} درصد">
+                            <div class="skill-fill-rahsa" style="width: {{ skill.level }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if member.socials %}
+                <div class="team-socials-rahsa">
+                    {% if member.socials.linkedin %}
+                    <a href="{{ member.socials.linkedin }}" target="_blank" rel="noopener" aria-label="لینکدین {{ member.full_name }}" class="social-icon-hover">in</a>
+                    {% endif %}
+                    {% if member.socials.instagram %}
+                    <a href="{{ member.socials.instagram }}" target="_blank" rel="noopener" aria-label="اینستاگرام {{ member.full_name }}" class="social-icon-hover">◎</a>
+                    {% endif %}
+                    {% if member.socials.telegram %}
+                    <a href="{{ member.socials.telegram }}" target="_blank" rel="noopener" aria-label="تلگرام {{ member.full_name }}" class="social-icon-hover">✈</a>
+                    {% endif %}
+                    {% if member.socials.email %}
+                    <a href="mailto:{{ member.socials.email }}" aria-label="ایمیل {{ member.full_name }}" class="social-icon-hover">✉</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

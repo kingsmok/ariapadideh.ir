@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Flask Pro - Application Runner
+Rahsa Dev Enterprise Application Runner
 """
 import os
 import sys
@@ -8,11 +8,15 @@ import sys
 # Add the parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import create_app
+from app import create_app, db
 
 # Determine environment
 env = os.getenv('FLASK_ENV', 'development')
 app = create_app(env)
+
+# Auto-create all tables in app context if missing
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(

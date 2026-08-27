@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}ورود با موبایل (پیامکی) | {{ site_settings.general_site_name or 'رهسا دیو' }}{% endblock %}
+
+{% block content %}
+<section class="section" style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+    <div class="container">
+        <div class="glass-card" style="max-width:450px; margin:0 auto; padding:2.5rem 2rem;">
+
+            <div class="text-center mb-4">
+                <div class="brand-badge-rahsa mx-auto" style="width:60px; height:60px; font-size:1.8rem; margin-bottom:1rem;" aria-hidden="true">📱</div>
+                <h1 class="text-white" style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem;">
+                    ورود / عضویت با موبایل
+                </h1>
+                <p class="text-muted" style="font-size:0.85rem; margin:0;">
+                    شماره موبایل خود را وارد کنید؛ کد تأیید برایتان پیامک می‌شود.
+                </p>
+            </div>
+
+            {% if step == 'request' %}
+            <form action="{{ url_for('user.otp_login') }}" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                <input type="hidden" name="step" value="request">
+
+                <div class="mb-3">
+                    <label for="otp_phone" class="form-label-rahsa">شماره موبایل</label>
+                    <input type="tel" id="otp_phone" name="phone" class="form-control-rahsa" inputmode="numeric"
+                           placeholder="09123456789" dir="ltr" style="text-align:center; letter-spacing:2px; font-size:1.05rem;"
+                           value="{{ phone or '' }}" required autofocus>
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem; font-size:0.95rem;">
+                    دریافت کد تأیید
+                </button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('user.otp_login') }}" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                <input type="hidden" name="step" value="verify">
+                <input type="hidden" name="phone" value="{{ phone or '' }}">
+
+                <p class="text-muted text-center" style="font-size:0.85rem;">
+                    کد ۶ رقمی ارسال‌شده به <span class="text-white font-bold" dir="ltr">{{ phone }}</span> را وارد کنید
+                </p>
+
+                {% if dev_code %}
+                <p class="text-center" style="font-size:0.8rem; color:var(--accent-gold);">
+                    (حالت توسعه — کد شما: <strong dir="ltr">{{ dev_code }}</strong>)
+                </p>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="otp_code" class="form-label-rahsa">کد تأیید</label>
+                    <input type="text" id="otp_code" name="code" class="form-control-rahsa" inputmode="numeric"
+                           maxlength="6" placeholder="------" dir="ltr" style="text-align:center; letter-spacing:8px; font-size:1.2rem;"
+                           required autofocus>
+                </div>
+
+                <button type="submit" class="btn-rahsa-cta w-100" style="padding:0.75rem; font-size:0.95rem;">
+                    تأیید و ورود
+                </button>
+                <a href="{{ url_for('user.otp_login') }}" class="d-block text-center btn-rahsa-outline" style="margin-top:0.6rem; padding:0.5rem; font-size:0.85rem;">
+                    تغییر شماره / ارسال مجدد
+                </a>
+            </form>
+            {% endif %}
+
+            <div class="text-center mt-4" style="font-size:0.85rem;">
+                <a href="{{ url_for('user.login') }}" class="text-muted">ورود با رمز عبور</a>
+                <span class="text-muted"> · </span>
+                <a href="{{ url_for('user.register') }}" class="text-yellow font-bold">ثبت‌نام با ایمیل</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

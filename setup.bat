@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM Flask Pro - Quick Setup Script for Windows
 REM Run this file by double-clicking or from CMD
 
@@ -17,11 +18,14 @@ if errorlevel 1 (
 
 REM Create virtual environment
 echo [1/5] Creating virtual environment...
-python -m venv venv
+if not exist "venv" (
+    python -m venv venv
+)
 
 REM Activate and install
 echo [2/5] Installing dependencies...
 call venv\Scripts\activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 
 REM Create instance folder
@@ -32,7 +36,6 @@ if not exist "logs" mkdir logs
 REM Initialize database
 echo [4/5] Initializing database...
 set FLASK_APP=run.py
-call venv\Scripts\activate
 flask init-db
 flask create-admin
 flask seed-data
